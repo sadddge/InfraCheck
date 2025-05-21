@@ -1,4 +1,3 @@
-# Node/NestJS backend
 # compiled output
 /dist
 /node_modules
@@ -55,35 +54,3 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-# Flutter frontend
-build/
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-.idea/
-android/.gradle/
-android/app/debug/
-android/app/profile/
-android/app/release/
-ios/Pods/
-ios/Flutter/Flutter.framework/
-ios/Flutter/Flutter.podspec
-ios/Flutter/Generated.xcconfig
-ios/Flutter/App.framework
-ios/Flutter/engine/
-ios/.symlinks/
-ios/Pods/
-ios/Runner.xcworkspace/
-macos/Flutter/ephemeral/
-*.iml
-
-# Common
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*.orig
