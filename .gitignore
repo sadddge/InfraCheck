@@ -1,0 +1,45 @@
+# Node/NestJS backend
+node_modules/
+dist/
+.env
+.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+build/
+tmp/
+*.tsbuildinfo
+
+# Flutter frontend
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.idea/
+android/.gradle/
+android/app/debug/
+android/app/profile/
+android/app/release/
+ios/Pods/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/App.framework
+ios/Flutter/engine/
+ios/.symlinks/
+ios/Pods/
+ios/Runner.xcworkspace/
+macos/Flutter/ephemeral/
+*.iml
+
+# Common
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.orig
+*.log
