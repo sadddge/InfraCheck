@@ -1,5 +1,3 @@
-// src/common/filters/http-exception.filter.ts
-
 import {
   ExceptionFilter,
   Catch,
@@ -8,12 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
-
-interface ErrorResponse {
-  code: string;
-  message: string;
-  details: any;
-}
+import { ErrorDto } from '../dto/error.dto';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -22,7 +15,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     let status: number;
-    let errorRes: ErrorResponse;
+    let errorRes: ErrorDto;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
