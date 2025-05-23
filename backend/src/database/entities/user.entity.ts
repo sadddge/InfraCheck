@@ -4,6 +4,7 @@ import { Report } from "./report.entity";
 import { Comment } from "./comment.entity";
 import { Message } from "./message.entity";
 import { Vote } from "./vote.entity";
+import { ReportChange } from "./report-change.entity";
 @Entity("users")
 export class User {
     @PrimaryGeneratedColumn()
@@ -35,6 +36,9 @@ export class User {
 
     @OneToMany(() => Report, (report) => report.creator)
     reports: Report[];
+
+    @OneToMany(() => ReportChange, (reportChange) => reportChange.creator)
+    reportChanges: ReportChange[];
 
     @OneToMany(() => Comment, (comment) => comment.creator)
     comments: Comment[];
