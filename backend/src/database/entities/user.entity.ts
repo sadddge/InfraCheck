@@ -13,8 +13,8 @@ export class User {
     @Column({ default: true })
     active: boolean;
 
-    @Column({ unique: true})
-    number: string;
+    @Column({ unique: true, name: "phone_number", nullable: false })
+    phoneNumber: string;
     
     @Column()
     password: string;
