@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './database/config/database.module';
+import { UsersModule } from './modules/users/users.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -17,9 +19,9 @@ import { DatabaseModule } from './database/config/database.module';
         }
       ]
     }),
-    DatabaseModule
+    DatabaseModule,
+    UsersModule
   ],
-  controllers: [],
   providers: [
     {
       provide: APP_GUARD,
