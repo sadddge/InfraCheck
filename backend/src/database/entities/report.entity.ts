@@ -32,16 +32,32 @@ export class Report {
     @Column({ type: "text" })
     description: string;
 
-    @Column({ type: "decimal", precision: 9, scale: 6 })
+    @Column({
+        type: "decimal",
+        precision: 9,
+        scale: 6,
+        transformer: {
+            to: (value: number) => value?.toString(),
+            from: (value: string) => parseFloat(value),
+        },
+    })
     latitude: number;
 
-    @Column({ type: "decimal", precision: 9, scale: 6 })
+    @Column({
+        type: "decimal",
+        precision: 9,
+        scale: 6,
+        transformer: {
+            to: (value: number) => value?.toString(),
+            from: (value: string) => parseFloat(value),
+        },
+    })
     longitude: number;
 
     @Column({ default: true, name: "is_visible" })
     isVisible: boolean;
 
-    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+    @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP", name: "created_at" })
     createdAt: Date;
 
     @Column({

@@ -159,7 +159,7 @@ CREATE TABLE user_reports_followed (
 
 CREATE TABLE users (
     id integer NOT NULL,
-    number character varying NOT NULL,
+    phone_number character varying NOT NULL,
     password character varying NOT NULL,
     name character varying NOT NULL,
     last_name character varying NOT NULL,
