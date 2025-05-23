@@ -5,6 +5,7 @@ import { Comment } from "./comment.entity";
 import { Message } from "./message.entity";
 import { Vote } from "./vote.entity";
 import { ReportChange } from "./report-change.entity";
+import { RefreshToken } from "./refresh-token.entity";
 @Entity("users")
 export class User {
     @PrimaryGeneratedColumn()
@@ -48,6 +49,9 @@ export class User {
 
     @OneToMany(() => Vote, (vote) => vote.user)
     votes: Vote[];
+
+    @OneToMany(() => RefreshToken , (refreshToken) => refreshToken.user)
+    refreshTokens: RefreshToken[];
 
     @ManyToMany(() => Report, (report) => report.followers)
     @JoinTable({
