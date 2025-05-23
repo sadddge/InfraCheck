@@ -1,0 +1,6 @@
+export enum ReportCategory {
+    SECURITY = 'SECURITY',
+    INFRASTRUCTURE = 'INFRASTRUCTURE',
+    TRANSIT = 'TRANSIT',
+    GARBAGE = 'GARBAGE',
+}
