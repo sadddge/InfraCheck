@@ -9,6 +9,7 @@ export default registerAs('database', (): TypeOrmModuleOptions => ({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     autoLoadEntities: true,
+    entities: [__dirname + '/../**/*.entity.{ts,js}'],
     synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV !== 'production',
 }));
