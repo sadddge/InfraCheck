@@ -8,7 +8,10 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterResponseDto } from './dto/register-reponse.dto';
 
-@Controller('auth')
+@Controller({
+    path: 'auth',
+    version: '1',
+})
 export class AuthController {
     constructor(
         @Inject(AUTH_SERVICE)
