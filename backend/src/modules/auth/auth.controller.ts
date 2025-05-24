@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, UseGuards, Request, Inject } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, UseGuards, Request, Inject, BadRequestException } from '@nestjs/common';
 import { AUTH_SERVICE, IAuthService } from './interfaces/auth-service.interface';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -7,6 +7,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterResponseDto } from './dto/register-reponse.dto';
 import { Public } from 'src/common/decorators/public.decorator';
+import { IVerificationService, VERIFICATION_SERVICE } from './interfaces/verification-service.interface';
 
 @Controller({
     path: 'auth',
@@ -15,7 +16,9 @@ import { Public } from 'src/common/decorators/public.decorator';
 export class AuthController {
     constructor(
         @Inject(AUTH_SERVICE)
-        private readonly authService: IAuthService
+        private readonly authService: IAuthService,
+        @Inject(VERIFICATION_SERVICE)
+        private readonly verificationService: IVerificationService
     ) {}
 
     @Public()
@@ -41,5 +44,23 @@ export class AuthController {
     @HttpCode(201)
     async register(@Body() dto: RegisterDto) : Promise<RegisterResponseDto> {
         return this.authService.register(dto);
+    }
+
+    @Public()
+    @Post('send-verification-code')
+    @HttpCode(200)
+    async sendVerificationCode(@Body('phoneNumber') phoneNumber: string) {
+        return this.verificationService.sendVerificationCode(phoneNumber);
+    }
+
+    @Public()
+    @Post('verify-code')
+    @HttpCode(200)
+    async verifyCode(@Body('phoneNumber') phoneNumber: string, @Body('code') code: string) {
+        const valid = this.verificationService.verifyCode(phoneNumber, code);
+        if (!valid) {
+            throw new BadRequestException('Invalid verification code');
+        }
+        return { message: 'Verification successful' };
     }
 }
