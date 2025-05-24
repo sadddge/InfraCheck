@@ -5,10 +5,12 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { Repository } from 'typeorm';
-import { LoginDto } from './dto/login-dto';
+import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/database/entities/user.entity';
+import { RegisterResponseDto } from './dto/register-reponse.dto';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -102,6 +104,27 @@ export class AuthService implements IAuthService {
 
     async logout(userId: number): Promise<void> {
         await this.refreshTokenRepository.delete({ user: { id: userId } });
+    }
+
+    async register(dto: RegisterDto): Promise<RegisterResponseDto> {
+        const existingUser = await this.usersService.findByPhoneNumber(dto.phoneNumber);
+        if (existingUser) {
+            throw new UnauthorizedException('User already exists');
+        }
+
+        const hashedPassword = await bcrypt.hash(dto.password, 10);
+        const user = await this.usersService.create({
+            ...dto,
+            password: hashedPassword,
+        });
+
+        return {
+            id: user.id,
+            phoneNumber: user.phoneNumber,
+            name: user.name,
+            lastName: user.lastName,
+            role: user.role,
+        };
     }
 
     async getUserIfRefreshTokenMatches(resfreshToken: string, userId: number): Promise<User | null> {

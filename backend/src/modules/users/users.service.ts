@@ -4,6 +4,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from 'src/database/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { RegisterDto } from '../auth/dto/register.dto';
+import { UserDto } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -13,27 +15,50 @@ export class UsersService {
     private readonly userRepository: Repository<User>
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  async create(RegisterDto: RegisterDto) : Promise<User> {
+    const user = this.userRepository.create(RegisterDto);
+    return this.userRepository.save(user);
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() : Promise<UserDto[]> {
+    return this.userRepository.find({
+      select: {
+        id: true,
+        name: true,
+        lastName: true,
+        phoneNumber: true,
+        role: true
+      }
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number) : Promise<User | null> {
+    return this.userRepository.findOne({
+      where: {
+        id: id
+      }
+    });
+    
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) : Promise<User | null> {
+    const result = await this.userRepository.update(id, updateUserDto);
+    if (result.affected === 0) {
+      return null;
+    }
+    return this.userRepository.findOne({
+      where: {
+        id: id
+      }
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number) : Promise<boolean> {
+    const result = await this.userRepository.delete(id);
+    return result.affected !== 0;
   }
 
-  findByPhoneNumber(phoneNumber: string) : Promise<User | null> {
+  async findByPhoneNumber(phoneNumber: string) : Promise<User | null> {
     return this.userRepository.findOne({
       where: {
         phoneNumber: phoneNumber
