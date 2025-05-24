@@ -10,6 +10,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { VerificationService } from './verification/verification.service';
+import { VERIFICATION_SERVICE } from './interfaces/verification-service.interface';
 
 @Module({
   imports: [
@@ -34,8 +36,13 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
       provide: AUTH_SERVICE,
       useClass: AuthService,
     },
+    {
+      provide: VERIFICATION_SERVICE,
+      useClass: VerificationService,
+    },
     JwtStrategy,
-    JwtRefreshStrategy
+    JwtRefreshStrategy,
+    VerificationService
   ]
 })
 export class AuthModule {}
