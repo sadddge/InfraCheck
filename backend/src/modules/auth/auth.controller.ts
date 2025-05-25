@@ -1,4 +1,13 @@
-import { Body, Controller, HttpCode, Post, UseGuards, Request, Inject, BadRequestException } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    HttpCode,
+    Post,
+    UseGuards,
+    Request,
+    Inject,
+    BadRequestException,
+} from '@nestjs/common';
 import { AUTH_SERVICE, IAuthService } from './interfaces/auth-service.interface';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -7,7 +16,10 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterResponseDto } from './dto/register-reponse.dto';
 import { Public } from 'src/common/decorators/public.decorator';
-import { IVerificationService, VERIFICATION_SERVICE } from './interfaces/verification-service.interface';
+import {
+    IVerificationService,
+    VERIFICATION_SERVICE,
+} from './interfaces/verification-service.interface';
 
 @Controller({
     path: 'auth',
@@ -18,13 +30,13 @@ export class AuthController {
         @Inject(AUTH_SERVICE)
         private readonly authService: IAuthService,
         @Inject(VERIFICATION_SERVICE)
-        private readonly verificationService: IVerificationService
+        private readonly verificationService: IVerificationService,
     ) {}
 
     @Public()
     @Post('login')
     @HttpCode(200)
-    async login(@Body() dto: LoginDto) : Promise<LoginResponseDto> {
+    async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
         return this.authService.login(dto);
     }
 
@@ -42,7 +54,7 @@ export class AuthController {
 
     @Post('register')
     @HttpCode(201)
-    async register(@Body() dto: RegisterDto) : Promise<RegisterResponseDto> {
+    async register(@Body() dto: RegisterDto): Promise<RegisterResponseDto> {
         return this.authService.register(dto);
     }
 
@@ -57,10 +69,7 @@ export class AuthController {
     @Post('verify-code')
     @HttpCode(200)
     async verifyCode(@Body('phoneNumber') phoneNumber: string, @Body('code') code: string) {
-        const valid = this.verificationService.verifyCode(phoneNumber, code);
-        if (!valid) {
-            throw new BadRequestException('Invalid verification code');
-        }
-        return { message: 'Verification successful' };
+        await this.verificationService.verifyCode(phoneNumber, code);
+        return 'Verification successful';
     }
 }
