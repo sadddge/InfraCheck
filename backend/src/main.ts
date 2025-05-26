@@ -5,6 +5,7 @@ import * as compression from 'compression';
 import { BadRequestException, ValidationPipe, VersioningType } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -27,6 +28,14 @@ async function bootstrap() {
     });
     app.useGlobalFilters(new AllExceptionsFilter());
     app.useGlobalInterceptors(new ResponseInterceptor());
+    const config = new DocumentBuilder()
+        .setTitle('InfraCheck API')
+        .setDescription('API documentation for InfraCheck')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .build();
+    const documentFactory = () => SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, documentFactory());
     await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

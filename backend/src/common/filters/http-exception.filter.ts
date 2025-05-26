@@ -39,7 +39,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             };
         }
 
-        const responseDto : ResponseDto<null> = {
+        const responseDto: ResponseDto<null> = {
             success: false,
             data: null,
             error: errorRes,
