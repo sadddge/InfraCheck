@@ -1,5 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
-
+import { ApiProperty } from '@nestjs/swagger';
 
 class UserData {
     @ApiProperty({
@@ -26,11 +25,11 @@ class UserData {
     @ApiProperty({
         description: 'User last name',
         example: 'Pérez',
-        type: String
+        type: String,
     })
     role: string;
 }
-    
+
 export class LoginResponseDto {
     @ApiProperty({
         description: 'JWT access token',

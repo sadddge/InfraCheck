@@ -1,4 +1,14 @@
-import { Body, Controller, HttpCode, Post, UseGuards, Request, Inject, Param, Query } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    HttpCode,
+    Post,
+    UseGuards,
+    Request,
+    Inject,
+    Param,
+    Query,
+} from '@nestjs/common';
 import { AUTH_SERVICE, IAuthService } from './interfaces/auth-service.interface';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -11,7 +21,17 @@ import {
     IVerificationService,
     VERIFICATION_SERVICE,
 } from './interfaces/verification-service.interface';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import {
+    ApiBadRequestResponse,
+    ApiBearerAuth,
+    ApiCreatedResponse,
+    ApiInternalServerErrorResponse,
+    ApiOkResponse,
+    ApiOperation,
+    ApiParam,
+    ApiQuery,
+    ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 @Controller({
     path: 'auth',
@@ -49,7 +69,8 @@ export class AuthController {
     @UseGuards(JwtRefreshGuard)
     @ApiOperation({
         summary: 'Refresh access token',
-        description: 'This endpoint allows users to refresh their access token using a valid refresh token.',
+        description:
+            'This endpoint allows users to refresh their access token using a valid refresh token.',
     })
     @ApiOkResponse({
         description: 'Access token refreshed successfully.',
@@ -84,7 +105,8 @@ export class AuthController {
     @HttpCode(201)
     @ApiOperation({
         summary: 'User registration',
-        description: 'This endpoint allows new users to register with their phone number and password.',
+        description:
+            'This endpoint allows new users to register with their phone number and password.',
     })
     @ApiCreatedResponse({
         description: 'User registered successfully.',
@@ -102,7 +124,7 @@ export class AuthController {
     @HttpCode(200)
     @ApiOperation({
         summary: 'Send verification code',
-        description: 'This endpoint sends a verification code to the user\'s phone number.',
+        description: "This endpoint sends a verification code to the user's phone number.",
     })
     @ApiQuery({
         name: 'phoneNumber',
@@ -119,7 +141,7 @@ export class AuthController {
     @ApiInternalServerErrorResponse({
         description: 'Internal server error while sending verification code.',
     })
-    async sendVerificationCode(@Query("phoneNumber") phoneNumber: string) {
+    async sendVerificationCode(@Query('phoneNumber') phoneNumber: string) {
         return this.verificationService.sendVerificationCode(phoneNumber);
     }
 
@@ -128,7 +150,7 @@ export class AuthController {
     @HttpCode(200)
     @ApiOperation({
         summary: 'Verify code',
-        description: 'This endpoint verifies the code sent to the user\'s phone number.',
+        description: "This endpoint verifies the code sent to the user's phone number.",
     })
     @ApiQuery({
         name: 'phoneNumber',
@@ -138,7 +160,7 @@ export class AuthController {
     })
     @ApiQuery({
         name: 'code',
-        description: 'Verification code sent to the user\'s phone number',
+        description: "Verification code sent to the user's phone number",
         required: true,
         type: String,
     })
@@ -148,7 +170,7 @@ export class AuthController {
     @ApiBadRequestResponse({
         description: 'Invalid phone number or code.',
     })
-    async verifyCode(@Query("phoneNumber") phoneNumber: string, @Query("code") code: string) {
+    async verifyCode(@Query('phoneNumber') phoneNumber: string, @Query('code') code: string) {
         await this.verificationService.verifyCode(phoneNumber, code);
         return 'Verification successful';
     }
