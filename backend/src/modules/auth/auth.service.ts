@@ -18,9 +18,8 @@ export class AuthService implements IAuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         @InjectRepository(RefreshToken)
-        private readonly refreshTokenRepository: Repository<RefreshToken>, 
+        private readonly refreshTokenRepository: Repository<RefreshToken>,
     ) {}
-
 
     async login(dto: LoginDto): Promise<LoginResponseDto> {
         const user = await this.usersService.findByPhoneNumber(dto.phoneNumber);
@@ -41,7 +40,11 @@ export class AuthService implements IAuthService {
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7);
         await this.refreshTokenRepository.save(
-            this.refreshTokenRepository.create({ token: refreshToken, user, expiresAt }),
+            this.refreshTokenRepository.create({
+                token: refreshToken,
+                user,
+                expiresAt,
+            }),
         );
         return {
             accessToken,
@@ -51,7 +54,7 @@ export class AuthService implements IAuthService {
                 phoneNumber: user.phoneNumber,
                 name: user.name,
                 role: user.role,
-            }
+            },
         };
     }
 
@@ -76,7 +79,11 @@ export class AuthService implements IAuthService {
         await this.refreshTokenRepository.delete({ id: token.id });
 
         const newAccessToken = await this.jwtService.signAsync(
-            { sub: token.user.id, phoneNumber: token.user.phoneNumber, role: token.user.role },
+            {
+                sub: token.user.id,
+                phoneNumber: token.user.phoneNumber,
+                role: token.user.role,
+            },
             { expiresIn: '15m', secret: process.env.JWT_SECRET },
         );
 
@@ -87,7 +94,11 @@ export class AuthService implements IAuthService {
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7);
         await this.refreshTokenRepository.save(
-            this.refreshTokenRepository.create({ token: newRefreshToken, user: token.user, expiresAt }),
+            this.refreshTokenRepository.create({
+                token: newRefreshToken,
+                user: token.user,
+                expiresAt,
+            }),
         );
 
         return {
@@ -98,8 +109,8 @@ export class AuthService implements IAuthService {
                 phoneNumber: token.user.phoneNumber,
                 name: token.user.name,
                 role: token.user.role,
-            }
-        }
+            },
+        };
     }
 
     async logout(userId: number): Promise<void> {
@@ -127,7 +138,10 @@ export class AuthService implements IAuthService {
         };
     }
 
-    async getUserIfRefreshTokenMatches(resfreshToken: string, userId: number): Promise<User | null> {
+    async getUserIfRefreshTokenMatches(
+        resfreshToken: string,
+        userId: number,
+    ): Promise<User | null> {
         const refreshToken = await this.refreshTokenRepository.findOne({
             where: { token: resfreshToken, user: { id: userId } },
             relations: ['user'],

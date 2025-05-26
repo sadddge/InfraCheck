@@ -11,7 +11,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
             useFactory: (config: ConfigService) => {
                 const options = config.get<TypeOrmModuleOptions>('database');
                 if (!options) {
-                    throw new Error("Database configuration is missing");
+                    throw new Error('Database configuration is missing');
                 }
                 return options;
             },

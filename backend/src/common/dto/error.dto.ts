@@ -1,5 +1,5 @@
 export class ErrorDto {
-  code: string;
-  message: string;
-  details?: any;
+    code: string;
+    message: string;
+    details?: any;
 }
