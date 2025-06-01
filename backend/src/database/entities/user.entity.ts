@@ -6,6 +6,7 @@ import { Message } from './message.entity';
 import { Vote } from './vote.entity';
 import { ReportChange } from './report-change.entity';
 import { RefreshToken } from './refresh-token.entity';
+import { UserStatus } from 'src/common/enums/user-status.enums';
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn()
@@ -34,6 +35,28 @@ export class User {
         default: Role.NEIGHBOR,
     })
     role: Role;
+
+    @Column({
+        type: 'enum',
+        enum: UserStatus,
+        default: UserStatus.PENDING_VERIFICATION,
+    })
+    status: UserStatus;
+
+    @Column({
+        type: 'timestamp',
+        name: 'created_at',
+        default: () => 'CURRENT_TIMESTAMP',
+    })
+    createdAt: Date;
+
+    @Column({
+        type: 'timestamp',
+        name: 'password_updated_at',
+        nullable: true,
+        default: null,
+    })
+    passwordUpdatedAt: Date | null;
 
     @OneToMany(() => Report, report => report.creator)
     reports: Report[];
