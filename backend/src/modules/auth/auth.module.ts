@@ -10,14 +10,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
-import { VerificationService } from './verification/verification.service';
-import { VERIFICATION_SERVICE } from './interfaces/verification-service.interface';
+import { VerificationModule } from '../verification/verification.module';
 
 @Module({
     imports: [
         UsersModule,
         ConfigModule,
         PassportModule,
+        VerificationModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: async (cfg: ConfigService) => ({
@@ -36,13 +36,8 @@ import { VERIFICATION_SERVICE } from './interfaces/verification-service.interfac
             provide: AUTH_SERVICE,
             useClass: AuthService,
         },
-        {
-            provide: VERIFICATION_SERVICE,
-            useClass: VerificationService,
-        },
         JwtStrategy,
         JwtRefreshStrategy,
-        VerificationService,
     ],
 })
 export class AuthModule {}

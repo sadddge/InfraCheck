@@ -4,9 +4,7 @@ import {
     HttpCode,
     Post,
     UseGuards,
-    Request,
     Inject,
-    Param,
     Query,
 } from '@nestjs/common';
 import { AUTH_SERVICE, IAuthService } from './interfaces/auth-service.interface';
@@ -18,18 +16,11 @@ import { RegisterDto } from './dto/register.dto';
 import { RegisterResponseDto } from './dto/register-reponse.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 import {
-    IVerificationService,
-    VERIFICATION_SERVICE,
-} from './interfaces/verification-service.interface';
-import {
     ApiBadRequestResponse,
-    ApiBearerAuth,
     ApiCreatedResponse,
     ApiInternalServerErrorResponse,
     ApiOkResponse,
     ApiOperation,
-    ApiParam,
-    ApiQuery,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
@@ -41,8 +32,6 @@ export class AuthController {
     constructor(
         @Inject(AUTH_SERVICE)
         private readonly authService: IAuthService,
-        @Inject(VERIFICATION_SERVICE)
-        private readonly verificationService: IVerificationService,
     ) {}
 
     @Public()
@@ -83,23 +72,6 @@ export class AuthController {
         return this.authService.refreshToken(dto.refreshToken);
     }
 
-    @Post('logout')
-    @HttpCode(204)
-    @ApiBearerAuth()
-    @ApiOperation({
-        summary: 'User logout',
-        description: 'This endpoint allows users to log out, invalidating their refresh token.',
-    })
-    @ApiOkResponse({
-        description: 'User logged out successfully.',
-    })
-    @ApiUnauthorizedResponse({
-        description: 'Unauthorized access, user not logged in.',
-    })
-    async logout(@Request() req) {
-        return this.authService.logout(parseInt(req.user.id));
-    }
-
     @Public()
     @Post('register')
     @HttpCode(201)
@@ -120,58 +92,26 @@ export class AuthController {
     }
 
     @Public()
-    @Post('send-verification-code')
+    @Post('verify-register-code')
     @HttpCode(200)
     @ApiOperation({
-        summary: 'Send verification code',
-        description: "This endpoint sends a verification code to the user's phone number.",
-    })
-    @ApiQuery({
-        name: 'phoneNumber',
-        description: 'User phone number in E.164 format (e.g., +56912345678)',
-        required: true,
-        type: String,
+        summary: 'Verify registration code',
+        description:
+            'This endpoint allows users to verify their registration code sent via SMS.',
     })
     @ApiOkResponse({
-        description: 'Verification code sent successfully.',
+        description: 'Registration code verified successfully.',
     })
     @ApiBadRequestResponse({
-        description: 'Invalid phone number format.',
+        description: 'Invalid or expired registration code.',
     })
     @ApiInternalServerErrorResponse({
-        description: 'Internal server error while sending verification code.',
+        description: 'An error occurred while verifying the registration code.',
     })
-    async sendVerificationCode(@Query('phoneNumber') phoneNumber: string) {
-        return this.verificationService.sendVerificationCode(phoneNumber);
-    }
-
-    @Public()
-    @Post('verify-code')
-    @HttpCode(200)
-    @ApiOperation({
-        summary: 'Verify code',
-        description: "This endpoint verifies the code sent to the user's phone number.",
-    })
-    @ApiQuery({
-        name: 'phoneNumber',
-        description: 'User phone number in E.164 format (e.g., +56912345678)',
-        required: true,
-        type: String,
-    })
-    @ApiQuery({
-        name: 'code',
-        description: "Verification code sent to the user's phone number",
-        required: true,
-        type: String,
-    })
-    @ApiOkResponse({
-        description: 'Verification successful.',
-    })
-    @ApiBadRequestResponse({
-        description: 'Invalid phone number or code.',
-    })
-    async verifyCode(@Query('phoneNumber') phoneNumber: string, @Query('code') code: string) {
-        await this.verificationService.verifyCode(phoneNumber, code);
-        return 'Verification successful';
+    async verifyRegisterCode(
+        @Query('phoneNumber') phoneNumber: string,
+        @Query('code') code: string,
+    ): Promise<void> {
+        return this.authService.verifyRegisterCode(phoneNumber, code);
     }
 }
