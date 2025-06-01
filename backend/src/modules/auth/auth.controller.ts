@@ -52,9 +52,9 @@ export class AuthController {
         return this.authService.login(dto);
     }
 
+    @Public()
     @Post('refresh')
     @HttpCode(200)
-    @Public()
     @UseGuards(JwtRefreshGuard)
     @ApiOperation({
         summary: 'Refresh access token',
