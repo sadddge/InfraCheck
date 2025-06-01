@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { IAuthService } from './interfaces/auth-service.interface';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -11,6 +11,9 @@ import * as bcrypt from 'bcrypt';
 import { User } from 'src/database/entities/user.entity';
 import { RegisterResponseDto } from './dto/register-reponse.dto';
 import { RegisterDto } from './dto/register.dto';
+import { VERIFICATION } from 'src/common/constants/verification.constants';
+import { IVerificationService } from '../verification/interfaces/verification-service.interface';
+import { UserStatus } from 'src/common/enums/user-status.enums';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -19,7 +22,11 @@ export class AuthService implements IAuthService {
         private readonly jwtService: JwtService,
         @InjectRepository(RefreshToken)
         private readonly refreshTokenRepository: Repository<RefreshToken>,
-    ) {}
+        @Inject(VERIFICATION.REGISTER_TOKEN)
+        private readonly registerVerificationService: IVerificationService,
+        @Inject(VERIFICATION.RECOVER_PASSWORD_TOKEN)
+        private readonly recoverPasswordVerificationService: IVerificationService, 
+    ) { }
 
     async login(dto: LoginDto): Promise<LoginResponseDto> {
         const user = await this.usersService.findByPhoneNumber(dto.phoneNumber);
@@ -113,10 +120,6 @@ export class AuthService implements IAuthService {
         };
     }
 
-    async logout(userId: number): Promise<void> {
-        await this.refreshTokenRepository.delete({ user: { id: userId } });
-    }
-
     async register(dto: RegisterDto): Promise<RegisterResponseDto> {
         const existingUser = await this.usersService.findByPhoneNumber(dto.phoneNumber);
         if (existingUser) {
@@ -128,6 +131,8 @@ export class AuthService implements IAuthService {
             ...dto,
             password: hashedPassword,
         });
+
+        await this.registerVerificationService.sendVerificationCode(user.phoneNumber);
 
         return {
             id: user.id,
@@ -151,5 +156,31 @@ export class AuthService implements IAuthService {
             return null;
         }
         return refreshToken.user;
+    }
+
+    async verifyRegisterCode(phoneNumber: string, code: string): Promise<void> {
+        await this.registerVerificationService.verifyCode(phoneNumber, code);
+        const user = await this.usersService.findByPhoneNumber(phoneNumber);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        user.status = UserStatus.PENDING_APPROVAL;
+        await this.usersService.update(user.id, user);
+    }
+    sendResetPasswordCode(phoneNumber: string): Promise<void> {
+        return this.recoverPasswordVerificationService.sendVerificationCode(phoneNumber);
+    }
+    verifyResetPasswordCode(phoneNumber: string, code: string): Promise<void> {
+        return this.recoverPasswordVerificationService.verifyCode(phoneNumber, code);
+    }
+
+    async resetPassword(phoneNumber: string, newPassword: string): Promise<void> {
+        const user = await this.usersService.findByPhoneNumber(phoneNumber);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.passwordUpdatedAt = new Date();
+        await this.usersService.update(user.id, user);
     }
 }
