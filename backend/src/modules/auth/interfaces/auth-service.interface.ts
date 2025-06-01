@@ -1,8 +1,8 @@
-import { User } from 'src/database/entities/user.entity';
-import { LoginDto } from '../dto/login.dto';
-import { LoginResponseDto } from '../dto/login-response.dto';
-import { RegisterResponseDto } from '../dto/register-reponse.dto';
-import { RegisterDto } from '../dto/register.dto';
+import type { User } from 'src/database/entities/user.entity';
+import type { LoginDto } from '../dto/login.dto';
+import type { LoginResponseDto } from '../dto/login-response.dto';
+import type { RegisterResponseDto } from '../dto/register-reponse.dto';
+import type { RegisterDto } from '../dto/register.dto';
 
 export const AUTH_SERVICE = 'AUTH_SERVICE';
 

@@ -20,7 +20,7 @@ import { VerificationModule } from '../verification/verification.module';
         VerificationModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
-            useFactory: async (cfg: ConfigService) => ({
+            useFactory: (cfg: ConfigService) => ({
                 secret: cfg.getOrThrow<string>('JWT_SECRET'),
                 signOptions: {
                     expiresIn: cfg.getOrThrow<string>('JWT_EXPIRATION'),

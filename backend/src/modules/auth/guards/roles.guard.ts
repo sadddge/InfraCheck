@@ -1,12 +1,12 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { Observable } from 'rxjs';
+import { type CanActivate, type ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import type { Reflector } from '@nestjs/core';
+import type { Observable } from 'rxjs';
 import { Role } from 'src/common/enums/roles.enums';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
     private readonly logger = new Logger(RolesGuard.name);
-    constructor(private reflector: Reflector) {}
+    constructor(private readonly reflector: Reflector) {}
 
     canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
         const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [

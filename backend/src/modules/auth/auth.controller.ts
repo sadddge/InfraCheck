@@ -1,18 +1,10 @@
-import {
-    Body,
-    Controller,
-    HttpCode,
-    Post,
-    UseGuards,
-    Inject,
-    Query,
-} from '@nestjs/common';
-import { AUTH_SERVICE, IAuthService } from './interfaces/auth-service.interface';
-import { LoginDto } from './dto/login.dto';
+import { Body, Controller, HttpCode, Post, UseGuards, Inject, Query } from '@nestjs/common';
+import { AUTH_SERVICE, type IAuthService } from './interfaces/auth-service.interface';
+import type { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { RegisterDto } from './dto/register.dto';
+import type { RefreshTokenDto } from './dto/refresh-token.dto';
+import type { RegisterDto } from './dto/register.dto';
 import { RegisterResponseDto } from './dto/register-reponse.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 import {
@@ -96,8 +88,7 @@ export class AuthController {
     @HttpCode(200)
     @ApiOperation({
         summary: 'Verify registration code',
-        description:
-            'This endpoint allows users to verify their registration code sent via SMS.',
+        description: 'This endpoint allows users to verify their registration code sent via SMS.',
     })
     @ApiOkResponse({
         description: 'Registration code verified successfully.',
