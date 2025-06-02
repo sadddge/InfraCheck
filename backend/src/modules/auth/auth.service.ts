@@ -1,7 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import type { IAuthService } from './interfaces/auth-service.interface';
-import type { UsersService } from '../users/users.service';
-import type { JwtService } from '@nestjs/jwt';
+import { UsersService } from '../users/users.service';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import type { Repository } from 'typeorm';
@@ -173,8 +173,12 @@ export class AuthService implements IAuthService {
         user.status = UserStatus.PENDING_APPROVAL;
         await this.usersService.update(user.id, user);
     }
-    sendResetPasswordCode(phoneNumber: string): Promise<void> {
-        return this.recoverPasswordVerificationService.sendVerificationCode(phoneNumber);
+    async sendResetPasswordCode(phoneNumber: string): Promise<void> {
+        const user = await this.usersService.findByPhoneNumber(phoneNumber);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        await this.recoverPasswordVerificationService.sendVerificationCode(phoneNumber);
     }
     verifyResetPasswordCode(phoneNumber: string, code: string): Promise<void> {
         return this.recoverPasswordVerificationService.verifyCode(phoneNumber, code);
