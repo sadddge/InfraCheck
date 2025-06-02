@@ -154,7 +154,7 @@ export class AuthController {
     async verifyRecoverPasswordCode(
         @Body() verifyRecoverPasswordDto: VerifyRecoverPasswordDto,
     ): Promise<unknown> {
-        return this.authService.verifyResetPasswordCode(
+        return this.authService.generateResetPasswordToken(
             verifyRecoverPasswordDto.phoneNumber,
             verifyRecoverPasswordDto.code,
         );

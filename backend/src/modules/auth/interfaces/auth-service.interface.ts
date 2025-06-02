@@ -13,6 +13,6 @@ export interface IAuthService {
     getUserIfRefreshTokenMatches(refreshToken: string, userId: number): Promise<User | null>;
     verifyRegisterCode(phoneNumber: string, code: string): Promise<void>;
     sendResetPasswordCode(phoneNumber: string): Promise<void>;
-    verifyResetPasswordCode(phoneNumber: string, code: string): Promise<unknown>;
+    generateResetPasswordToken(phoneNumber: string, code: string): Promise<unknown>;
     resetPassword(id: number, newPassword: string): Promise<string>;
 }

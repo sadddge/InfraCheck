@@ -178,7 +178,7 @@ export class AuthService implements IAuthService {
         await this.recoverPasswordVerificationService.sendVerificationCode(phoneNumber);
     }
 
-    async verifyResetPasswordCode(phoneNumber: string, code: string): Promise<unknown> {
+    async generateResetPasswordToken(phoneNumber: string, code: string): Promise<unknown> {
         await this.recoverPasswordVerificationService.verifyCode(phoneNumber, code);
         const user = await this.usersService.findByPhoneNumber(phoneNumber);
         if (!user) {
