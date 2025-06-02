@@ -1,8 +1,4 @@
-import { Controller, Get, Body, Patch, Param, Delete } from '@nestjs/common';
-import { UsersService } from './users.service';
-import type { UpdateUserDto } from './dto/update-user.dto';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { Role } from 'src/common/enums/roles.enums';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, UseGuards } from '@nestjs/common';
 import {
     ApiBearerAuth,
     ApiForbiddenResponse,
@@ -12,6 +8,11 @@ import {
     ApiParam,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/roles.enums';
+import { UserAccessGuard } from 'src/common/guards/user-access.guard';
+import type { UpdateUserDto } from './dto/update-user.dto';
+import { UsersService } from './users.service';
 @ApiBearerAuth()
 @Controller({
     path: 'users',
@@ -21,6 +22,7 @@ export class UsersController {
     constructor(private readonly usersService: UsersService) {}
 
     @Get()
+    @HttpCode(200)
     @Roles(Role.ADMIN)
     @ApiOperation({
         summary: 'Retrieve all users',
@@ -41,6 +43,8 @@ export class UsersController {
     }
 
     @Get(':id')
+    @HttpCode(200)
+    @UseGuards(UserAccessGuard)
     @ApiOperation({
         summary: 'Retrieve a user by ID',
         description:
@@ -69,6 +73,8 @@ export class UsersController {
     }
 
     @Patch(':id')
+    @HttpCode(200)
+    @UseGuards(UserAccessGuard)
     @ApiOperation({
         summary: 'Update a user by ID',
         description:
@@ -97,6 +103,8 @@ export class UsersController {
     }
 
     @Delete(':id')
+    @HttpCode(202)
+    @UseGuards(UserAccessGuard)
     @ApiOperation({
         summary: 'Delete a user by ID',
         description:
