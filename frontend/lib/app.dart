@@ -4,8 +4,6 @@ import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
 import 'features/auth/presentation/verify_register_code.dart';
 import 'features/auth/presentation/home_screen.dart';
-import 'features/reports/presentation/create_report_screen.dart';
-import 'features/reports/presentation/report_detail_screen.dart';
 import 'core/providers/auth_provider.dart';
 
 final GoRouter router = GoRouter(
@@ -14,8 +12,8 @@ final GoRouter router = GoRouter(
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final isAuthenticated = authProvider.isAuthenticated;
     final isAuthRoute = state.uri.path == '/login' || 
-                       state.uri.path == '/register' || 
-                       state.uri.path.startsWith('/verify-register-code');
+                        state.uri.path == '/register' || 
+                        state.uri.path.startsWith('/verify-register-code');
 
     // TEMPORAL: Si estamos simulando autenticación, permitir acceso directo
     if (isAuthenticated) {
@@ -43,15 +41,8 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const HomeScreen(),
     ),
     GoRoute(
-      path: '/create-report',
-      builder: (context, state) => const CreateReportScreen(),
-    ),
-    GoRoute(
-      path: '/report/:id',
-      builder: (context, state) {
-        final reportId = state.pathParameters['id']!;
-        return ReportDetailScreen(reportId: reportId);
-      },
+      path: '/verify-register-code',
+      builder: (context, state) => const VerifyRegisterCodeScreen(),
     ),
   ],
 );
