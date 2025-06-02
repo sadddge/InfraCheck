@@ -7,24 +7,27 @@ part of 'auth_models.dart';
 // **************************************************************************
 
 LoginRequest _$LoginRequestFromJson(Map<String, dynamic> json) => LoginRequest(
-  phoneNumber: json['email'] as String,
+  phoneNumber: json['phoneNumber'] as String,
   password: json['password'] as String,
 );
 
 Map<String, dynamic> _$LoginRequestToJson(LoginRequest instance) =>
-    <String, dynamic>{'email': instance.phoneNumber, 'password': instance.password};
+    <String, dynamic>{
+      'phoneNumber': instance.phoneNumber,
+      'password': instance.password,
+    };
 
 RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
     RegisterRequest(
-      phoneNumber: json['email'] as String,
+      phoneNumber: json['phoneNumber'] as String,
       password: json['password'] as String,
       name: json['name'] as String,
-      lastName: json['lastName'] as String
+      lastName: json['lastName'] as String,
     );
 
 Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
     <String, dynamic>{
-      'email': instance.phoneNumber,
+      'phoneNumber': instance.phoneNumber,
       'password': instance.password,
       'name': instance.name,
       'lastName': instance.lastName,

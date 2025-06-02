@@ -5,6 +5,7 @@ part 'auth_models.g.dart';
 
 @JsonSerializable()
 class LoginRequest extends Equatable {
+  @JsonKey(name: 'phoneNumber')
   final String phoneNumber;
   final String password;
 
@@ -22,6 +23,7 @@ class LoginRequest extends Equatable {
 
 @JsonSerializable()
 class RegisterRequest extends Equatable {
+  @JsonKey(name: 'phoneNumber')
   final String phoneNumber;
   final String password;
   final String name;

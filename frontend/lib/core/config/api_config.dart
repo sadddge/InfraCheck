@@ -1,12 +1,11 @@
 class ApiConfig {
   // Configuración base para desarrollo local
   static const String baseUrl = 'http://localhost:3000/api';
-  
-  // Endpoints de autenticación
-  static const String loginEndpoint = '/auth/login';
-  static const String registerEndpoint = '/auth/register';
-  static const String logoutEndpoint = '/auth/logout';
-  static const String refreshTokenEndpoint = '/auth/refresh';
+    // Endpoints de autenticación
+  static const String loginEndpoint = '/v1/auth/login';
+  static const String registerEndpoint = '/v1/auth/register';
+  static const String logoutEndpoint = '/v1/auth/logout';
+  static const String refreshTokenEndpoint = '/v1/auth/refresh';
   
   // Endpoints de usuarios
   static const String userProfileEndpoint = '/users/profile';
