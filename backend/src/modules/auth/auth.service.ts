@@ -7,13 +7,13 @@ import { UserStatus } from 'src/common/enums/user-status.enums';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import type { User } from 'src/database/entities/user.entity';
 import type { Repository } from 'typeorm';
+import type { IAuthService } from '../../common/interfaces/auth-service.interface';
+import type { IVerificationService } from '../../common/interfaces/verification-service.interface';
 import { UsersService } from '../users/users.service';
-import type { IVerificationService } from '../verification/interfaces/verification-service.interface';
 import type { LoginResponseDto } from './dto/login-response.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterResponseDto } from './dto/register-response.dto';
 import type { RegisterDto } from './dto/register.dto';
-import type { IAuthService } from './interfaces/auth-service.interface';
 
 interface RefreshTokenPayload {
     sub: number;

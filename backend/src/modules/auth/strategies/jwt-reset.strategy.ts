@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { UsersService } from 'src/modules/users/users.service';
-import { JwtResetPayload } from '../interfaces/jwt-payload.interface';
+import { JwtResetPayload } from '../../../common/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {

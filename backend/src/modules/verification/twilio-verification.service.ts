@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import type { IVerificationService } from './interfaces/verification-service.interface';
-import { Twilio } from 'twilio';
 import type { ConfigService } from '@nestjs/config';
+import { Twilio } from 'twilio';
+import type { IVerificationService } from '../../common/interfaces/verification-service.interface';
 
 @Injectable()
 export class TwilioVerificationService implements IVerificationService {
