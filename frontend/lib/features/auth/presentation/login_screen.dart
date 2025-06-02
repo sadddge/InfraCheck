@@ -116,16 +116,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            CustomTextField( //componente reutilizable de campo de texto
-                              label: 'Número de telefono', 
+                            CustomTextField(
+                              label: 'Número de telefono',
                               controller: _phoneNumberController,
                               hintText: '+56912345678',
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Por favor ingresa tu numero de telefono';
+                                  return 'Por favor ingresa tu número de telefono';
                                 }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                  return 'Por favor ingresa un número de telefono válido';
+                                // Regex actualizada para el formato +569xxxxxxxx
+                                if (!RegExp(r'^\+569\d{8}$').hasMatch(value)) {
+                                  return 'El formato debe ser +569xxxxxxxx (ej: +56912345678)';
                                 }
                                 return null;
                               },
