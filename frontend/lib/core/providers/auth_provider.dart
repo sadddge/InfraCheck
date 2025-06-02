@@ -25,10 +25,9 @@ class AuthProvider extends ChangeNotifier {
     try {
       final isAuth = await AuthService.isAuthenticated();
       if (isAuth) {
-        // En lugar de obtener el perfil, simular usuario autenticado
-        // o implementar modo dev
-        loginDev();
-        return;
+        // Intentar obtener el perfil del usuario
+        final user = await AuthService.getUserProfile();
+        _setAuthenticated(user);
       } else {
         _setUnauthenticated();
       }
@@ -36,8 +35,12 @@ class AuthProvider extends ChangeNotifier {
       // Si hay error, intentar refresh token
       final refreshed = await AuthService.refreshToken();
       if (refreshed) {
-        // En lugar de obtener el perfil, simular usuario autenticado
-        loginDev();
+        try {
+          final user = await AuthService.getUserProfile();
+          _setAuthenticated(user);
+        } catch (e) {
+          _setUnauthenticated();
+        }
       } else {
         _setUnauthenticated();
       }
@@ -45,6 +48,7 @@ class AuthProvider extends ChangeNotifier {
     
     _setLoading(false);
   }
+
   // Login
   Future<bool> login(String phoneNumber, String password) async {
     _setLoading(true);
@@ -52,10 +56,11 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final loginRequest = LoginRequest(phoneNumber: phoneNumber, password: password);
-      final authResponse = await AuthService.login(loginRequest);
+      await AuthService.login(loginRequest);
       
-      // Usar los datos del usuario que vienen en la respuesta del login
-      _setAuthenticated(authResponse.user);
+      // Obtener perfil del usuario después del login
+      final user = await AuthService.getUserProfile();
+      _setAuthenticated(user);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -64,6 +69,7 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
+
   // Register
   Future<bool> register(String phoneNumber, String password, String name, String lastName) async {
     _setLoading(true);
@@ -78,18 +84,9 @@ class AuthProvider extends ChangeNotifier {
       );
       await AuthService.register(registerRequest);
       
-      // Para el registro, simular usuario registrado
-      // En una implementación real, el registro podría retornar también los datos del usuario
-      final newUser = User(
-        id: DateTime.now().millisecondsSinceEpoch, // ID temporal
-        phoneNumber: phoneNumber,
-        name: name,
-        lastName: lastName,
-        role: 'NEIGHBOR',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      _setAuthenticated(newUser);
+      // Obtener perfil del usuario después del registro
+      final user = await AuthService.getUserProfile();
+      _setAuthenticated(user);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -110,7 +107,21 @@ class AuthProvider extends ChangeNotifier {
     }
     
     _setUnauthenticated();
-    _setLoading(false);  }
+    _setLoading(false);
+  }
+
+  // Actualizar perfil del usuario
+  Future<void> updateUserProfile() async {
+    if (_status != AuthStatus.authenticated) return;
+    
+    try {
+      final user = await AuthService.getUserProfile();
+      _user = user;
+      notifyListeners();
+    } catch (e) {
+      // Manejar error silenciosamente o mostrar notificación
+    }
+  }
 
   // Métodos privados
   void _setAuthenticated(User user) {
@@ -152,15 +163,18 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
     notifyListeners();
   }
+
   // MODO DESARROLLO - Simular login con credenciales de prueba
   Future<void> loginDev() async {
     _setLoading(true);
+    
     // Simular usuario de desarrollo
     final devUser = User(
-      id: 1,
+      id: 'dev-user-001',
       phoneNumber: '+56912345678',
-      name: 'Usuario Desarrollo',
-      role: 'NEIGHBOR',
+      name: 'Usuario',
+      lastName: 'Desarrollo',
+      email: 'dev@infracheck.com',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
