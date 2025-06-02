@@ -5,7 +5,7 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import type { RefreshTokenDto } from './dto/refresh-token.dto';
 import type { RegisterDto } from './dto/register.dto';
-import { RegisterResponseDto } from './dto/register-reponse.dto';
+import { RegisterResponseDto } from './dto/register-response.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 import {
     ApiBadRequestResponse,

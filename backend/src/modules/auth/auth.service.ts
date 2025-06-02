@@ -9,7 +9,7 @@ import type { LoginDto } from './dto/login.dto';
 import type { LoginResponseDto } from './dto/login-response.dto';
 import * as bcrypt from 'bcrypt';
 import type { User } from 'src/database/entities/user.entity';
-import type { RegisterResponseDto } from './dto/register-reponse.dto';
+import type { RegisterResponseDto } from './dto/register-response.dto';
 import type { RegisterDto } from './dto/register.dto';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
 import type { IVerificationService } from '../verification/interfaces/verification-service.interface';
