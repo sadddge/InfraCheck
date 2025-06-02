@@ -1,4 +1,13 @@
-import { Body, Controller, HttpCode, Inject, Post, Query, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    HttpCode,
+    Inject,
+    Post,
+    Query,
+    Request,
+    UseGuards,
+} from '@nestjs/common';
 import {
     ApiBadRequestResponse,
     ApiCreatedResponse,
@@ -9,13 +18,15 @@ import {
 } from '@nestjs/swagger';
 import { Public } from 'src/common/decorators/public.decorator';
 import { LoginResponseDto } from './dto/login-response.dto';
-import type { LoginDto } from './dto/login.dto';
-import type { RecoverPasswordDto } from './dto/recover-password.dto';
-import type { RefreshTokenDto } from './dto/refresh-token.dto';
+import { LoginDto } from './dto/login.dto';
+import { RecoverPasswordDto } from './dto/recover-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
-import type { RegisterDto } from './dto/register.dto';
-import type { VerifyRecoverPasswordDto } from './dto/verify-recover-password.dto';
+import { RegisterDto } from './dto/register.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyRecoverPasswordDto } from './dto/verify-recover-password.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { JwtResetGuard } from './guards/jwt-reset.guard';
 import { AUTH_SERVICE, type IAuthService } from './interfaces/auth-service.interface';
 
 @Controller({
@@ -147,5 +158,27 @@ export class AuthController {
             verifyRecoverPasswordDto.phoneNumber,
             verifyRecoverPasswordDto.code,
         );
+    }
+
+    @Public()
+    @UseGuards(JwtResetGuard)
+    @Post('reset-password')
+    @HttpCode(200)
+    @ApiOperation({
+        summary: 'Reset password',
+        description: 'This endpoint allows users to reset their password using a valid token.',
+    })
+    @ApiOkResponse({
+        description: 'Password reset successfully.',
+        type: String,
+    })
+    @ApiBadRequestResponse({
+        description: 'Invalid token or password provided.',
+    })
+    async resetPassword(
+        @Body() resetPasswordDto: ResetPasswordDto,
+        @Request() req,
+    ): Promise<string> {
+        return this.authService.resetPassword(req.id, resetPasswordDto.newPassword);
     }
 }
