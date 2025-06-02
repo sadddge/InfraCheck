@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/theme/colors.dart';
-import '../../../../shared/theme/text_styles.dart';
+import '../../../shared/theme/colors.dart';
+import '../../../shared/theme/text_styles.dart';
 import '../../../core/providers/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,19 +14,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-  @override
-  void initState() {
-    super.initState();
-    // TODO: Inicializar datos cuando se implementen los reportes
-  }
-
-  final List<Widget> _pages = [
-    const _ReportsPage(),
-    const _MapPage(),
-    const _ProfilePage(),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,7 +54,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPressed: () {
                           // TODO: Implementar notificaciones
                         },
-                      ),                      IconButton(
+                      ),
+                      IconButton(
                         icon: const Icon(
                           Icons.logout,
                           color: AppColors.textWhite,
@@ -80,64 +68,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                // Page content
-                Expanded(child: _pages[_selectedIndex]),
+                // Page content - Solo perfil
+                const Expanded(child: _ProfilePage()),
               ],
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.formBackground,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedItemColor: AppColors.teal800,
-          unselectedItemColor: AppColors.iconGrey,
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.report_problem_outlined),
-              activeIcon: Icon(Icons.report_problem),
-              label: 'Reportes',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.map_outlined),
-              activeIcon: Icon(Icons.map),
-              label: 'Mapa',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Perfil',
-            ),
-          ],
-        ),
-      ),      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.go('/create-report');
-        },
-        backgroundColor: AppColors.primaryYellow,
-        child: Icon(
-          Icons.add,
-          color: AppColors.teal900,
-          size: 28,
-        ),
       ),
     );
   }
@@ -165,7 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Cancelar',
                 style: AppTextStyles.linkText,
               ),
-            ),            TextButton(
+            ),
+            TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 Provider.of<AuthProvider>(context, listen: false).logout();
@@ -177,81 +114,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-        );      },
-    );
-  }
-}
-
-class _ReportsPage extends StatelessWidget {
-  const _ReportsPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.formBackground,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.report_outlined,
-              size: 80,
-              color: AppColors.teal800,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Reportes',
-              style: AppTextStyles.heading.copyWith(fontSize: 20),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Función en desarrollo',
-              style: AppTextStyles.subtitle,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MapPage extends StatelessWidget {
-  const _MapPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.formBackground,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.map_outlined,
-              size: 80,
-              color: AppColors.teal800,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Mapa de Reportes',
-              style: AppTextStyles.heading.copyWith(fontSize: 20),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Función en desarrollo',
-              style: AppTextStyles.subtitle,
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -295,20 +159,26 @@ class _ProfilePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      user?.name ?? 'Usuario',
+                      '${user?.name ?? 'Usuario'} ${user?.lastName ?? ''}',
                       style: AppTextStyles.inputLabel.copyWith(fontSize: 18),
-                    ),                    const SizedBox(height: 4),
+                    ),
+                    const SizedBox(height: 4),
                     Text(
                       user?.phoneNumber ?? 'Sin teléfono',
                       style: AppTextStyles.inputText,
                     ),
-                    if (user?.lastName != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        '${user!.name} ${user.lastName!}',
-                        style: AppTextStyles.inputText,
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
+                      child: Text(
+                        user?.role.toUpperCase() ?? 'USER',
+                        style: AppTextStyles.caption.copyWith(color: AppColors.accent),
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -329,14 +199,6 @@ class _ProfilePage extends StatelessWidget {
             child: Column(
               children: [
                 _ProfileMenuItem(
-                  icon: Icons.report_outlined,
-                  title: 'Mis Reportes',
-                  onTap: () {
-                    // TODO: Navegar a mis reportes
-                  },
-                ),
-                const Divider(height: 1, color: AppColors.inputBorder),
-                _ProfileMenuItem(
                   icon: Icons.settings_outlined,
                   title: 'Configuración',
                   onTap: () {
@@ -349,6 +211,14 @@ class _ProfilePage extends StatelessWidget {
                   title: 'Ayuda',
                   onTap: () {
                     // TODO: Navegar a ayuda
+                  },
+                ),
+                const Divider(height: 1, color: AppColors.inputBorder),
+                _ProfileMenuItem(
+                  icon: Icons.info_outline,
+                  title: 'Acerca de',
+                  onTap: () {
+                    // TODO: Navegar a acerca de
                   },
                 ),
               ],

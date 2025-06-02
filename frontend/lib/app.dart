@@ -39,10 +39,12 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/home',
       builder: (context, state) => const HomeScreen(),
-    ),
-    GoRoute(
-      path: '/verify-register-code',
-      builder: (context, state) => const VerifyRegisterCodeScreen(),
+    ),    GoRoute(
+      path: '/verify-register-code/:phoneNumber',
+      builder: (context, state) {
+        final phoneNumber = state.pathParameters['phoneNumber']!;
+        return VerifyRegisterCodeScreen(phoneNumber: phoneNumber);
+      },
     ),
   ],
 );
