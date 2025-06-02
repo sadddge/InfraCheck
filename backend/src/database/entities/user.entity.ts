@@ -12,9 +12,6 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ default: true })
-    active: boolean;
-
     @Column({ unique: true, name: 'phone_number', nullable: false })
     phoneNumber: string;
 
