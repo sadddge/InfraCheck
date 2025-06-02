@@ -15,6 +15,7 @@ import {
     ApiOperation,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { RecoverPasswordDto } from './dto/recover-password.dto';
 
 @Controller({
     path: 'auth',
@@ -104,5 +105,23 @@ export class AuthController {
         @Query('code') code: string,
     ): Promise<void> {
         return this.authService.verifyRegisterCode(phoneNumber, code);
+    }
+
+    @Public()
+    @Post('recover-password')
+    @HttpCode(200)
+    @ApiOperation({
+        summary: 'Recover password',
+        description: 'This endpoint allows users to recover their password by sending a reset code.',
+    })
+    @ApiOkResponse({
+        description: 'Password recovery code sent successfully.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Invalid phone number provided.',
+    })
+    async sendResetPasswordCode(@Body() recoverPasswordDto: RecoverPasswordDto): Promise<string> {
+        await this.authService.sendResetPasswordCode(recoverPasswordDto.phoneNumber);
+        return "Password recovery code sent successfully.";
     }
 }
