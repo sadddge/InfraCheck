@@ -84,7 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.5),
+              color: AppColors.primary.withOpacity(0.5),
             ),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),

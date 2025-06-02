@@ -86,7 +86,7 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.primary.withOpacity(0.5),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
