@@ -1,12 +1,4 @@
-import { Body, Controller, HttpCode, Post, UseGuards, Inject, Query } from '@nestjs/common';
-import { AUTH_SERVICE, type IAuthService } from './interfaces/auth-service.interface';
-import type { LoginDto } from './dto/login.dto';
-import { LoginResponseDto } from './dto/login-response.dto';
-import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-import type { RefreshTokenDto } from './dto/refresh-token.dto';
-import type { RegisterDto } from './dto/register.dto';
-import { RegisterResponseDto } from './dto/register-response.dto';
-import { Public } from 'src/common/decorators/public.decorator';
+import { Body, Controller, HttpCode, Inject, Post, Query, UseGuards } from '@nestjs/common';
 import {
     ApiBadRequestResponse,
     ApiCreatedResponse,
@@ -15,7 +7,16 @@ import {
     ApiOperation,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { RecoverPasswordDto } from './dto/recover-password.dto';
+import { Public } from 'src/common/decorators/public.decorator';
+import { LoginResponseDto } from './dto/login-response.dto';
+import type { LoginDto } from './dto/login.dto';
+import type { RecoverPasswordDto } from './dto/recover-password.dto';
+import type { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RegisterResponseDto } from './dto/register-response.dto';
+import type { RegisterDto } from './dto/register.dto';
+import type { VerifyRecoverPasswordDto } from './dto/verify-recover-password.dto';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { AUTH_SERVICE, type IAuthService } from './interfaces/auth-service.interface';
 
 @Controller({
     path: 'auth',
@@ -112,7 +113,8 @@ export class AuthController {
     @HttpCode(200)
     @ApiOperation({
         summary: 'Recover password',
-        description: 'This endpoint allows users to recover their password by sending a reset code.',
+        description:
+            'This endpoint allows users to recover their password by sending a reset code.',
     })
     @ApiOkResponse({
         description: 'Password recovery code sent successfully.',
@@ -122,6 +124,28 @@ export class AuthController {
     })
     async sendResetPasswordCode(@Body() recoverPasswordDto: RecoverPasswordDto): Promise<string> {
         await this.authService.sendResetPasswordCode(recoverPasswordDto.phoneNumber);
-        return "Password recovery code sent successfully.";
+        return 'Password recovery code sent successfully.';
+    }
+
+    @Public()
+    @Post('verify-recover-password')
+    @HttpCode(200)
+    @ApiOperation({
+        summary: 'Verify recover password code',
+        description: 'This endpoint allows users to verify their password recovery code.',
+    })
+    @ApiOkResponse({
+        description: 'Password recovery code verified successfully.',
+    })
+    @ApiBadRequestResponse({
+        description: 'Invalid or expired recovery code.',
+    })
+    async verifyRecoverPasswordCode(
+        @Body() verifyRecoverPasswordDto: VerifyRecoverPasswordDto,
+    ): Promise<unknown> {
+        return this.authService.verifyResetPasswordCode(
+            verifyRecoverPasswordDto.phoneNumber,
+            verifyRecoverPasswordDto.code,
+        );
     }
 }

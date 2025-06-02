@@ -1,4 +1,4 @@
-import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
+import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import type { Response } from 'express';
 import type { ErrorDto } from '../dto/error.dto';

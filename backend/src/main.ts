@@ -1,11 +1,11 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import helmet from 'helmet';
-import * as compression from 'compression';
 import { BadRequestException, ValidationPipe, VersioningType } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as compression from 'compression';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
