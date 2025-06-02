@@ -179,8 +179,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 if (value == null || value.isEmpty) {
                                   return 'Por favor ingresa tu número de telefono';
                                 }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                  return 'Por favor ingresa un número de telefono válido';
+                                // Regex actualizada para el formato +569xxxxxxxx
+                                if (!RegExp(r'^\+569\d{8}$').hasMatch(value)) {
+                                  return 'El formato debe ser +569xxxxxxxx (ej: +56912345678)';
                                 }
                                 return null;
                               },

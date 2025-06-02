@@ -116,8 +116,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            CustomTextField(
-                              label: 'Número de telefono',
+                            CustomTextField( //componente reutilizable de campo de texto
+                              label: 'Número de telefono', 
                               controller: _phoneNumberController,
                               hintText: '+56912345678',
                               validator: (value) {
