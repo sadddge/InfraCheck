@@ -1,5 +1,5 @@
 import { type CanActivate, type ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import type { Observable } from 'rxjs';
 import { Role } from 'src/common/enums/roles.enums';
 

@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { UsersModule } from '../users/users.module';
-import { AUTH_SERVICE } from './interfaces/auth-service.interface';
+import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { UsersModule } from '../users/users.module';
 import { VerificationModule } from '../verification/verification.module';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { AUTH_SERVICE } from './interfaces/auth-service.interface';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { JwtResetStrategy } from './strategies/jwt-reset.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
     imports: [
@@ -38,6 +39,7 @@ import { VerificationModule } from '../verification/verification.module';
         },
         JwtStrategy,
         JwtRefreshStrategy,
+        JwtResetStrategy,
     ],
 })
 export class AuthModule {}

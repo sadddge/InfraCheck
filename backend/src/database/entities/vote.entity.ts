@@ -8,10 +8,16 @@ export class Vote {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => User, user => user.votes)
+    @ManyToOne(
+        () => User,
+        user => user.votes,
+    )
     user: User;
 
-    @ManyToOne(() => Report, report => report.votes)
+    @ManyToOne(
+        () => Report,
+        report => report.votes,
+    )
     report: Report;
 
     @Column({

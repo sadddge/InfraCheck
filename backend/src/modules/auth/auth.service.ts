@@ -1,19 +1,19 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import type { IAuthService } from './interfaces/auth-service.interface';
-import type { UsersService } from '../users/users.service';
-import type { JwtService } from '@nestjs/jwt';
+import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RefreshToken } from 'src/database/entities/refresh-token.entity';
-import type { Repository } from 'typeorm';
-import type { LoginDto } from './dto/login.dto';
-import type { LoginResponseDto } from './dto/login-response.dto';
 import * as bcrypt from 'bcrypt';
-import type { User } from 'src/database/entities/user.entity';
-import type { RegisterResponseDto } from './dto/register-reponse.dto';
-import type { RegisterDto } from './dto/register.dto';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
-import type { IVerificationService } from '../verification/interfaces/verification-service.interface';
 import { UserStatus } from 'src/common/enums/user-status.enums';
+import { RefreshToken } from 'src/database/entities/refresh-token.entity';
+import type { User } from 'src/database/entities/user.entity';
+import type { Repository } from 'typeorm';
+import { UsersService } from '../users/users.service';
+import type { IVerificationService } from '../verification/interfaces/verification-service.interface';
+import type { LoginResponseDto } from './dto/login-response.dto';
+import type { LoginDto } from './dto/login.dto';
+import type { RegisterResponseDto } from './dto/register-response.dto';
+import type { RegisterDto } from './dto/register.dto';
+import type { IAuthService } from './interfaces/auth-service.interface';
 
 interface RefreshTokenPayload {
     sub: number;
@@ -149,19 +149,16 @@ export class AuthService implements IAuthService {
         };
     }
 
-    async getUserIfRefreshTokenMatches(
-        resfreshToken: string,
-        userId: number,
-    ): Promise<User | null> {
-        const refreshToken = await this.refreshTokenRepository.findOne({
-            where: { token: resfreshToken, user: { id: userId } },
+    async getUserIfRefreshTokenMatches(refreshToken: string, userId: number): Promise<User | null> {
+        const token = await this.refreshTokenRepository.findOne({
+            where: { token: refreshToken, user: { id: userId } },
             relations: ['user'],
         });
 
-        if (!refreshToken || refreshToken.expiresAt < new Date()) {
+        if (!token || token.expiresAt < new Date()) {
             return null;
         }
-        return refreshToken.user;
+        return token.user;
     }
 
     async verifyRegisterCode(phoneNumber: string, code: string): Promise<void> {
@@ -173,20 +170,44 @@ export class AuthService implements IAuthService {
         user.status = UserStatus.PENDING_APPROVAL;
         await this.usersService.update(user.id, user);
     }
-    sendResetPasswordCode(phoneNumber: string): Promise<void> {
-        return this.recoverPasswordVerificationService.sendVerificationCode(phoneNumber);
-    }
-    verifyResetPasswordCode(phoneNumber: string, code: string): Promise<void> {
-        return this.recoverPasswordVerificationService.verifyCode(phoneNumber, code);
-    }
-
-    async resetPassword(phoneNumber: string, newPassword: string): Promise<void> {
+    async sendResetPasswordCode(phoneNumber: string): Promise<void> {
         const user = await this.usersService.findByPhoneNumber(phoneNumber);
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
-        user.password = await bcrypt.hash(newPassword, 10);
+        await this.recoverPasswordVerificationService.sendVerificationCode(phoneNumber);
+    }
+
+    async generateResetPasswordToken(phoneNumber: string, code: string): Promise<unknown> {
+        await this.recoverPasswordVerificationService.verifyCode(phoneNumber, code);
+        const user = await this.usersService.findByPhoneNumber(phoneNumber);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        const payload = {
+            sub: user.id,
+            scope: 'reset_password' as const,
+        };
+        const token = await this.jwtService.signAsync(payload, {
+            expiresIn: '15m',
+            secret: process.env.JWT_RESET_SECRET,
+        });
+        return {
+            token,
+            message: 'Password reset token generated successfully',
+        };
+    }
+
+    async resetPassword(id: number, newPassword: string): Promise<string> {
+        const user = await this.usersService.findOne(id);
+        if (!user) {
+            throw new BadRequestException('User not found or inactive');
+        }
+        const newHashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = newHashedPassword;
         user.passwordUpdatedAt = new Date();
+
         await this.usersService.update(user.id, user);
+        return 'Password reset successful';
     }
 }

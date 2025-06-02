@@ -11,7 +11,7 @@ export class RegisterResponseDto {
         description: 'User phone number in E.164 format',
         example: '+56912345678',
         type: String,
-        pattern: '^\\+569\\d{8}$', // Matches Chilean phone numbers starting with +569
+        pattern: '^\\+569\\d{8}$',
     })
     phoneNumber: string;
     @ApiProperty({
