@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -198,13 +198,16 @@ export class AuthService implements IAuthService {
         };
     }
 
-    async resetPassword(phoneNumber: string, newPassword: string): Promise<void> {
-        const user = await this.usersService.findByPhoneNumber(phoneNumber);
+    async resetPassword(id: number, newPassword: string): Promise<string> {
+        const user = await this.usersService.findOne(id);
         if (!user) {
-            throw new UnauthorizedException('User not found');
+            throw new BadRequestException('User not found or inactive');
         }
-        user.password = await bcrypt.hash(newPassword, 10);
+        const newHashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = newHashedPassword;
         user.passwordUpdatedAt = new Date();
+
         await this.usersService.update(user.id, user);
+        return 'Password reset successful';
     }
 }
