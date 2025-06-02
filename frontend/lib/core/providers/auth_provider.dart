@@ -16,30 +16,9 @@ class AuthProvider extends ChangeNotifier {
   User? get user => _user;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
-  bool get isAuthenticated => _status == AuthStatus.authenticated;
-  AuthProvider() {
-    // TEMPORAL: Para pruebas sin base de datos
-    _simulateAuthenticatedUser();
-    // _checkAuthStatus(); // Comentado temporalmente
-  }
-  // MÉTODO TEMPORAL: Simular usuario autenticado
-  void _simulateAuthenticatedUser() {
-    _user = User(
-      id: 'test-user-123',
-      email: 'test@example.com',
-      name: 'Usuario de Prueba',
-      phone: '+1234567890',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    _status = AuthStatus.authenticated;
-    _errorMessage = null;
-    _isLoading = false;
-    notifyListeners();
-  }
-  // Verificar estado de autenticación al inicializar
-  // Comentado temporalmente para usar datos simulados
-  /*
+  bool get isAuthenticated => _status == AuthStatus.authenticated;  AuthProvider() {
+    _checkAuthStatus();
+  }  // Verificar estado de autenticación al inicializar
   Future<void> _checkAuthStatus() async {
     _setLoading(true);
     
@@ -69,7 +48,6 @@ class AuthProvider extends ChangeNotifier {
     
     _setLoading(false);
   }
-  */
 
   // Login
   Future<bool> login(String phoneNumber, String password) async {
