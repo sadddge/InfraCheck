@@ -6,13 +6,6 @@ class ApiConfig {
   static const String verifyRegisterCodeEndpoint = '/v1/auth/verify-register-code';
   static const String logoutEndpoint = '/v1/auth/logout';
   static const String refreshTokenEndpoint = '/v1/auth/refresh';
-    // Endpoints de usuarios
-  static const String updateProfileEndpoint = '/users/profile';
-  
-  // Endpoints de reportes
-  static const String reportsEndpoint = '/reports';
-  static const String createReportEndpoint = '/reports';
-  static const String myReportsEndpoint = '/reports/my-reports';
   
   // Headers comunes
   static const Map<String, String> defaultHeaders = {

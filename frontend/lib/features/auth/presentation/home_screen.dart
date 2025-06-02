@@ -5,8 +5,6 @@ import 'package:provider/provider.dart';
 import '../../../../shared/theme/colors.dart';
 import '../../../../shared/theme/text_styles.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/report_provider.dart';
-import '../../../core/models/report_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -17,14 +15,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-
   @override
   void initState() {
     super.initState();
-    // Cargar reportes al inicializar la pantalla
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ReportProvider>(context, listen: false).loadReports();
-    });
+    // TODO: Inicializar datos cuando se implementen los reportes
   }
 
   final List<Widget> _pages = [
@@ -193,244 +187,35 @@ class _ReportsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Reportes Recientes',
-            style: AppTextStyles.heading.copyWith(fontSize: 20),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Consumer<ReportProvider>(
-              builder: (context, reportProvider, child) {
-                if (reportProvider.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryYellow),
-                    ),
-                  );
-                }
-
-                if (reportProvider.errorMessage != null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: AppColors.iconGrey,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error al cargar reportes',
-                          style: AppTextStyles.inputLabel,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          reportProvider.errorMessage!,
-                          style: AppTextStyles.inputText,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => reportProvider.loadReports(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryYellow,
-                          ),
-                          child: Text(
-                            'Reintentar',
-                            style: AppTextStyles.buttonText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (reportProvider.reports.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.report_outlined,
-                          size: 64,
-                          color: AppColors.iconGrey,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No hay reportes disponibles',
-                          style: AppTextStyles.inputLabel,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Crea tu primer reporte tocando el botón +',
-                          style: AppTextStyles.inputText,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () => reportProvider.loadReports(),
-                  child: ListView.builder(
-                    itemCount: reportProvider.reports.length,
-                    itemBuilder: (context, index) {
-                      final report = reportProvider.reports[index];
-                      return GestureDetector(
-                        onTap: () {
-                          context.go('/report/${report.id}');
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.formBackground,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: _getStatusColor(report.status).withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  _getTypeIcon(report.type),
-                                  color: _getStatusColor(report.status),
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      report.title,
-                                      style: AppTextStyles.inputLabel,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      report.description,
-                                      style: AppTextStyles.inputText,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: _getStatusColor(report.status),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            _getStatusText(report.status),
-                                            style: AppTextStyles.smallText.copyWith(
-                                              color: Colors.white,
-                                              fontSize: 10,
-                                            ),
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        Icon(
-                                          Icons.location_on_outlined,
-                                          size: 12,
-                                          color: AppColors.iconGrey,
-                                        ),
-                                        const SizedBox(width: 2),
-                                        Text(
-                                          '${report.latitude.toStringAsFixed(4)}, ${report.longitude.toStringAsFixed(4)}',
-                                          style: AppTextStyles.smallText.copyWith(
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                color: AppColors.iconGrey,
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.formBackground,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.report_outlined,
+              size: 80,
+              color: AppColors.teal800,
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              'Reportes',
+              style: AppTextStyles.heading.copyWith(fontSize: 20),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Función en desarrollo',
+              style: AppTextStyles.subtitle,
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  Color _getStatusColor(ReportStatus status) {
-    switch (status) {
-      case ReportStatus.pending:
-        return Colors.orange;
-      case ReportStatus.inProgress:
-        return Colors.blue;
-      case ReportStatus.resolved:
-        return Colors.green;
-      case ReportStatus.rejected:
-        return Colors.red;
-    }
-  }
-  IconData _getTypeIcon(ReportType type) {
-    switch (type) {
-      case ReportType.waterLeak:
-        return Icons.water_drop_outlined;
-      case ReportType.pothole:
-        return Icons.warning_outlined;
-      case ReportType.streetLight:
-        return Icons.lightbulb_outlined;
-      case ReportType.trafficSignal:
-        return Icons.traffic_outlined;
-      case ReportType.wasteManagement:
-        return Icons.delete_outline;
-      case ReportType.other:
-        return Icons.report_problem_outlined;
-    }
-  }
-
-  String _getStatusText(ReportStatus status) {
-    switch (status) {
-      case ReportStatus.pending:
-        return 'Pendiente';
-      case ReportStatus.inProgress:
-        return 'En Progreso';
-      case ReportStatus.resolved:
-        return 'Resuelto';
-      case ReportStatus.rejected:
-        return 'Rechazado';
-    }
   }
 }
 
