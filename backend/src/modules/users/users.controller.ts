@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Controller, Get, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { UsersService } from './users.service';
+import type { UpdateUserDto } from './dto/update-user.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/roles.enums';
 import {
@@ -10,7 +10,6 @@ import {
     ApiOkResponse,
     ApiOperation,
     ApiParam,
-    ApiResponse,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 @ApiBearerAuth()

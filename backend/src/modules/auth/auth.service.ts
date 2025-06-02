@@ -1,19 +1,25 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { IAuthService } from './interfaces/auth-service.interface';
-import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
+import type { IAuthService } from './interfaces/auth-service.interface';
+import type { UsersService } from '../users/users.service';
+import type { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
-import { Repository } from 'typeorm';
-import { LoginDto } from './dto/login.dto';
-import { LoginResponseDto } from './dto/login-response.dto';
+import type { Repository } from 'typeorm';
+import type { LoginDto } from './dto/login.dto';
+import type { LoginResponseDto } from './dto/login-response.dto';
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/database/entities/user.entity';
-import { RegisterResponseDto } from './dto/register-reponse.dto';
-import { RegisterDto } from './dto/register.dto';
+import type { User } from 'src/database/entities/user.entity';
+import type { RegisterResponseDto } from './dto/register-reponse.dto';
+import type { RegisterDto } from './dto/register.dto';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
-import { IVerificationService } from '../verification/interfaces/verification-service.interface';
+import type { IVerificationService } from '../verification/interfaces/verification-service.interface';
 import { UserStatus } from 'src/common/enums/user-status.enums';
+
+interface RefreshTokenPayload {
+    sub: number;
+    iat: number;
+    exp: number;
+}
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -25,8 +31,8 @@ export class AuthService implements IAuthService {
         @Inject(VERIFICATION.REGISTER_TOKEN)
         private readonly registerVerificationService: IVerificationService,
         @Inject(VERIFICATION.RECOVER_PASSWORD_TOKEN)
-        private readonly recoverPasswordVerificationService: IVerificationService, 
-    ) { }
+        private readonly recoverPasswordVerificationService: IVerificationService,
+    ) {}
 
     async login(dto: LoginDto): Promise<LoginResponseDto> {
         const user = await this.usersService.findByPhoneNumber(dto.phoneNumber);
@@ -65,8 +71,8 @@ export class AuthService implements IAuthService {
         };
     }
 
-    async refreshToken(refreshToken: string): Promise<any> {
-        let payload: any;
+    async refreshToken(refreshToken: string): Promise<LoginResponseDto> {
+        let payload: RefreshTokenPayload;
         try {
             payload = await this.jwtService.verifyAsync(refreshToken, {
                 secret: process.env.JWT_REFRESH_SECRET,

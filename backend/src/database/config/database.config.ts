@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 export default registerAs(
     'database',
@@ -11,7 +11,7 @@ export default registerAs(
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
         autoLoadEntities: true,
-        entities: [__dirname + '/../**/*.entity.{ts,js}'],
+        entities: [`${__dirname}/../**/*.entity.{ts,js}`],
         synchronize: process.env.NODE_ENV !== 'production',
         logging: process.env.NODE_ENV !== 'production',
     }),

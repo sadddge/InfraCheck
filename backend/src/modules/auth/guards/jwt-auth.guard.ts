@@ -1,12 +1,12 @@
-import { ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { type ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import type { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
     private readonly logger = new Logger(JwtAuthGuard.name);
-    constructor(private reflector: Reflector) {
+    constructor(private readonly reflector: Reflector) {
         super();
     }
 
@@ -22,16 +22,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         return super.canActivate(context);
     }
 
-    handleRequest<TUser = any>(
-        err: any,
-        user: any,
-        info: any,
-        context: ExecutionContext,
-        status?: any,
-    ): TUser {
+    handleRequest<TUser = unknown>(err: unknown, user: unknown): TUser {
         if (err || !user) {
-            throw err || new UnauthorizedException('Unauthorized');
+            throw err ?? new UnauthorizedException('Unauthorized');
         }
-        return user;
+        return user as TUser;
     }
 }

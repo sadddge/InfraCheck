@@ -10,7 +10,7 @@ import { TwilioVerificationService } from './twilio-verification.service';
             useFactory: (cf: ConfigService) => {
                 return new TwilioVerificationService(
                     cf,
-                    cf.getOrThrow<string>(VERIFICATION.REGISTER_SID)
+                    cf.getOrThrow<string>(VERIFICATION.REGISTER_SID),
                 );
             },
             inject: [ConfigService],
@@ -20,15 +20,12 @@ import { TwilioVerificationService } from './twilio-verification.service';
             useFactory: (cf: ConfigService) => {
                 return new TwilioVerificationService(
                     cf,
-                    cf.getOrThrow<string>(VERIFICATION.RECOVER_PASSWORD_SID)
+                    cf.getOrThrow<string>(VERIFICATION.RECOVER_PASSWORD_SID),
                 );
             },
             inject: [ConfigService],
         },
     ],
-    exports: [
-        VERIFICATION.REGISTER_TOKEN,
-        VERIFICATION.RECOVER_PASSWORD_TOKEN,
-    ],
+    exports: [VERIFICATION.REGISTER_TOKEN, VERIFICATION.RECOVER_PASSWORD_TOKEN],
 })
 export class VerificationModule {}
