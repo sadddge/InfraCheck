@@ -33,17 +33,29 @@ Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
       'lastName': instance.lastName,
     };
 
+VerifyRegisterCodeRequest _$VerifyRegisterCodeRequestFromJson(
+  Map<String, dynamic> json,
+) => VerifyRegisterCodeRequest(
+  phoneNumber: json['phoneNumber'] as String,
+  code: json['code'] as String,
+);
+
+Map<String, dynamic> _$VerifyRegisterCodeRequestToJson(
+  VerifyRegisterCodeRequest instance,
+) => <String, dynamic>{
+  'phoneNumber': instance.phoneNumber,
+  'code': instance.code,
+};
+
 AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) => AuthResponse(
   accessToken: json['accessToken'] as String,
   refreshToken: json['refreshToken'] as String,
-  tokenType: json['tokenType'] as String,
-  expiresIn: (json['expiresIn'] as num).toInt(),
+  user: User.fromJson(json['user'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$AuthResponseToJson(AuthResponse instance) =>
     <String, dynamic>{
       'accessToken': instance.accessToken,
       'refreshToken': instance.refreshToken,
-      'tokenType': instance.tokenType,
-      'expiresIn': instance.expiresIn,
+      'user': instance.user,
     };

@@ -512,16 +512,15 @@ class _ProfilePage extends StatelessWidget {
                     Text(
                       user?.name ?? 'Usuario',
                       style: AppTextStyles.inputLabel.copyWith(fontSize: 18),
-                    ),
-                    const SizedBox(height: 4),
+                    ),                    const SizedBox(height: 4),
                     Text(
-                      user?.email ?? 'usuario@correo.com',
+                      user?.phoneNumber ?? 'Sin teléfono',
                       style: AppTextStyles.inputText,
                     ),
-                    if (user?.phone != null) ...[
+                    if (user?.lastName != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        user!.phone!,
+                        '${user!.name} ${user.lastName!}',
                         style: AppTextStyles.inputText,
                       ),
                     ],

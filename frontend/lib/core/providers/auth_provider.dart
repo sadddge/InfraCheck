@@ -25,9 +25,10 @@ class AuthProvider extends ChangeNotifier {
     try {
       final isAuth = await AuthService.isAuthenticated();
       if (isAuth) {
-        // Intentar obtener el perfil del usuario
-        final user = await AuthService.getUserProfile();
-        _setAuthenticated(user);
+        // En lugar de obtener el perfil, simular usuario autenticado
+        // o implementar modo dev
+        loginDev();
+        return;
       } else {
         _setUnauthenticated();
       }
@@ -35,12 +36,8 @@ class AuthProvider extends ChangeNotifier {
       // Si hay error, intentar refresh token
       final refreshed = await AuthService.refreshToken();
       if (refreshed) {
-        try {
-          final user = await AuthService.getUserProfile();
-          _setAuthenticated(user);
-        } catch (e) {
-          _setUnauthenticated();
-        }
+        // En lugar de obtener el perfil, simular usuario autenticado
+        loginDev();
       } else {
         _setUnauthenticated();
       }
@@ -48,7 +45,6 @@ class AuthProvider extends ChangeNotifier {
     
     _setLoading(false);
   }
-
   // Login
   Future<bool> login(String phoneNumber, String password) async {
     _setLoading(true);
@@ -56,11 +52,10 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final loginRequest = LoginRequest(phoneNumber: phoneNumber, password: password);
-      await AuthService.login(loginRequest);
+      final authResponse = await AuthService.login(loginRequest);
       
-      // Obtener perfil del usuario después del login
-      final user = await AuthService.getUserProfile();
-      _setAuthenticated(user);
+      // Usar los datos del usuario que vienen en la respuesta del login
+      _setAuthenticated(authResponse.user);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -69,7 +64,6 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
-
   // Register
   Future<bool> register(String phoneNumber, String password, String name, String lastName) async {
     _setLoading(true);
@@ -84,9 +78,18 @@ class AuthProvider extends ChangeNotifier {
       );
       await AuthService.register(registerRequest);
       
-      // Obtener perfil del usuario después del registro
-      final user = await AuthService.getUserProfile();
-      _setAuthenticated(user);
+      // Para el registro, simular usuario registrado
+      // En una implementación real, el registro podría retornar también los datos del usuario
+      final newUser = User(
+        id: DateTime.now().millisecondsSinceEpoch, // ID temporal
+        phoneNumber: phoneNumber,
+        name: name,
+        lastName: lastName,
+        role: 'NEIGHBOR',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      _setAuthenticated(newUser);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -107,21 +110,7 @@ class AuthProvider extends ChangeNotifier {
     }
     
     _setUnauthenticated();
-    _setLoading(false);
-  }
-
-  // Actualizar perfil del usuario
-  Future<void> updateUserProfile() async {
-    if (_status != AuthStatus.authenticated) return;
-    
-    try {
-      final user = await AuthService.getUserProfile();
-      _user = user;
-      notifyListeners();
-    } catch (e) {
-      // Manejar error silenciosamente o mostrar notificación
-    }
-  }
+    _setLoading(false);  }
 
   // Métodos privados
   void _setAuthenticated(User user) {
@@ -158,10 +147,37 @@ class AuthProvider extends ChangeNotifier {
     }
     return 'Ha ocurrido un error inesperado';
   }
-
   // Limpiar errores manualmente
   void clearError() {
     _clearError();
     notifyListeners();
+  }
+  // MODO DESARROLLO - Simular login con credenciales de prueba
+  Future<void> loginDev() async {
+    _setLoading(true);
+    // Simular usuario de desarrollo
+    final devUser = User(
+      id: 1,
+      phoneNumber: '+56912345678',
+      name: 'Usuario Desarrollo',
+      role: 'NEIGHBOR',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    
+    // Simular delay de red
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    _setAuthenticated(devUser);
+    _setLoading(false);
+  }
+
+  // MODO DESARROLLO - Toggle rápido de autenticación
+  void toggleDevAuth() {
+    if (_status == AuthStatus.authenticated) {
+      _setUnauthenticated();
+    } else {
+      loginDev();
+    }
   }
 }

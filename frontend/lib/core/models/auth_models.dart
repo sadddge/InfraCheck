@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/equatable.dart';
+import 'user_model.dart';
 
 part 'auth_models.g.dart';
 
@@ -44,22 +45,38 @@ class RegisterRequest extends Equatable {
 }
 
 @JsonSerializable()
+class VerifyRegisterCodeRequest extends Equatable {
+  @JsonKey(name: 'phoneNumber')
+  final String phoneNumber;
+  final String code;
+
+  const VerifyRegisterCodeRequest({
+    required this.phoneNumber,
+    required this.code,
+  });
+
+  factory VerifyRegisterCodeRequest.fromJson(Map<String, dynamic> json) => _$VerifyRegisterCodeRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$VerifyRegisterCodeRequestToJson(this);
+
+  @override
+  List<Object> get props => [phoneNumber, code];
+}
+
+@JsonSerializable()
 class AuthResponse extends Equatable {
   final String accessToken;
   final String refreshToken;
-  final String tokenType;
-  final int expiresIn;
+  final User user;
 
   const AuthResponse({
     required this.accessToken,
     required this.refreshToken,
-    required this.tokenType,
-    required this.expiresIn,
+    required this.user,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) => _$AuthResponseFromJson(json);
   Map<String, dynamic> toJson() => _$AuthResponseToJson(this);
 
   @override
-  List<Object> get props => [accessToken, refreshToken, tokenType, expiresIn];
+  List<Object> get props => [accessToken, refreshToken, user];
 }
