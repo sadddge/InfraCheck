@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
 import { UserStatus } from 'src/common/enums/user-status.enums';
+import { JwtRefreshPayload } from 'src/common/interfaces/jwt-payload.interface';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import type { User } from 'src/database/entities/user.entity';
 import type { Repository } from 'typeorm';
@@ -14,12 +15,6 @@ import type { LoginResponseDto } from './dto/login-response.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterResponseDto } from './dto/register-response.dto';
 import type { RegisterDto } from './dto/register.dto';
-
-interface RefreshTokenPayload {
-    sub: number;
-    iat: number;
-    exp: number;
-}
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -72,7 +67,7 @@ export class AuthService implements IAuthService {
     }
 
     async refreshToken(refreshToken: string): Promise<LoginResponseDto> {
-        let payload: RefreshTokenPayload;
+        let payload: JwtRefreshPayload;
         try {
             payload = await this.jwtService.verifyAsync(refreshToken, {
                 secret: process.env.JWT_REFRESH_SECRET,
@@ -170,6 +165,7 @@ export class AuthService implements IAuthService {
         user.status = UserStatus.PENDING_APPROVAL;
         await this.usersService.update(user.id, user);
     }
+
     async sendResetPasswordCode(phoneNumber: string): Promise<void> {
         const user = await this.usersService.findByPhoneNumber(phoneNumber);
         if (!user) {

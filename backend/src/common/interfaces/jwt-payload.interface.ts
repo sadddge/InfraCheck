@@ -1,3 +1,9 @@
+export interface JwtRefreshPayload {
+    sub: number;
+    iat: number;
+    exp: number;
+}
+
 export interface JwtResetPayload {
     sub: string;
     scope: 'reset_password';
