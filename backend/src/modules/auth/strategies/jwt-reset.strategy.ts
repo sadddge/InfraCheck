@@ -25,7 +25,10 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
         }
         const id = Number(payload.sub);
         const user = await this.usersService.findOne(id);
-        if (!user || user.status !== UserStatus.ACTIVE) {
+        if (
+            !user ||
+            (user.status !== UserStatus.ACTIVE && user.status !== UserStatus.PENDING_APPROVAL)
+        ) {
             throw new UnauthorizedException('User not found or inactive');
         }
 
