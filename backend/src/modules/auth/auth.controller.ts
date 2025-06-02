@@ -179,6 +179,6 @@ export class AuthController {
         @Body() resetPasswordDto: ResetPasswordDto,
         @Request() req,
     ): Promise<string> {
-        return this.authService.resetPassword(req.id, resetPasswordDto.newPassword);
+        return this.authService.resetPassword(req.user.id, resetPasswordDto.newPassword);
     }
 }

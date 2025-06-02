@@ -38,7 +38,9 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
         }
 
         return {
-            id: user.id,
+            user: {
+                id: user.id,
+            },
         };
     }
 }
