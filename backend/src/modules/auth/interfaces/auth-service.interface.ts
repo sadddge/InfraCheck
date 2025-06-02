@@ -14,5 +14,5 @@ export interface IAuthService {
     verifyRegisterCode(phoneNumber: string, code: string): Promise<void>;
     sendResetPasswordCode(phoneNumber: string): Promise<void>;
     verifyResetPasswordCode(phoneNumber: string, code: string): Promise<unknown>;
-    resetPassword(token: string, newPassword: string): Promise<string>;
+    resetPassword(id: number, newPassword: string): Promise<string>;
 }
