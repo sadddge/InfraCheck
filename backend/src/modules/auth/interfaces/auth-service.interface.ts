@@ -10,7 +10,7 @@ export interface IAuthService {
     login(dto: LoginDto): Promise<LoginResponseDto>;
     refreshToken(refreshToken: string): Promise<LoginResponseDto>;
     register(dto: RegisterDto): Promise<RegisterResponseDto>;
-    getUserIfRefreshTokenMatches(resfreshToken: string, userId: number): Promise<User | null>;
+    getUserIfRefreshTokenMatches(refreshToken: string, userId: number): Promise<User | null>;
     verifyRegisterCode(phoneNumber: string, code: string): Promise<void>;
     sendResetPasswordCode(phoneNumber: string): Promise<void>;
     verifyResetPasswordCode(phoneNumber: string, code: string): Promise<void>;

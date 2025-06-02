@@ -150,18 +150,18 @@ export class AuthService implements IAuthService {
     }
 
     async getUserIfRefreshTokenMatches(
-        resfreshToken: string,
+        refreshToken: string,
         userId: number,
     ): Promise<User | null> {
-        const refreshToken = await this.refreshTokenRepository.findOne({
-            where: { token: resfreshToken, user: { id: userId } },
+        const token = await this.refreshTokenRepository.findOne({
+            where: { token: refreshToken, user: { id: userId } },
             relations: ['user'],
         });
 
-        if (!refreshToken || refreshToken.expiresAt < new Date()) {
+        if (!token || token.expiresAt < new Date()) {
             return null;
         }
-        return refreshToken.user;
+        return token.user;
     }
 
     async verifyRegisterCode(phoneNumber: string, code: string): Promise<void> {
