@@ -26,6 +26,14 @@ class UserData {
         description: 'User last name',
         example: 'Pérez',
         type: String,
+        minLength: 2,
+        maxLength: 50,
+    })
+    lastName: string;
+    @ApiProperty({
+        description: 'User last name',
+        example: 'Pérez',
+        type: String,
     })
     role: string;
 }
