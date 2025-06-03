@@ -50,7 +50,8 @@ import { IUserService, USER_SERVICE } from './interfaces/user-service.interface'
     path: 'users',
     version: '1',
 })
-export class UsersController {    /**
+export class UsersController {
+    /**
      * Creates a new UsersController instance.
      *
      * @param usersService User service for handling business logic
@@ -58,7 +59,7 @@ export class UsersController {    /**
     constructor(
         @Inject(USER_SERVICE)
         private readonly usersService: IUserService,
-    ) {}    /**
+    ) {} /**
      * Retrieves a list of all users in the system.
      * Only accessible by users with ADMIN role. Supports optional status filtering.
      * Returns user data without sensitive information like passwords.
@@ -71,7 +72,7 @@ export class UsersController {    /**
      * // Get all active users
      * GET /api/v1/users?status=ACTIVE
      * Authorization: Bearer <admin-token>
-     * 
+     *
      * // Get all users regardless of status
      * GET /api/v1/users
      * Authorization: Bearer <admin-token>
@@ -97,7 +98,8 @@ export class UsersController {    /**
         description: 'Forbidden. You do not have permission to access this resource.',
     })
     async findAll(@Query() query: UserQueryDto): Promise<UserDto[]> {
-        return this.usersService.findAll(query.status);    }
+        return this.usersService.findAll(query.status);
+    }
 
     /**
      * Retrieves a specific user by their unique identifier.
@@ -141,7 +143,8 @@ export class UsersController {    /**
         description: 'User not found. The user with the specified ID does not exist.',
     })
     findOne(@Param('id') id: string): Promise<UserDto> {
-        return this.usersService.findById(+id);    }
+        return this.usersService.findById(+id);
+    }
 
     /**
      * Updates an existing user's profile information.
@@ -158,7 +161,7 @@ export class UsersController {    /**
      * PATCH /api/v1/users/123
      * Authorization: Bearer <token>
      * Content-Type: application/json
-     * 
+     *
      * {
      *   "name": "Updated Name",
      *   "lastName": "Updated LastName"
@@ -192,7 +195,8 @@ export class UsersController {    /**
         description: 'User not found. The user with the specified ID does not exist.',
     })
     update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-        return this.usersService.update(+id, updateUserDto);    }
+        return this.usersService.update(+id, updateUserDto);
+    }
 
     /**
      * Updates a user's account status (administrative operation).
@@ -209,11 +213,11 @@ export class UsersController {    /**
      * PATCH /api/v1/users/123/status
      * Authorization: Bearer <admin-token>
      * Content-Type: application/json
-     * 
+     *
      * {
      *   "status": "SUSPENDED"
      * }
-     * 
+     *
      * // Reactivate a user account
      * {
      *   "status": "ACTIVE"
@@ -248,7 +252,8 @@ export class UsersController {    /**
         description: 'User not found. The user with the specified ID does not exist.',
     })
     updateStatus(@Param('id') id: string, @Body() updateUserStatusDto: UpdateUserStatusDto) {
-        return this.usersService.updateStatus(+id, updateUserStatusDto.status);    }
+        return this.usersService.updateStatus(+id, updateUserStatusDto.status);
+    }
 
     /**
      * Permanently removes a user from the system.
@@ -264,7 +269,7 @@ export class UsersController {    /**
      * // Delete user account
      * DELETE /api/v1/users/123
      * Authorization: Bearer <token>
-     * 
+     *
      * // Response: 202 Accepted
      * ```
      */
