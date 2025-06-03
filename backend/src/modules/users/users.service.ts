@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/roles.enums';
+import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
 import type { Repository } from 'typeorm';
 import type { RegisterDto } from '../auth/dto/register.dto';
@@ -14,8 +15,10 @@ export class UsersService implements IUserService {
         private readonly userRepository: Repository<User>,
     ) {}
 
-    async findAll(): Promise<UserDto[]> {
+    async findAll(status?: string): Promise<UserDto[]> {
+        const where = status ? { status: status as UserStatus } : {};
         return this.userRepository.find({
+            where,
             select: {
                 id: true,
                 phoneNumber: true,
