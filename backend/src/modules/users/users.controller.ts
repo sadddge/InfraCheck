@@ -22,6 +22,7 @@ import {
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserAccessGuard } from 'src/common/guards/user-access.guard';
+import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { UserDto } from './dto/user.dto';
@@ -118,6 +119,36 @@ export class UsersController {
     })
     update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
         return this.usersService.update(+id, updateUserDto);
+    }
+
+    @Patch(':id/status')
+    @HttpCode(200)
+    @Roles(Role.ADMIN)
+    @ApiOperation({
+        summary: 'Update user status by ID',
+        description:
+            'This endpoint updates the status of a user by their unique ID. Accessible by users with the ADMIN role.',
+    })
+    @ApiParam({
+        name: 'id',
+        description: 'The unique identifier of the user whose status is to be updated.',
+        type: Number,
+        required: true,
+    })
+    @ApiOkResponse({
+        description: 'User status updated successfully.',
+    })
+    @ApiUnauthorizedResponse({
+        description: 'Unauthorized. You must be logged in to access this resource.',
+    })
+    @ApiForbiddenResponse({
+        description: 'Forbidden. You do not have permission to access this resource.',
+    })
+    @ApiNotFoundResponse({
+        description: 'User not found. The user with the specified ID does not exist.',
+    })
+    updateStatus(@Param('id') id: string, @Body() updateUserStatusDto: UpdateUserStatusDto) {
+        return this.usersService.updateStatus(+id, updateUserStatusDto.status);
     }
 
     @Delete(':id')

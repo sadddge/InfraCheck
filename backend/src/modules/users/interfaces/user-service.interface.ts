@@ -1,3 +1,4 @@
+import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
 import { RegisterDto } from 'src/modules/auth/dto/register.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -10,6 +11,7 @@ export interface IUserService {
     findById(id: number): Promise<UserDto>;
     findByPhoneNumber(phoneNumber: string): Promise<UserDto>;
     update(id: number, updateUserDto: UpdateUserDto): Promise<UserDto>;
+    updateStatus(id: number, status: UserStatus): Promise<UserDto>;
     registerNeighbor(user: RegisterDto): Promise<UserDto>;
     createAdmin(user: RegisterDto): Promise<UserDto>;
     remove(id: number): Promise<void>;

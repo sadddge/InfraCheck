@@ -81,6 +81,18 @@ export class UsersService implements IUserService {
         return this.findById(id);
     }
 
+    async updateStatus(id: number, status: UserStatus): Promise<UserDto> {
+        const user = await this.userRepository.findOne({
+            where: { id },
+        });
+        if (!user) {
+            throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        user.status = status;
+        await this.userRepository.save(user);
+        return this.findById(id);
+    }
+
     async registerNeighbor(user: RegisterDto): Promise<UserDto> {
         const existingUser = await this.userRepository.findOne({
             where: {
