@@ -7,7 +7,7 @@ import { UserDto } from '../dto/user.dto';
 export const USER_SERVICE = 'USER_SERVICE';
 
 export interface IUserService {
-    findAll(status?: string): Promise<UserDto[]>;
+    findAll(status?: UserStatus): Promise<UserDto[]>;
     findById(id: number): Promise<UserDto>;
     findByPhoneNumber(phoneNumber: string): Promise<UserDto>;
     update(id: number, updateUserDto: UpdateUserDto): Promise<UserDto>;

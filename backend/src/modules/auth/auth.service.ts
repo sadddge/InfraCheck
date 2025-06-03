@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -31,7 +31,16 @@ export class AuthService implements IAuthService {
     ) {}
 
     async login(dto: LoginDto): Promise<LoginResponseDto> {
-        const user = await this.usersService.findByPhoneNumberWithPassword(dto.phoneNumber);
+        let user: User;
+        try {
+            user = await this.usersService.findByPhoneNumberWithPassword(dto.phoneNumber);
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw new UnauthorizedException('Invalid credentials');
+            }
+            throw error;
+        }
+
         if (!(await bcrypt.compare(dto.password, user.password))) {
             throw new UnauthorizedException('Invalid credentials');
         }

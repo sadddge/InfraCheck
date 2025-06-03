@@ -137,6 +137,7 @@ export class UsersController {
     })
     @ApiOkResponse({
         description: 'User status updated successfully.',
+        type: UserDto,
     })
     @ApiUnauthorizedResponse({
         description: 'Unauthorized. You must be logged in to access this resource.',

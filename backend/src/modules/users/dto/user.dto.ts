@@ -38,7 +38,7 @@ export class UserDto {
         example: 'ACTIVE',
         enum: UserStatus,
     })
-    status: string;
+    status: UserStatus;
     @ApiProperty({
         description: 'Date when the user was created',
         example: '2023-10-01T12:00:00Z',

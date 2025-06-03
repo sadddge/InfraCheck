@@ -15,7 +15,7 @@ export class UsersService implements IUserService {
         private readonly userRepository: Repository<User>,
     ) {}
 
-    async findAll(status?: string): Promise<UserDto[]> {
+    async findAll(status?: UserStatus): Promise<UserDto[]> {
         const where = status ? { status: status as UserStatus } : {};
         return this.userRepository.find({
             where,
