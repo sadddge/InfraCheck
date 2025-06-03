@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    Inject,
+    Param,
+    Patch,
+    UseGuards,
+} from '@nestjs/common';
 import {
     ApiBearerAuth,
     ApiForbiddenResponse,
@@ -11,15 +21,19 @@ import {
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserAccessGuard } from 'src/common/guards/user-access.guard';
-import type { UpdateUserDto } from './dto/update-user.dto';
-import { UsersService } from './users.service';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UserDto } from './dto/user.dto';
+import { IUserService, USER_SERVICE } from './interfaces/user-service.interface';
 @ApiBearerAuth()
 @Controller({
     path: 'users',
     version: '1',
 })
 export class UsersController {
-    constructor(private readonly usersService: UsersService) {}
+    constructor(
+        @Inject(USER_SERVICE)
+        private readonly usersService: IUserService,
+    ) {}
 
     @Get()
     @HttpCode(200)
@@ -38,7 +52,7 @@ export class UsersController {
     @ApiForbiddenResponse({
         description: 'Forbidden. You do not have permission to access this resource.',
     })
-    findAll() {
+    async findAll(): Promise<UserDto[]> {
         return this.usersService.findAll();
     }
 
@@ -68,8 +82,8 @@ export class UsersController {
     @ApiNotFoundResponse({
         description: 'User not found. The user with the specified ID does not exist.',
     })
-    findOne(@Param('id') id: string) {
-        return this.usersService.findOne(+id);
+    findOne(@Param('id') id: string): Promise<UserDto> {
+        return this.usersService.findById(+id);
     }
 
     @Patch(':id')

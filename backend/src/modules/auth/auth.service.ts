@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -10,7 +10,7 @@ import type { User } from 'src/database/entities/user.entity';
 import type { Repository } from 'typeorm';
 import type { IAuthService } from '../../common/interfaces/auth-service.interface';
 import type { IVerificationService } from '../../common/interfaces/verification-service.interface';
-import { UsersService } from '../users/users.service';
+import { type IUserService, USER_SERVICE } from '../users/interfaces/user-service.interface';
 import type { LoginResponseDto } from './dto/login-response.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterResponseDto } from './dto/register-response.dto';
@@ -19,7 +19,8 @@ import type { RegisterDto } from './dto/register.dto';
 @Injectable()
 export class AuthService implements IAuthService {
     constructor(
-        private readonly usersService: UsersService,
+        @Inject(USER_SERVICE)
+        private readonly usersService: IUserService,
         private readonly jwtService: JwtService,
         @InjectRepository(RefreshToken)
         private readonly refreshTokenRepository: Repository<RefreshToken>,
@@ -30,8 +31,8 @@ export class AuthService implements IAuthService {
     ) {}
 
     async login(dto: LoginDto): Promise<LoginResponseDto> {
-        const user = await this.usersService.findByPhoneNumber(dto.phoneNumber);
-        if (!user || !(await bcrypt.compare(dto.password, user.password))) {
+        const user = await this.usersService.findByPhoneNumberWithPassword(dto.phoneNumber);
+        if (!(await bcrypt.compare(dto.password, user.password))) {
             throw new UnauthorizedException('Invalid credentials');
         }
 
@@ -122,13 +123,8 @@ export class AuthService implements IAuthService {
     }
 
     async register(dto: RegisterDto): Promise<RegisterResponseDto> {
-        const existingUser = await this.usersService.findByPhoneNumber(dto.phoneNumber);
-        if (existingUser) {
-            throw new UnauthorizedException('User already exists');
-        }
-
         const hashedPassword = await bcrypt.hash(dto.password, 10);
-        const user = await this.usersService.create({
+        const user = await this.usersService.registerNeighbor({
             ...dto,
             password: hashedPassword,
         });
@@ -195,10 +191,7 @@ export class AuthService implements IAuthService {
     }
 
     async resetPassword(id: number, newPassword: string): Promise<string> {
-        const user = await this.usersService.findOne(id);
-        if (!user) {
-            throw new BadRequestException('User not found or inactive');
-        }
+        const user = await this.usersService.findByIdWithPassword(id);
         const newHashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = newHashedPassword;
         user.passwordUpdatedAt = new Date();
