@@ -8,13 +8,13 @@ import { JwtRefreshPayload } from 'src/common/interfaces/jwt-payload.interface';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import type { User } from 'src/database/entities/user.entity';
 import type { Repository } from 'typeorm';
-import type { IAuthService } from '../../common/interfaces/auth-service.interface';
-import type { IVerificationService } from '../../common/interfaces/verification-service.interface';
 import { type IUserService, USER_SERVICE } from '../users/interfaces/user-service.interface';
+import type { IVerificationService } from '../verification/interfaces/verification-service.interface';
 import type { LoginResponseDto } from './dto/login-response.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterResponseDto } from './dto/register-response.dto';
 import type { RegisterDto } from './dto/register.dto';
+import type { IAuthService } from './interfaces/auth-service.interface';
 
 /**
  * Authentication service handling user registration, login, password recovery, and token management.

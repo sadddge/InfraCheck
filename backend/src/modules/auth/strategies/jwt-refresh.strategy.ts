@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { AUTH_SERVICE, type IAuthService } from '../../../common/interfaces/auth-service.interface';
+import { AUTH_SERVICE, type IAuthService } from '../interfaces/auth-service.interface';
 
 /**
  * @class JwtRefreshStrategy
