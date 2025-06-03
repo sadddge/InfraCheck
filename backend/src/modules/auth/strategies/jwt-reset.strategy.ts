@@ -1,16 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserStatus } from 'src/common/enums/user-status.enums';
-import { UsersService } from 'src/modules/users/users.service';
-import { JwtResetPayload } from '../interfaces/jwt-payload.interface';
+import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
+import { JwtResetPayload } from '../../../common/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
     constructor(
         private readonly configService: ConfigService,
-        private readonly usersService: UsersService,
+        @Inject(USER_SERVICE)
+        private readonly usersService: IUserService,
     ) {
         super({
             jwtFromRequest: ExtractJwt.fromBodyField('token'),
@@ -24,7 +25,7 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
             throw new UnauthorizedException('Invalid token scope');
         }
         const id = Number(payload.sub);
-        const user = await this.usersService.findOne(id);
+        const user = await this.usersService.findById(id);
         if (
             !user ||
             (user.status !== UserStatus.ACTIVE && user.status !== UserStatus.PENDING_APPROVAL)

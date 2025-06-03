@@ -17,6 +17,7 @@ import {
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Public } from 'src/common/decorators/public.decorator';
+import { AUTH_SERVICE, type IAuthService } from '../../common/interfaces/auth-service.interface';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RecoverPasswordDto } from './dto/recover-password.dto';
@@ -27,7 +28,6 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyRecoverPasswordDto } from './dto/verify-recover-password.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtResetGuard } from './guards/jwt-reset.guard';
-import { AUTH_SERVICE, type IAuthService } from './interfaces/auth-service.interface';
 
 @Controller({
     path: 'auth',
@@ -54,7 +54,7 @@ export class AuthController {
         description: 'Invalid credentials provided.',
     })
     async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
-        return this.authService.login(dto);
+        return await this.authService.login(dto);
     }
 
     @Public()
@@ -73,8 +73,8 @@ export class AuthController {
     @ApiUnauthorizedResponse({
         description: 'Invalid or expired refresh token.',
     })
-    async refresh(@Body() dto: RefreshTokenDto) {
-        return this.authService.refreshToken(dto.refreshToken);
+    async refresh(@Body() dto: RefreshTokenDto): Promise<LoginResponseDto> {
+        return await this.authService.refreshToken(dto.refreshToken);
     }
 
     @Public()
@@ -93,7 +93,7 @@ export class AuthController {
         description: 'Invalid registration data provided.',
     })
     async register(@Body() dto: RegisterDto): Promise<RegisterResponseDto> {
-        return this.authService.register(dto);
+        return await this.authService.register(dto);
     }
 
     @Public()
@@ -116,7 +116,7 @@ export class AuthController {
         @Query('phoneNumber') phoneNumber: string,
         @Query('code') code: string,
     ): Promise<void> {
-        return this.authService.verifyRegisterCode(phoneNumber, code);
+        await this.authService.verifyRegisterCode(phoneNumber, code);
     }
 
     @Public()
@@ -154,7 +154,7 @@ export class AuthController {
     async verifyRecoverPasswordCode(
         @Body() verifyRecoverPasswordDto: VerifyRecoverPasswordDto,
     ): Promise<unknown> {
-        return this.authService.generateResetPasswordToken(
+        return await this.authService.generateResetPasswordToken(
             verifyRecoverPasswordDto.phoneNumber,
             verifyRecoverPasswordDto.code,
         );
@@ -179,6 +179,6 @@ export class AuthController {
         @Body() resetPasswordDto: ResetPasswordDto,
         @Request() req,
     ): Promise<string> {
-        return this.authService.resetPassword(req.user.id, resetPasswordDto.newPassword);
+        return await this.authService.resetPassword(req.user.id, resetPasswordDto.newPassword);
     }
 }
