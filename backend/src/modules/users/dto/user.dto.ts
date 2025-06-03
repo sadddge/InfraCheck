@@ -32,7 +32,7 @@ export class UserDto {
         example: 'NEIGHBOR',
         enum: Role,
     })
-    role: string;
+    role: Role;
     @ApiProperty({
         description: 'User status',
         example: 'ACTIVE',

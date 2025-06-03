@@ -16,7 +16,7 @@ export class UsersService implements IUserService {
     ) {}
 
     async findAll(status?: UserStatus): Promise<UserDto[]> {
-        const where = status ? { status: status as UserStatus } : {};
+        const where = status ? { status: status } : {};
         return this.userRepository.find({
             where,
             select: {
