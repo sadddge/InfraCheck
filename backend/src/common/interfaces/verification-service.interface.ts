@@ -56,7 +56,8 @@ export interface IVerificationService {
      * @async
      * @param {string} phoneNumber - Phone number that received the verification code
      * @param {string} code - 6-digit verification code to validate
-     * @returns {Promise<void>} Resolves when verification is successful     * @throws {BadRequestException} When verification code is invalid or expired
+     * @returns {Promise<void>} Resolves when verification is successful
+     * @throws {BadRequestException} When verification code is invalid or expired
      *
      * @example
      * ```typescript
