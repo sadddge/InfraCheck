@@ -13,6 +13,35 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtResetStrategy } from './strategies/jwt-reset.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
+/**
+ * Authentication module providing complete authentication functionality for the application.
+ * Configures JWT-based authentication with multiple token types and SMS verification integration.
+ *
+ * @class AuthModule
+ * @description Comprehensive authentication module that provides:
+ * - JWT access token authentication
+ * - Refresh token management
+ * - Password reset token handling
+ * - SMS verification integration
+ * - User registration and login
+ * - Password recovery workflows
+ *
+ * @example
+ * ```typescript
+ * // Module is automatically imported in AppModule
+ * // Provides authentication endpoints at /api/v1/auth/*
+ * // Configures JWT strategies for different token types
+ *
+ * // Available endpoints:
+ * // POST /api/v1/auth/login
+ * // POST /api/v1/auth/register
+ * // POST /api/v1/auth/refresh
+ * // POST /api/v1/auth/recover-password
+ * // POST /api/v1/auth/reset-password
+ * ```
+ *
+ * @since 1.0.0
+ */
 @Module({
     imports: [
         UsersModule,
