@@ -7,6 +7,7 @@ import {
     Inject,
     Param,
     Patch,
+    Query,
     UseGuards,
 } from '@nestjs/common';
 import {
@@ -22,6 +23,7 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserAccessGuard } from 'src/common/guards/user-access.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserQueryDto } from './dto/user-query.dto';
 import { UserDto } from './dto/user.dto';
 import { IUserService, USER_SERVICE } from './interfaces/user-service.interface';
 @ApiBearerAuth()
@@ -45,6 +47,8 @@ export class UsersController {
     })
     @ApiOkResponse({
         description: 'List of users retrieved successfully.',
+        type: UserDto,
+        isArray: true,
     })
     @ApiUnauthorizedResponse({
         description: 'Unauthorized. You must be logged in to access this resource.',
@@ -52,8 +56,8 @@ export class UsersController {
     @ApiForbiddenResponse({
         description: 'Forbidden. You do not have permission to access this resource.',
     })
-    async findAll(): Promise<UserDto[]> {
-        return this.usersService.findAll();
+    async findAll(@Query() query: UserQueryDto): Promise<UserDto[]> {
+        return this.usersService.findAll(query.status);
     }
 
     @Get(':id')
