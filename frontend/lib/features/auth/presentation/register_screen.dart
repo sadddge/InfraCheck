@@ -53,22 +53,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _passwordController.text.trim(),
       _nameController.text.trim(),
       _lastNameController.text.trim(),
-    );
-
-    if (registerResponse != null && mounted) {
+    );    if (registerResponse != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(registerResponse.message),
+          content: Text('Usuario registrado exitosamente. Se ha enviado un código de verificación a ${registerResponse.phoneNumber}'),
           backgroundColor: Colors.green,
         ),
       );
       
-      // Navegar a la pantalla de verificación de código
-      Navigator.pushNamed(
-        context,
-        '/verify-register-code',
-        arguments: _phoneNumberController.text.trim(),
-      );
+      // Navegar a la pantalla de verificación de código usando Go Router
+      context.go('/verify-register-code/${_phoneNumberController.text.trim()}');
     } else if (mounted && authProvider.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

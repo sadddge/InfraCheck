@@ -49,14 +49,20 @@ Map<String, dynamic> _$VerifyRegisterCodeRequestToJson(
 
 RegisterResponse _$RegisterResponseFromJson(Map<String, dynamic> json) =>
     RegisterResponse(
-      message: json['message'] as String,
-      verificationCodeSentTo: json['verificationCodeSentTo'] as String,
+      id: (json['id'] as num).toInt(),
+      phoneNumber: json['phoneNumber'] as String,
+      name: json['name'] as String,
+      lastName: json['lastName'] as String,
+      role: json['role'] as String,
     );
 
 Map<String, dynamic> _$RegisterResponseToJson(RegisterResponse instance) =>
     <String, dynamic>{
-      'message': instance.message,
-      'verificationCodeSentTo': instance.verificationCodeSentTo,
+      'id': instance.id,
+      'phoneNumber': instance.phoneNumber,
+      'name': instance.name,
+      'lastName': instance.lastName,
+      'role': instance.role,
     };
 
 AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) => AuthResponse(

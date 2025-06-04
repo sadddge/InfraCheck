@@ -64,19 +64,25 @@ class VerifyRegisterCodeRequest extends Equatable {
 
 @JsonSerializable()
 class RegisterResponse extends Equatable {
-  final String message;
-  final String verificationCodeSentTo;
+  final int id;
+  final String phoneNumber;
+  final String name;
+  final String lastName;
+  final String role;
 
   const RegisterResponse({
-    required this.message,
-    required this.verificationCodeSentTo,
+    required this.id,
+    required this.phoneNumber,
+    required this.name,
+    required this.lastName,
+    required this.role,
   });
 
   factory RegisterResponse.fromJson(Map<String, dynamic> json) => _$RegisterResponseFromJson(json);
   Map<String, dynamic> toJson() => _$RegisterResponseToJson(this);
 
   @override
-  List<Object> get props => [message, verificationCodeSentTo];
+  List<Object> get props => [id, phoneNumber, name, lastName, role];
 }
 
 @JsonSerializable()

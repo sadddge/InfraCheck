@@ -76,10 +76,19 @@ class ApiService {
       
       try {
         final errorData = json.decode(response.body);
-        
-        // Manejar errores del backend que también están envueltos
+          // Manejar errores del backend que también están envueltos
         if (errorData is Map<String, dynamic>) {
-          if (errorData.containsKey('message') && errorData['message'] is String) {
+          // Primero intentar obtener el mensaje del campo 'error'
+          if (errorData.containsKey('error') && errorData['error'] is Map) {
+            final error = errorData['error'] as Map<String, dynamic>;
+            if (error.containsKey('details') && error['details'] is String) {
+              errorMessage = error['details'];
+            } else if (error.containsKey('message') && error['message'] is String) {
+              errorMessage = error['message'];
+            }
+          }
+          // Si no hay campo 'error', intentar con el campo 'message' directo
+          else if (errorData.containsKey('message') && errorData['message'] is String) {
             errorMessage = errorData['message'];
             
             // Detectar errores específicos de estado de usuario
@@ -94,7 +103,9 @@ class ApiService {
                 statusCode: response.statusCode,
               );
             }
-          } else if (errorData.containsKey('data') && errorData['data'] is Map) {
+          } 
+          // Último intento con el campo 'data'
+          else if (errorData.containsKey('data') && errorData['data'] is Map) {
             final data = errorData['data'] as Map<String, dynamic>;
             errorMessage = data['message'] ?? errorMessage;
           }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
@@ -49,14 +50,8 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
             content: Text('Código verificado exitosamente'),
             backgroundColor: Colors.green,
           ),
-        );
-
-        // Navegar a la pantalla principal o home
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/home', // Ajusta esta ruta según tu configuración de navegación
-          (route) => false,
-        );
+        );        // Navegar a la pantalla principal usando Go Router esto modificar
+        context.go('/home');
       } else {
         // Mostrar mensaje de error del provider
         final errorMessage = authProvider.errorMessage ?? 'Error al verificar el código';
