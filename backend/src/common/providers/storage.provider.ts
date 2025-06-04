@@ -8,7 +8,7 @@ export const StorageProvider: Provider = {
     provide: STORAGE_SERVICE,
     useFactory: (cfg: ConfigService) => {
         const env = cfg.get<string>('NODE_ENV');
-        return env === 'production' ? new S3StorageService(cfg) : LocalStorageService;
+        return env === 'production' ? new S3StorageService(cfg) : new LocalStorageService();
     },
     inject: [ConfigService],
 };
