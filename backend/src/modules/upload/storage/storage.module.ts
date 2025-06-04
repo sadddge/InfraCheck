@@ -1,14 +1,8 @@
 import { Module } from '@nestjs/common';
-import { STORAGE_SERVICE } from './interfaces/storage-service.interface';
-import { S3StorageService } from './services/s3-storage.service';
+import { StorageProvider } from 'src/common/providers/storage.provider';
 
 @Module({
-    providers: [
-        {
-            provide: STORAGE_SERVICE,
-            useClass: S3StorageService,
-        },
-    ],
-    exports: [STORAGE_SERVICE],
+    providers: [StorageProvider],
+    exports: [StorageProvider],
 })
 export class StorageModule {}
