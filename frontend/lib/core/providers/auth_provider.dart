@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../models/auth_models.dart';
+import '../models/auth_error_models.dart';
+import '../enums/user_status.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 
@@ -10,13 +12,17 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.unknown;
   User? _user;
   String? _errorMessage;
+  UserStatus? _userStatus;
+  String? _redirectTo;
   bool _isLoading = false;
 
   AuthStatus get status => _status;
   User? get user => _user;
   String? get errorMessage => _errorMessage;
+  UserStatus? get userStatus => _userStatus;
+  String? get redirectTo => _redirectTo;
   bool get isLoading => _isLoading;
-  bool get isAuthenticated => _status == AuthStatus.authenticated;  AuthProvider() {
+  bool get isAuthenticated => _status == AuthStatus.authenticated;AuthProvider() {
     _checkAuthStatus();
   }  // Verificar estado de autenticación al inicializar
   Future<void> _checkAuthStatus() async {
@@ -137,13 +143,17 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = error;
     notifyListeners();
   }
-
   void _clearError() {
     _errorMessage = null;
+    _userStatus = null;
+    _redirectTo = null;
   }
-
   String _getErrorMessage(dynamic error) {
-    if (error is ApiException) {
+    if (error is AuthErrorException) {
+      _userStatus = error.userStatus;
+      _redirectTo = error.redirectTo;
+      return error.message;
+    } else if (error is ApiException) {
       return error.message;
     }
     return 'Ha ocurrido un error inesperado';

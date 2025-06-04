@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/api_config.dart';
 import '../models/auth_models.dart';
+import '../models/auth_error_models.dart';
+import '../enums/user_status.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -53,8 +55,7 @@ class ApiService {
     }
     
     return headers;
-  }
-  // Manejar respuesta HTTP
+  }  // Manejar respuesta HTTP
   static dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
@@ -70,6 +71,9 @@ class ApiService {
       return responseData;
     } else {
       String errorMessage = 'Error desconocido';
+      UserStatus? userStatus;
+      String? redirectTo;
+      
       try {
         final errorData = json.decode(response.body);
         
@@ -77,12 +81,26 @@ class ApiService {
         if (errorData is Map<String, dynamic>) {
           if (errorData.containsKey('message') && errorData['message'] is String) {
             errorMessage = errorData['message'];
+            
+            // Detectar errores específicos de estado de usuario
+            if (errorData.containsKey('userStatus')) {
+              userStatus = UserStatus.fromString(errorData['userStatus']);
+              redirectTo = errorData['redirectTo'];
+              
+              throw AuthErrorException(
+                errorMessage,
+                userStatus: userStatus,
+                redirectTo: redirectTo,
+                statusCode: response.statusCode,
+              );
+            }
           } else if (errorData.containsKey('data') && errorData['data'] is Map) {
             final data = errorData['data'] as Map<String, dynamic>;
             errorMessage = data['message'] ?? errorMessage;
           }
         }
       } catch (e) {
+        if (e is AuthErrorException) rethrow;
         errorMessage = 'Error: ${response.statusCode}';
       }
       throw ApiException(errorMessage, response.statusCode);

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/enums/user_status.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -122,6 +123,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _ProfilePage extends StatelessWidget {
   const _ProfilePage();
+  Color _getStatusColor(String status) {
+    final userStatus = UserStatus.fromString(status);
+    switch (userStatus) {
+      case UserStatus.active:
+        return Colors.green;
+      case UserStatus.pendingApproval:
+        return Colors.orange;
+      case UserStatus.pendingVerification:
+        return Colors.blue;
+      case UserStatus.rejected:
+        return Colors.red;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    final userStatus = UserStatus.fromString(status);
+    switch (userStatus) {
+      case UserStatus.active:
+        return Icons.check_circle;
+      case UserStatus.pendingApproval:
+        return Icons.pending;
+      case UserStatus.pendingVerification:
+        return Icons.hourglass_empty;
+      case UserStatus.rejected:
+        return Icons.cancel;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,8 +194,7 @@ class _ProfilePage extends StatelessWidget {
                     Text(
                       user?.phoneNumber ?? 'Sin teléfono',
                       style: AppTextStyles.inputText,
-                    ),
-                    const SizedBox(height: 8),
+                    ),                    const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -179,6 +206,37 @@ class _ProfilePage extends StatelessWidget {
                         style: AppTextStyles.caption.copyWith(color: AppColors.accent),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    // Mostrar estado del usuario
+                    if (user?.status != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(user!.status!).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _getStatusColor(user.status!),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [                            Icon(
+                              _getStatusIcon(user.status!),
+                              size: 14,
+                              color: _getStatusColor(user.status!),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              UserStatus.fromString(user.status!).displayName,
+                              style: AppTextStyles.caption.copyWith(
+                                color: _getStatusColor(user.status!),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               );
