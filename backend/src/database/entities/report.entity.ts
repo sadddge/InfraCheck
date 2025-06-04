@@ -1,9 +1,10 @@
 import { ReportCategory } from 'src/common/enums/report-category.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { Column, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from './user.entity';
 import { Comment } from './comment.entity';
 import { ReportChange } from './report-change.entity';
+import { ReportImage } from './report-image.entity';
+import { User } from './user.entity';
 import { Vote } from './vote.entity';
 
 @Entity()
@@ -16,6 +17,13 @@ export class Report {
         user => user.reports,
     )
     creator: User;
+
+    @OneToMany(
+        () => ReportImage,
+        reportImage => reportImage.report,
+        { cascade: true, eager: true, onDelete: 'CASCADE' },
+    )
+    images: ReportImage[];
 
     @OneToMany(
         () => Comment,
