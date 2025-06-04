@@ -59,7 +59,9 @@ export class UsersController {
     constructor(
         @Inject(USER_SERVICE)
         private readonly usersService: IUserService,
-    ) {} /**
+    ) {}
+
+    /**
      * Retrieves a list of all users in the system.
      * Only accessible by users with ADMIN role. Supports optional status filtering.
      * Returns user data without sensitive information like passwords.

@@ -17,7 +17,6 @@ import {
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Public } from 'src/common/decorators/public.decorator';
-import { AUTH_SERVICE, type IAuthService } from '../../common/interfaces/auth-service.interface';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RecoverPasswordDto } from './dto/recover-password.dto';
@@ -28,6 +27,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyRecoverPasswordDto } from './dto/verify-recover-password.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtResetGuard } from './guards/jwt-reset.guard';
+import { AUTH_SERVICE, type IAuthService } from './interfaces/auth-service.interface';
 
 /**
  * Authentication controller handling user registration, login, password recovery, and token management.
