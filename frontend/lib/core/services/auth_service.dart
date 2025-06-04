@@ -15,31 +15,24 @@ class AuthService {
     await ApiService.saveTokens(authResponse);
     return authResponse;
   }
-
   // Register
-  static Future<AuthResponse> register(RegisterRequest request) async {
+  static Future<RegisterResponse> register(RegisterRequest request) async {
     final response = await ApiService.post(
       ApiConfig.registerEndpoint,
       data: request.toJson(),
       includeAuth: false,
     );
     
-    final authResponse = AuthResponse.fromJson(response);
-    await ApiService.saveTokens(authResponse);
-    return authResponse;
+    return RegisterResponse.fromJson(response);
   }
-
   // Verify register code
-  static Future<AuthResponse> verifyRegisterCode(VerifyRegisterCodeRequest request) async {
-    final response = await ApiService.post(
-      ApiConfig.verifyRegisterCodeEndpoint,
-      data: request.toJson(),
+  static Future<void> verifyRegisterCode(VerifyRegisterCodeRequest request) async {
+    final uri = '${ApiConfig.verifyRegisterCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
+    await ApiService.post(
+      uri,
       includeAuth: false,
     );
-    
-    final authResponse = AuthResponse.fromJson(response);
-    await ApiService.saveTokens(authResponse);
-    return authResponse;
+    // No retorna datos, solo confirma que el código es válido
   }
 
   // Logout

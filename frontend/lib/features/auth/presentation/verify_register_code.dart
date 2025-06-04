@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
-import '../../../core/services/auth_service.dart';
-import '../../../core/models/auth_models.dart';
+import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
 
 class VerifyRegisterCodeScreen extends StatefulWidget {
@@ -25,25 +25,24 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
   void dispose() {
     _codeController.dispose();
     super.dispose();
-  }
-  void _verifyCode() {
+  }  void _verifyCode() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Crear la solicitud de verificación
-      final request = VerifyRegisterCodeRequest(
-        phoneNumber: widget.phoneNumber,
-        code: _codeController.text.trim(),
+      // Usar AuthProvider para verificar el código
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.verifyRegisterCode(
+        widget.phoneNumber,
+        _codeController.text.trim(),
       );
 
-      // Llamar al servicio de verificación
-      AuthService.verifyRegisterCode(request).then((authResponse) {
-        setState(() {
-          _isLoading = false;
-        });
-        
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (success) {
         // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -58,20 +57,9 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
           '/home', // Ajusta esta ruta según tu configuración de navegación
           (route) => false,
         );
-      }).catchError((error) {
-        setState(() {
-          _isLoading = false;
-        });
-        
-        // Mostrar mensaje de error
-        String errorMessage = 'Error al verificar el código';
-        if (error.toString().contains('Invalid code') || 
-            error.toString().contains('Código inválido')) {
-          errorMessage = 'Código incorrecto. Verifica e intenta nuevamente.';
-        } else if (error.toString().contains('Expired') || 
-                   error.toString().contains('Expirado')) {
-          errorMessage = 'El código ha expirado. Solicita uno nuevo.';
-        }
+      } else {
+        // Mostrar mensaje de error del provider
+        final errorMessage = authProvider.errorMessage ?? 'Error al verificar el código';
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -79,7 +67,7 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
             backgroundColor: Colors.red,
           ),
         );
-      });
+      }
     }
   }
 

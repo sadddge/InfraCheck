@@ -47,6 +47,18 @@ Map<String, dynamic> _$VerifyRegisterCodeRequestToJson(
   'code': instance.code,
 };
 
+RegisterResponse _$RegisterResponseFromJson(Map<String, dynamic> json) =>
+    RegisterResponse(
+      message: json['message'] as String,
+      verificationCodeSentTo: json['verificationCodeSentTo'] as String,
+    );
+
+Map<String, dynamic> _$RegisterResponseToJson(RegisterResponse instance) =>
+    <String, dynamic>{
+      'message': instance.message,
+      'verificationCodeSentTo': instance.verificationCodeSentTo,
+    };
+
 AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) => AuthResponse(
   accessToken: json['accessToken'] as String,
   refreshToken: json['refreshToken'] as String,

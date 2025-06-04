@@ -33,7 +33,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
-
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -49,21 +48,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
-    final success = await authProvider.register(
+    final registerResponse = await authProvider.register(
       _phoneNumberController.text.trim(),
       _passwordController.text.trim(),
       _nameController.text.trim(),
-      _lastNameController.text.trim(), // phone es opcional
+      _lastNameController.text.trim(),
     );
 
-    if (success && mounted) {
+    if (registerResponse != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cuenta creada exitosamente'),
+        SnackBar(
+          content: Text(registerResponse.message),
           backgroundColor: Colors.green,
         ),
       );
-      context.go('/login');
+      
+      // Navegar a la pantalla de verificación de código
+      Navigator.pushNamed(
+        context,
+        '/verify-register-code',
+        arguments: _phoneNumberController.text.trim(),
+      );
     } else if (mounted && authProvider.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

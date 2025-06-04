@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../models/auth_models.dart';
 import '../services/auth_service.dart';
@@ -22,18 +22,11 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _checkAuthStatus() async {
     _setLoading(true);
     
-    // En modo desarrollo, usar usuario simulado
-    if (kDebugMode) {
-      await loginDev();
-      _setLoading(false);
-      return;
-    }
-    
     try {
       final isAuth = await AuthService.isAuthenticated();
-      if (isAuth) {
-        // Usuario autenticado pero sin datos, usar modo desarrollo
-        await loginDev();
+      if (isAuth) {        // En producción, aquí se obtendría la información del usuario desde el backend
+        // Por ahora se marca como no autenticado ya que no tenemos la implementación completa
+        _setUnauthenticated();
       } else {
         _setUnauthenticated();
       }
@@ -61,9 +54,8 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return false;
     }
-  }
-  // Register
-  Future<bool> register(String phoneNumber, String password, String name, String lastName) async {
+  }  // Register
+  Future<RegisterResponse?> register(String phoneNumber, String password, String name, String lastName) async {
     _setLoading(true);
     _clearError();
 
@@ -74,19 +66,31 @@ class AuthProvider extends ChangeNotifier {
         name: name,
         lastName: lastName
       );
-      await AuthService.register(registerRequest);
+      final registerResponse = await AuthService.register(registerRequest);
       
-      // Crear usuario simulado después del registro exitoso
-      final user = User(
-        id: 1,
+      _setLoading(false);
+      return registerResponse;
+    } catch (e) {
+      _setError(_getErrorMessage(e));
+      _setLoading(false);
+      return null;
+    }
+  }
+
+  // Verify Register Code - authentica al usuario después de verificar el código
+  Future<bool> verifyRegisterCode(String phoneNumber, String code) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final verifyRequest = VerifyRegisterCodeRequest(
         phoneNumber: phoneNumber,
-        name: name,
-        lastName: lastName,
-        role: 'user',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        code: code,
       );
-      _setAuthenticated(user);
+      await AuthService.verifyRegisterCode(verifyRequest);
+        // En producción, aquí se obtendría la información del usuario desde el backend
+      // Por ahora, se marca como no autenticado ya que no tenemos la implementación completa
+      _setUnauthenticated();
       _setLoading(false);
       return true;
     } catch (e) {
@@ -148,35 +152,5 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _clearError();
     notifyListeners();
-  }
-  // MODO DESARROLLO - Simular login con credenciales de prueba
-  Future<void> loginDev() async {
-    _setLoading(true);
-    
-    // Simular usuario de desarrollo
-    final devUser = User(
-      id: 1,
-      phoneNumber: '+56912345678',
-      name: 'Usuario',
-      lastName: 'Desarrollo',
-      role: 'admin',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    
-    // Simular delay de red
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    _setAuthenticated(devUser);
-    _setLoading(false);
-  }
-
-  // MODO DESARROLLO - Toggle rápido de autenticación
-  void toggleDevAuth() {
-    if (_status == AuthStatus.authenticated) {
-      _setUnauthenticated();
-    } else {
-      loginDev();
-    }
   }
 }

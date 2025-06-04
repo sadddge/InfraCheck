@@ -63,6 +63,23 @@ class VerifyRegisterCodeRequest extends Equatable {
 }
 
 @JsonSerializable()
+class RegisterResponse extends Equatable {
+  final String message;
+  final String verificationCodeSentTo;
+
+  const RegisterResponse({
+    required this.message,
+    required this.verificationCodeSentTo,
+  });
+
+  factory RegisterResponse.fromJson(Map<String, dynamic> json) => _$RegisterResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$RegisterResponseToJson(this);
+
+  @override
+  List<Object> get props => [message, verificationCodeSentTo];
+}
+
+@JsonSerializable()
 class AuthResponse extends Equatable {
   final String accessToken;
   final String refreshToken;

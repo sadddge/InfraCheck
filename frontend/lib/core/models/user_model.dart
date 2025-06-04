@@ -22,8 +22,27 @@ class User extends Equatable {
     this.createdAt,
     this.updatedAt,
   });
-
-  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  factory User.fromJson(Map<String, dynamic> json) {
+    try {
+      return _$UserFromJson(json);
+    } catch (e) {
+      // Fallback para manejar inconsistencias del backend
+      return User(
+        id: json['id'] as int,
+        phoneNumber: json['phoneNumber'] as String,
+        name: json['name'] as String,
+        lastName: json['lastName'] as String?, // Puede ser null
+        role: json['role'] as String,
+        createdAt: json['createdAt'] != null 
+            ? DateTime.parse(json['createdAt'] as String) 
+            : null,
+        updatedAt: json['updatedAt'] != null 
+            ? DateTime.parse(json['updatedAt'] as String) 
+            : null,
+      );
+    }
+  }
+  
   Map<String, dynamic> toJson() => _$UserToJson(this);
 
   User copyWith({

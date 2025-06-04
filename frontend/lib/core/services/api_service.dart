@@ -54,17 +54,34 @@ class ApiService {
     
     return headers;
   }
-
   // Manejar respuesta HTTP
   static dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
-      return json.decode(response.body);
+      
+      final responseData = json.decode(response.body);
+      
+      // El backend envuelve las respuestas con ResponseInterceptor
+      // que tiene la estructura: { success: boolean, data: any, message?: string }
+      if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+        return responseData['data'];
+      }
+      
+      return responseData;
     } else {
       String errorMessage = 'Error desconocido';
       try {
         final errorData = json.decode(response.body);
-        errorMessage = errorData['message'] ?? errorMessage;
+        
+        // Manejar errores del backend que también están envueltos
+        if (errorData is Map<String, dynamic>) {
+          if (errorData.containsKey('message') && errorData['message'] is String) {
+            errorMessage = errorData['message'];
+          } else if (errorData.containsKey('data') && errorData['data'] is Map) {
+            final data = errorData['data'] as Map<String, dynamic>;
+            errorMessage = data['message'] ?? errorMessage;
+          }
+        }
       } catch (e) {
         errorMessage = 'Error: ${response.statusCode}';
       }
