@@ -11,9 +11,9 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { CreateReportDto } from './dto/create-report.dto';
-import { ReportDto } from './dto/report.dto';
-import { IReportsService, REPORTS_SERVICE } from './interfaces/reports-service.interface';
+import { CreateReportDto } from '../dto/create-report.dto';
+import { ReportDto } from '../dto/report.dto';
+import { IReportsService, REPORTS_SERVICE } from '../interfaces/reports-service.interface';
 
 @Controller({
     path: 'reports',
