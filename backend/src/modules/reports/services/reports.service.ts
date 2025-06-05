@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Report } from 'src/database/entities/report.entity';
 import {
@@ -19,12 +19,61 @@ export class ReportsService implements IReportsService {
         private readonly uploadService: IUploadService,
     ) {}
 
-    findAll(): Promise<ReportDto[]> {
-        throw new Error('Method not implemented.');
+    async findAll(): Promise<ReportDto[]> {
+        const reports = await this.reportRepository.find({
+            relations: ['creator', 'images'],
+        });
+
+        return reports.map(report => ({
+            id: report.id,
+            title: report.title,
+            description: report.description,
+            category: report.category,
+            state: report.state,
+            isVisible: report.isVisible,
+            latitude: report.latitude,
+            longitude: report.longitude,
+            createdAt: report.createdAt,
+            creatorId: report.creator.id,
+            images: report.images.map(img => ({
+                takenAt: img.takenAt,
+                latitude: img.latitude,
+                longitude: img.longitude,
+                url: img.imageUrl,
+            })),
+        }));
     }
-    findById(id: number): Promise<ReportDto> {
-        throw new Error('Method not implemented.');
+
+    async findById(id: number): Promise<ReportDto> {
+        const report = await this.reportRepository.findOne({
+            where: { id },
+            relations: ['creator', 'images'],
+        });
+
+        if (!report) {
+            throw new NotFoundException(`Report with ID ${id} not found`);
+        }
+
+        return {
+            id: report.id,
+            title: report.title,
+            description: report.description,
+            category: report.category,
+            state: report.state,
+            isVisible: report.isVisible,
+            latitude: report.latitude,
+            longitude: report.longitude,
+            createdAt: report.createdAt,
+            creatorId: report.creator.id,
+            images: report.images.map(img => ({
+                takenAt: img.takenAt,
+                latitude: img.latitude,
+                longitude: img.longitude,
+                url: img.imageUrl,
+            })),
+        };
     }
+
     async createReport(
         dto: CreateReportDto,
         files: Express.Multer.File[],
@@ -85,9 +134,11 @@ export class ReportsService implements IReportsService {
         };
         return reportDto;
     }
+
     updateReport(id: number, dto: CreateReportDto): Promise<ReportDto> {
         throw new Error('Method not implemented.');
     }
+
     deleteReport(id: number): Promise<void> {
         throw new Error('Method not implemented.');
     }
