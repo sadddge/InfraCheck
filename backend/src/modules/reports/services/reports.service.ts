@@ -1,5 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ReportState } from 'src/common/enums/report-state.enums';
 import { Report } from 'src/database/entities/report.entity';
 import {
     IUploadService,
@@ -7,6 +8,7 @@ import {
 } from 'src/modules/upload/interfaces/upload-service.interface';
 import { Repository } from 'typeorm';
 import { CreateReportDto } from '../dto/create-report.dto';
+import { ReportChangeDto } from '../dto/report-change.dto';
 import { ReportDto } from '../dto/report.dto';
 import { IReportsService } from '../interfaces/reports-service.interface';
 
@@ -74,6 +76,23 @@ export class ReportsService implements IReportsService {
         };
     }
 
+    async findHistoryByReportId(reportId: number): Promise<ReportChangeDto[]> {
+        const report = await this.reportRepository.findOne({
+            where: { id: reportId },
+            relations: ['changes', 'changes.creator'],
+        });
+        if (!report) {
+            throw new NotFoundException(`Report with ID ${reportId} not found`);
+        }
+        return report.changes.map(change => ({
+            creatorId: change.creator.id,
+            changeType: change.changeType,
+            from: change.from,
+            to: change.to,
+            createdAt: change.createdAt,
+        }));
+    }
+
     async createReport(
         dto: CreateReportDto,
         files: Express.Multer.File[],
@@ -135,12 +154,20 @@ export class ReportsService implements IReportsService {
         return reportDto;
     }
 
-    updateReport(id: number, dto: CreateReportDto): Promise<ReportDto> {
-        throw new Error('Method not implemented.');
-    }
+    async updateState(id: number, state: ReportState): Promise<ReportDto> {
+        const report = await this.reportRepository.findOne({
+            where: { id },
+            relations: ['creator', 'images'],
+        });
 
-    deleteReport(id: number): Promise<void> {
-        throw new Error('Method not implemented.');
+        if (!report) {
+            throw new NotFoundException(`Report with ID ${id} not found`);
+        }
+
+        report.state = state;
+        const updatedReport = await this.reportRepository.save(report);
+
+        return this.findById(updatedReport.id);
     }
 
     private getAvarage(values: number[]): number {
