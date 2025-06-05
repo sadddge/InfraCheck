@@ -2,7 +2,9 @@ import {
     BadRequestException,
     Body,
     Controller,
+    Get,
     Inject,
+    Param,
     Post,
     Req,
     UploadedFiles,
@@ -25,6 +27,16 @@ export class ReportsController {
         private readonly reportsService: IReportsService,
     ) {}
 
+    @Get()
+    async getAllReports(): Promise<ReportDto[]> {
+        return await this.reportsService.findAll();
+    }
+
+    @Get(':id')
+    async getReportById(@Param('id') id: string): Promise<ReportDto> {
+        return await this.reportsService.findById(+id);
+    }
+
     @Post()
     @UseInterceptors(FilesInterceptor('images', 10))
     async createReport(
@@ -44,6 +56,6 @@ export class ReportsController {
             throw new BadRequestException('Number of uploaded files does not match metadata');
         const creatorId = req.user.id ?? 5; // Assuming user ID is available in the request
 
-        return this.reportsService.createReport(dto, files, creatorId);
+        return await this.reportsService.createReport(dto, files, creatorId);
     }
 }
