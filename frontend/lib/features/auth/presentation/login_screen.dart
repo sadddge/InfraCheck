@@ -92,13 +92,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
+    return Scaffold(      body: Stack(
         children: [
-          // Blur background
+          // Background with gradient and blur effect
           Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
+            width: double.infinity,
+            height: double.infinity,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: const Alignment(0.50, 0.00),
@@ -109,10 +108,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-              child: Container(),
-            ),
+          ),
+          // Overlay with opacity
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.black.withOpacity(0.35),
+          ),
+          // Blur effect
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(),
           ),
           // Main content
           SafeArea(
