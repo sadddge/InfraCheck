@@ -100,7 +100,14 @@ class _LoginScreenState extends State<LoginScreen> {
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.5),
+              gradient: LinearGradient(
+                begin: const Alignment(0.50, 0.00),
+                end: const Alignment(0.50, 1.00),
+                colors: [
+                  const Color(0xFF9BD6D1),
+                  const Color(0xFFDCEDC8),
+                ],
+              ),
             ),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
