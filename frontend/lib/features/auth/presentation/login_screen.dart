@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
             userStatus: userStatus,
             onRetry: userStatus == UserStatus.pendingVerification
                 ? () {
-                    Navigator.of(context).pop();
+                    context.go('/verify-register-code/${_phoneNumberController.text}');
                     // Navegar a verificación si es necesario
                     if (userStatus == UserStatus.pendingVerification) {
                       context.go('/verify-register-code/${_phoneNumberController.text}');
@@ -234,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: () {
-                                  // TODO: Implementar recuperación de contraseña
+                                  context.go('/recover-password');
                                 },
                                 child: Text(
                                   '¿Has olvidado la contraseña?',

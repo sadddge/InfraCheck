@@ -1,10 +1,9 @@
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
 import 'features/auth/presentation/verify_register_code.dart';
 import 'features/auth/presentation/home_screen.dart';
-import 'core/providers/auth_provider.dart';
+import 'features/auth/presentation/recover_password.dart';
 
 
 /// Configuración principal de navegación de la aplicación InfraCheck
@@ -21,31 +20,6 @@ final GoRouter router = GoRouter(
   
   // Habilitar logs de depuración para desarrollo y poder ver errores de navegación
   debugLogDiagnostics: true,
-    // Lógica de redirección automática
-  
-  redirect: (context, state) {
-    // Obtener el estado de autenticación actual
-    final authProvider = Provider.of<AuthProvider>(context, listen: true);
-    final isAuthenticated = authProvider.isAuthenticated;
-    
-    // Definir rutas que no requieren autenticación
-    final publicRoutes = {'/login', '/register'};
-    final isPublicRoute = publicRoutes.contains(state.uri.path) || 
-                         state.uri.path.startsWith('/verify-register-code');
-
-    // CASO 1: Usuario no autenticado intentando acceder a ruta protegida
-    if (!isAuthenticated && !isPublicRoute) {
-      return '/login';
-    }
-    
-    // CASO 2: Usuario autenticado en ruta pública (evitar loops)
-    if (isAuthenticated && state.uri.path == '/login') {
-      return '/home';
-    }
-
-    // CASO 3: Permitir navegación normal
-    return null;
-  },
   
   // Definición de todas las rutas de la aplicación
   routes: [
@@ -78,9 +52,16 @@ final GoRouter router = GoRouter(
         final phoneNumber = state.pathParameters['phoneNumber']!;
         return VerifyRegisterCodeScreen(phoneNumber: phoneNumber);
       },
+    ),    // Ruta: Recuperación de contraseña
+    GoRoute(
+      path: '/recover-password',
+      name: 'recover-password',
+      builder: (context, state) => const RecoverPasswordScreen(),
     ),
   ],
-  
+
+
+
   // Página de error para rutas no encontradas
   errorBuilder: (context, state) => const LoginScreen(),
 );

@@ -30,6 +30,7 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
 
       // Simular llamada al servicio de recuperación de contraseña
       // En producción, aquí se haría la llamada real al backend
+      // Aca para enviar codigo de recuperación al teléfono
       await Future.delayed(const Duration(seconds: 2));
 
       setState(() {
