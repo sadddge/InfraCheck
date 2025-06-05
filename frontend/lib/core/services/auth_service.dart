@@ -35,16 +35,15 @@ class AuthService {
     );
     // No retorna datos, solo envía el código por SMS
   }
-
   // Verify register code
   static Future<void> verifyRegisterCode(VerifyRegisterCodeRequest request) async {
-    final uri = '${ApiConfig.verifyRegisterCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
     await ApiService.post(
-      uri,
+      ApiConfig.verifyRegisterCodeEndpoint,
+      data: request.toJson(),
       includeAuth: false,
     );
     // No retorna datos, solo confirma que el código es válido
-  }  // Verify recover password code
+  }// Verify recover password code
   static Future<VerifyRecoverPasswordResponse> verifyRecoverPassword(VerifyRecoverPasswordRequest request) async {
     final response = await ApiService.post(
       ApiConfig.verifyRecoverCodeEndpoint,
