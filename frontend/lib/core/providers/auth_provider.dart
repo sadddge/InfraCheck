@@ -106,19 +106,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Logout
-  Future<void> logout() async {
-    _setLoading(true);
-    
-    try {
-      await AuthService.logout();
-    } catch (e) {
-      // Ignorar errores del logout
-    }
-    
-    _setUnauthenticated();
-    _setLoading(false);
-  }
   // Métodos privados
   void _setAuthenticated(User user) {
     _status = AuthStatus.authenticated;
@@ -146,8 +133,24 @@ class AuthProvider extends ChangeNotifier {
   void _clearError() {
     _errorMessage = null;
     _userStatus = null;
-    _redirectTo = null;
+    _redirectTo = null;  }
+  // Logout - limpia tokens y estado del usuario
+  Future<void> logout() async {
+    _setLoading(true);
+    
+    try {
+      // Limpiar tokens del almacenamiento seguro
+      await ApiService.clearTokens();
+    } catch (e) {
+      // Continuar con logout incluso si hay error limpiando tokens
+      print('Error clearing tokens: $e');
+    }
+    
+    // Siempre marcar como no autenticado
+    _setUnauthenticated();
+    _setLoading(false);
   }
+
   String _getErrorMessage(dynamic error) {
     if (error is AuthErrorException) {
       _userStatus = error.userStatus;

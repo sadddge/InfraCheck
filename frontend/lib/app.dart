@@ -21,12 +21,11 @@ final GoRouter router = GoRouter(
   
   // Habilitar logs de depuración para desarrollo y poder ver errores de navegación
   debugLogDiagnostics: true,
-  
-  // Lógica de redirección automática
+    // Lógica de redirección automática
   
   redirect: (context, state) {
     // Obtener el estado de autenticación actual
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: true);
     final isAuthenticated = authProvider.isAuthenticated;
     
     // Definir rutas que no requieren autenticación

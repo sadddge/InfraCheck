@@ -35,16 +35,6 @@ class AuthService {
     // No retorna datos, solo confirma que el código es válido
   }
 
-  // Logout
-  static Future<void> logout() async {
-    try {
-      await ApiService.post(ApiConfig.logoutEndpoint);
-    } catch (e) {
-      // Ignorar errores del logout en el servidor
-    } finally {
-      await ApiService.clearTokens();
-    }  }
-
   // Verificar si está autenticado
   static Future<bool> isAuthenticated() async {
     return await ApiService.isAuthenticated();
