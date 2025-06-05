@@ -24,8 +24,7 @@ class AuthService {
     );
     
     return RegisterResponse.fromJson(response);
-  }
-  // Verify register code
+  }  // Verify register code
   static Future<void> verifyRegisterCode(VerifyRegisterCodeRequest request) async {
     final uri = '${ApiConfig.verifyRegisterCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
     await ApiService.post(
@@ -35,15 +34,15 @@ class AuthService {
     // No retorna datos, solo confirma que el código es válido
   }
 
-  // Logout
-  static Future<void> logout() async {
-    try {
-      await ApiService.post(ApiConfig.logoutEndpoint);
-    } catch (e) {
-      // Ignorar errores del logout en el servidor
-    } finally {
-      await ApiService.clearTokens();
-    }  }
+  // Verify recover password code
+  static Future<void> verifyRecoverPassword(VerifyRecoverPasswordRequest request) async {
+    final uri = '${ApiConfig.verifyRecoverCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
+    await ApiService.post(
+      uri,
+      includeAuth: false,
+    );
+    // No retorna datos, solo confirma que el código es válido
+  }
 
   // Verificar si está autenticado
   static Future<bool> isAuthenticated() async {

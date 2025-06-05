@@ -1,76 +1,102 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'dart:ui';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+class ResetPasswordScreen extends StatefulWidget {
+  final String phoneNumber;
+  
+  const ResetPasswordScreen({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
-  final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _lastNameController.dispose();
-    _phoneNumberController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
-  Future<void> _handleRegister() async {
+  Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_passwordController.text != _confirmPasswordController.text) {
+    // final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    // TODO: Implementar la llamada al servicio de reset password
+    // final success = await authProvider.resetPassword(
+    //   widget.phoneNumber,
+    //   _passwordController.text.trim(),
+    // );
+
+    // Simulación temporal - remover cuando se implemente el servicio
+    setState(() {});
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (mounted) {
+      // Mostrar mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Las contraseñas no coinciden'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
-    final registerResponse = await authProvider.register(
-      _phoneNumberController.text.trim(),
-      _passwordController.text.trim(),
-      _nameController.text.trim(),
-      _lastNameController.text.trim(),
-    );    if (registerResponse != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Usuario registrado exitosamente. Se ha enviado un código de verificación a ${registerResponse.phoneNumber}'),
+          content: Text('Tu contraseña ha sido restablecida exitosamente'),
           backgroundColor: Colors.green,
         ),
       );
       
-      // Navegar a la pantalla de verificación de código usando Go Router
-      context.go('/verify-register-code/${_phoneNumberController.text.trim()}');
-    } else if (mounted && authProvider.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage!),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // Navegar al login
+      context.go('/login');
     }
+
+    // Código para cuando se implemente el servicio real:
+    // if (success && mounted) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Tu contraseña ha sido restablecida exitosamente'),
+    //       backgroundColor: Colors.green,
+    //     ),
+    //   );
+    //   context.go('/login');
+    // } else if (mounted && authProvider.errorMessage != null) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text(authProvider.errorMessage!),
+    //       backgroundColor: Colors.red,
+    //     ),
+    //   );
+    // }
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Por favor ingresa tu nueva contraseña';
+    }
+    if (value.length < 8) {
+      return 'La contraseña debe tener al menos 8 caracteres';
+    }
+    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
+      return 'La contraseña debe contener al menos una mayúscula, una minúscula y un número';
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Por favor confirma tu nueva contraseña';
+    }
+    if (value != _passwordController.text) {
+      return 'Las contraseñas no coinciden';
+    }
+    return null;
   }
 
   @override
@@ -118,23 +144,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 32),
+                    
+                    // Back button
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          color: AppColors.textWhite,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
                     // Header section
                     Column(
                       children: [
                         Text(
-                          'Crear nueva cuenta',
+                          'Restablecer Contraseña',
                           style: AppTextStyles.heading,
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Completa los datos para crear tu cuenta',
+                          'Ingresa tu nueva contraseña para completar el proceso de recuperación',
                           style: AppTextStyles.subtitle,
                           textAlign: TextAlign.center,
                         ),
                       ],
                     ),
                     const SizedBox(height: 32),
+                    
                     // Form container
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -154,65 +197,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             CustomTextField(
-                              label: 'Nombre',
-                              controller: _nameController,
-                              hintText: 'Ingresa tu nombre',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Por favor ingresa tu nombre';
-                                }
-                                if (value.length < 2) {
-                                  return 'El nombre debe tener al menos 2 caracteres';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            CustomTextField(
-                              label: 'Apellido',
-                              controller: _lastNameController,
-                              hintText: 'Ingresa tu apellido',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Por favor ingresa tu apellido';
-                                }
-                                if (value.length < 2) {
-                                  return 'El apellido debe tener al menos 2 caracteres';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            CustomTextField(
-                              label: 'Número de telefono',
-                              controller: _phoneNumberController,
-                              hintText: '+56912345678',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Por favor ingresa tu número de telefono';
-                                }
-                                // Regex actualizada para el formato +569xxxxxxxx
-                                if (!RegExp(r'^\+569\d{8}$').hasMatch(value)) {
-                                  return 'El formato debe ser +569xxxxxxxx (ej: +56912345678)';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            CustomTextField(
-                              label: 'Contraseña',
+                              label: 'Nueva Contraseña',
                               controller: _passwordController,
                               obscureText: _obscurePassword,
-                              hintText: '*******',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Por favor ingresa una contraseña';
-                                }
-                                if (value.length < 6) {
-                                  return 'La contraseña debe tener al menos 6 caracteres';
-                                }
-                                return null;
-                              },
+                              hintText: '••••••••',
+                              validator: _validatePassword,
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword
@@ -229,19 +218,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             const SizedBox(height: 16),
                             CustomTextField(
-                              label: 'Confirmar contraseña',
+                              label: 'Confirmar Contraseña',
                               controller: _confirmPasswordController,
                               obscureText: _obscureConfirmPassword,
-                              hintText: '*******',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Por favor confirma tu contraseña';
-                                }
-                                if (value != _passwordController.text) {
-                                  return 'Las contraseñas no coinciden';
-                                }
-                                return null;
-                              },
+                              hintText: '••••••••',
+                              validator: _validateConfirmPassword,
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscureConfirmPassword
@@ -256,11 +237,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 },
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            
+                            // Password requirements
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.teal800.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: AppColors.teal800.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'La contraseña debe tener:',
+                                    style: AppTextStyles.inputLabel.copyWith(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  _buildRequirement('Al menos 8 caracteres'),
+                                  _buildRequirement('Una letra mayúscula'),
+                                  _buildRequirement('Una letra minúscula'),
+                                  _buildRequirement('Un número'),
+                                ],
+                              ),
+                            ),
+                            
                             const SizedBox(height: 24),
                             Consumer<AuthProvider>(
                               builder: (context, authProvider, child) {
                                 return ElevatedButton(
-                                  onPressed: authProvider.isLoading ? null : _handleRegister,
+                                  onPressed: authProvider.isLoading ? null : _handleResetPassword,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.primaryYellow,
                                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -278,38 +291,69 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           ),
                                         )
                                       : Text(
-                                          'Crear cuenta',
+                                          'Restablecer Contraseña',
                                           style: AppTextStyles.buttonText,
                                         ),
                                 );
                               },
                             ),
-                            const SizedBox(height: 24),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '¿Ya tienes una cuenta?',
-                                  style: AppTextStyles.smallText,
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    context.go('/login');
-                                  },
-                                  child: Text(
-                                    'Inicia sesión',
-                                    style: AppTextStyles.smallLinkText,
-                                  ),
-                                ),
-                              ],
-                            ),
                           ],
                         ),
                       ),
                     ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Back to login link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '¿Recordaste tu contraseña?',
+                          style: AppTextStyles.smallText.copyWith(
+                            color: AppColors.textWhite,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            context.go('/login');
+                          },
+                          child: Text(
+                            'Inicia sesión',
+                            style: AppTextStyles.smallLinkText.copyWith(
+                              color: AppColors.textWhite,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequirement(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 14,
+            color: AppColors.teal800.withOpacity(0.7),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: AppTextStyles.caption.copyWith(
+              fontSize: 11,
+              color: AppColors.teal800.withOpacity(0.8),
             ),
           ),
         ],

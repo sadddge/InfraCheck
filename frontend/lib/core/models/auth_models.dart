@@ -63,6 +63,24 @@ class VerifyRegisterCodeRequest extends Equatable {
 }
 
 @JsonSerializable()
+class VerifyRecoverPasswordRequest extends Equatable {
+  @JsonKey(name: 'phoneNumber')
+  final String phoneNumber;
+  final String code;
+
+  const VerifyRecoverPasswordRequest({
+    required this.phoneNumber,
+    required this.code,
+  });
+
+  factory VerifyRecoverPasswordRequest.fromJson(Map<String, dynamic> json) => _$VerifyRecoverPasswordRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$VerifyRecoverPasswordRequestToJson(this);
+
+  @override
+  List<Object> get props => [phoneNumber, code];
+}
+
+@JsonSerializable()
 class RegisterResponse extends Equatable {
   final int id;
   final String phoneNumber;

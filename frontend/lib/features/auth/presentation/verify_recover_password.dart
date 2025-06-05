@@ -6,19 +6,19 @@ import '../../../shared/theme/colors.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
 
-class VerifyRegisterCodeScreen extends StatefulWidget {
+class VerifyRecoverPassword extends StatefulWidget {
   final String phoneNumber;
 
-  const VerifyRegisterCodeScreen({
+  const VerifyRecoverPassword({
     Key? key,
     required this.phoneNumber,
   }) : super(key: key);
 
   @override
-  State<VerifyRegisterCodeScreen> createState() => _VerifyRegisterCodeScreenState();
+  State<VerifyRecoverPassword> createState() => _VerifyRecoverPasswordState();
 }
 
-class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
+class _VerifyRecoverPasswordState extends State<VerifyRecoverPassword> {
   final TextEditingController _codeController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -27,15 +27,17 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
   void dispose() {
     _codeController.dispose();
     super.dispose();
-  }  void _verifyCode() async {
+  }
+
+  void _verifyCode() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Usar AuthProvider para verificar el código
+      // Usar AuthProvider para verificar el código de recuperación de contraseña
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.verifyRegisterCode(
+      final success = await authProvider.verifyRecoverPassword(
         widget.phoneNumber,
         _codeController.text.trim(),
       );
@@ -51,12 +53,13 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
             content: Text('Código verificado exitosamente'),
             backgroundColor: Colors.green,
           ),
-        );        // Navegar a la pantalla principal usando Go Router esto modificar
-        context.go('/home');
+        );
+        // Navegar a la pantalla de restablecimiento de contraseña
+        context.go('/reset-password', extra: widget.phoneNumber);
       } else {
         // Mostrar mensaje de error del provider
         final errorMessage = authProvider.errorMessage ?? 'Error al verificar el código';
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -113,12 +116,12 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 32),
-                    
+
                     // Back button
                     Align(
                       alignment: Alignment.centerLeft,
                       child: IconButton(
-                        onPressed: () => context.go('/register'),
+                        onPressed: () => context.go('/recover-password'),
                         icon: const Icon(
                           Icons.arrow_back_ios,
                           color: AppColors.textWhite,
@@ -126,15 +129,15 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Header section
                     Column(
                       children: [
                         // Title with shadow
                         Text(
-                          'Verificar código de registro',
+                          'Verificar código de recuperación',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: const Color(0xFFFCFDFA),
@@ -165,9 +168,9 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Form container
                     Container(
                       width: double.infinity,

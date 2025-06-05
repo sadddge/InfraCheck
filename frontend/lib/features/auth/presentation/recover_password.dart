@@ -1,68 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
 import '../../../shared/theme/colors.dart';
-import '../../../core/providers/auth_provider.dart';
-import 'widgets/custom_text_field.dart';
+import '../../../shared/theme/text_styles.dart';
 
-class VerifyRegisterCodeScreen extends StatefulWidget {
-  final String phoneNumber;
-
-  const VerifyRegisterCodeScreen({
-    Key? key,
-    required this.phoneNumber,
-  }) : super(key: key);
+class RecoverPasswordScreen extends StatefulWidget {
+  const RecoverPasswordScreen({Key? key}) : super(key: key);
 
   @override
-  State<VerifyRegisterCodeScreen> createState() => _VerifyRegisterCodeScreenState();
+  State<RecoverPasswordScreen> createState() => _RecoverPasswordScreenState();
 }
 
-class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
-  final TextEditingController _codeController = TextEditingController();
+class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
+  final TextEditingController _phoneNumberController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _codeController.dispose();
+    _phoneNumberController.dispose();
     super.dispose();
-  }  void _verifyCode() async {
+  }
+
+  Future<void> _recoverPassword() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Usar AuthProvider para verificar el código
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.verifyRegisterCode(
-        widget.phoneNumber,
-        _codeController.text.trim(),
-      );
+      // Simular llamada al servicio de recuperación de contraseña
+      // En producción, aquí se haría la llamada real al backend
+      // Aca para enviar codigo de recuperación al teléfono
+      await Future.delayed(const Duration(seconds: 2));
 
       setState(() {
         _isLoading = false;
-      });
-
-      if (success) {
-        // Mostrar mensaje de éxito
+      });      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Código verificado exitosamente'),
+            content: Text('Se ha enviado un código de recuperación a tu teléfono'),
             backgroundColor: Colors.green,
           ),
-        );        // Navegar a la pantalla principal usando Go Router esto modificar
-        context.go('/home');
-      } else {
-        // Mostrar mensaje de error del provider
-        final errorMessage = authProvider.errorMessage ?? 'Error al verificar el código';
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
         );
+        
+        // Navegar a la pantalla de verificación de código de recuperación
+        context.go('/verify-recover-password', extra: _phoneNumberController.text.trim());
       }
     }
   }
@@ -118,7 +100,7 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: IconButton(
-                        onPressed: () => context.go('/register'),
+                        onPressed: () => context.go('/login'),
                         icon: const Icon(
                           Icons.arrow_back_ios,
                           color: AppColors.textWhite,
@@ -134,7 +116,7 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                       children: [
                         // Title with shadow
                         Text(
-                          'Verificar código de registro',
+                          'Recupera tu Contraseña',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: const Color(0xFFFCFDFA),
@@ -153,14 +135,8 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Ingresa el código de 6 dígitos enviado a ${widget.phoneNumber}',
-                          style: TextStyle(
-                            color: const Color(0xFFFCFDFA),
-                            fontSize: 16,
-                            fontFamily: 'Work Sans',
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: -0.32,
-                          ),
+                          'Ingresa tu número de teléfono para enviar el código de recuperación',
+                          style: AppTextStyles.subtitle,
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -189,28 +165,94 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                       child: Form(
                         key: _formKey,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            CustomTextField(
-                              label: 'Código de verificación',
-                              controller: _codeController,
-                              hintText: '123456',
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Por favor ingresa el código';
-                                }
-                                if (value.length != 6) {
-                                  return 'El código debe tener 6 dígitos';
-                                }
-                                return null;
-                              },
+                            // Phone number input
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Label
+                                Text(
+                                  'Teléfono',
+                                  style: TextStyle(
+                                    color: const Color(0xFF155B55),
+                                    fontSize: 13,
+                                    fontFamily: 'Open Sans',
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.26,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                
+                                // Input field
+                                Container(
+                                  width: double.infinity,
+                                  height: 46,
+                                  decoration: ShapeDecoration(
+                                    color: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      side: const BorderSide(
+                                        width: 1,
+                                        color: Color(0xFFC9D6CE),
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    shadows: const [
+                                      BoxShadow(
+                                        color: Color(0x3DE4E5E7),
+                                        blurRadius: 2,
+                                        offset: Offset(0, 1),
+                                        spreadRadius: 0,
+                                      ),
+                                    ],
+                                  ),
+                                  child: TextFormField(
+                                    controller: _phoneNumberController,
+                                    style: const TextStyle(
+                                      color: Color(0xFF104641),
+                                      fontSize: 13,
+                                      fontFamily: 'Work Sans',
+                                      fontWeight: FontWeight.w400,
+                                      letterSpacing: -0.26,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      hintText: '+569 12345678',
+                                      hintStyle: TextStyle(
+                                        color: Color(0xFF104641),
+                                        fontSize: 13,
+                                        fontFamily: 'Work Sans',
+                                        fontWeight: FontWeight.w400,
+                                        letterSpacing: -0.26,
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 13,
+                                      ),
+                                      border: InputBorder.none,
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Por favor ingresa tu número de teléfono';
+                                      }
+                                      if (!RegExp(r'^\+569\d{8}$').hasMatch(value)) {
+                                        return 'El formato debe ser +569xxxxxxxx';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
+                            
                             const SizedBox(height: 24),
+                            
+                            // Continue button
                             SizedBox(
                               width: double.infinity,
                               height: 48,
                               child: ElevatedButton(
-                                onPressed: _isLoading ? null : _verifyCode,
+                                onPressed: _isLoading ? null : _recoverPassword,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFFFC400),
                                   foregroundColor: const Color(0xFF104641),
@@ -232,7 +274,7 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                                         ),
                                       )
                                     : const Text(
-                                        'Verificar código',
+                                        'Continuar',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           color: Color(0xFF104641),
@@ -248,6 +290,9 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                         ),
                       ),
                     ),
+                    
+                    const SizedBox(height: 24),
+                    
                   ],
                 ),
               ),

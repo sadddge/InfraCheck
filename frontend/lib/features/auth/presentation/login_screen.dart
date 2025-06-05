@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
             userStatus: userStatus,
             onRetry: userStatus == UserStatus.pendingVerification
                 ? () {
-                    Navigator.of(context).pop();
+                    context.go('/verify-register-code/${_phoneNumberController.text}');
                     // Navegar a verificación si es necesario
                     if (userStatus == UserStatus.pendingVerification) {
                       context.go('/verify-register-code/${_phoneNumberController.text}');
@@ -92,20 +92,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
+    return Scaffold(      body: Stack(
         children: [
-          // Blur background
+          // Background with gradient and blur effect
           Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
+            width: double.infinity,
+            height: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.5),
+              gradient: LinearGradient(
+                begin: const Alignment(0.50, 0.00),
+                end: const Alignment(0.50, 1.00),
+                colors: [
+                  const Color(0xFF9BD6D1),
+                  const Color(0xFFDCEDC8),
+                ],
+              ),
             ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-              child: Container(),
-            ),
+          ),
+          // Overlay with opacity
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.black.withOpacity(0.35),
+          ),
+          // Blur effect
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(),
           ),
           // Main content
           SafeArea(
@@ -234,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: () {
-                                  // TODO: Implementar recuperación de contraseña
+                                  context.go('/recover-password');
                                 },
                                 child: Text(
                                   '¿Has olvidado la contraseña?',

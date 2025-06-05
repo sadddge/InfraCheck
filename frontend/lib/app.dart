@@ -1,10 +1,11 @@
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
 import 'features/auth/presentation/verify_register_code.dart';
 import 'features/auth/presentation/home_screen.dart';
-import 'core/providers/auth_provider.dart';
+import 'features/auth/presentation/recover_password.dart';
+import 'features/auth/presentation/verify_recover_password.dart';
+import 'features/auth/presentation/reset_password_screen.dart';
 
 
 /// Configuración principal de navegación de la aplicación InfraCheck
@@ -21,32 +22,6 @@ final GoRouter router = GoRouter(
   
   // Habilitar logs de depuración para desarrollo y poder ver errores de navegación
   debugLogDiagnostics: true,
-  
-  // Lógica de redirección automática
-  
-  redirect: (context, state) {
-    // Obtener el estado de autenticación actual
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final isAuthenticated = authProvider.isAuthenticated;
-    
-    // Definir rutas que no requieren autenticación
-    final publicRoutes = {'/login', '/register'};
-    final isPublicRoute = publicRoutes.contains(state.uri.path) || 
-                         state.uri.path.startsWith('/verify-register-code');
-
-    // CASO 1: Usuario no autenticado intentando acceder a ruta protegida
-    if (!isAuthenticated && !isPublicRoute) {
-      return '/login';
-    }
-    
-    // CASO 2: Usuario autenticado en ruta pública (evitar loops)
-    if (isAuthenticated && state.uri.path == '/login') {
-      return '/home';
-    }
-
-    // CASO 3: Permitir navegación normal
-    return null;
-  },
   
   // Definición de todas las rutas de la aplicación
   routes: [
@@ -70,8 +45,7 @@ final GoRouter router = GoRouter(
       name: 'home',
       builder: (context, state) => const HomeScreen(),
     ),
-    
-    // RUTA: Verificación de código de registro
+      // RUTA: Verificación de código de registro
     GoRoute(
       path: '/verify-register-code/:phoneNumber',
       name: 'verify-register-code',
@@ -80,8 +54,37 @@ final GoRouter router = GoRouter(
         return VerifyRegisterCodeScreen(phoneNumber: phoneNumber);
       },
     ),
+    
+    // RUTA: Recuperación de contraseña
+    GoRoute(
+      path: '/recover-password',
+      name: 'recover-password',
+      builder: (context, state) => const RecoverPasswordScreen(),
+    ),
+    
+    // RUTA: Verificación de código de recuperación de contraseña
+    GoRoute(
+      path: '/verify-recover-password',
+      name: 'verify-recover-password',
+      builder: (context, state) {
+        final phoneNumber = state.extra as String;
+        return VerifyRecoverPassword(phoneNumber: phoneNumber);
+      },
+    ),
+    
+    // RUTA: Restablecimiento de contraseña
+    GoRoute(
+      path: '/reset-password',
+      name: 'reset-password',
+      builder: (context, state) {
+        final phoneNumber = state.extra as String;
+        return ResetPasswordScreen(phoneNumber: phoneNumber);
+      },
+    ),
   ],
-  
+
+
+
   // Página de error para rutas no encontradas
   errorBuilder: (context, state) => const LoginScreen(),
 );

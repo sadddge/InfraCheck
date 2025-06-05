@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:go_router/go_router.dart';
+import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
@@ -96,18 +96,17 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                context.go('/login');
               },
               child: Text(
                 'Cancelar',
                 style: AppTextStyles.linkText,
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Provider.of<AuthProvider>(context, listen: false).logout();
+            ),            TextButton(
+              onPressed: () async {
                 context.go('/login');
+                await Provider.of<AuthProvider>(context, listen: false).logout();
+                // El router debería redirigir automáticamente a login
               },
               child: Text(
                 'Cerrar Sesión',
