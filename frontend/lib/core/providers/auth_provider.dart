@@ -15,6 +15,7 @@ class AuthProvider extends ChangeNotifier {
   UserStatus? _userStatus;
   String? _redirectTo;
   bool _isLoading = false;
+  String? _resetToken; // Token para reset de contraseña
 
   AuthStatus get status => _status;
   User? get user => _user;
@@ -104,7 +105,6 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
-
   // Verify Recover Password Code - verifica el código para recuperación de contraseña
   Future<bool> verifyRecoverPassword(String phoneNumber, String code) async {
     _setLoading(true);
@@ -115,7 +115,52 @@ class AuthProvider extends ChangeNotifier {
         phoneNumber: phoneNumber,
         code: code,
       );
-      await AuthService.verifyRecoverPassword(verifyRequest);
+      final response = await AuthService.verifyRecoverPassword(verifyRequest);
+      _resetToken = response.resetToken; // Capturar el token de reset
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(_getErrorMessage(e));
+      _setLoading(false);
+      return false;
+    }
+  }
+  // Send Reset Password Code - envía código de recuperación de contraseña por SMS
+  Future<bool> sendResetPasswordCode(String phoneNumber) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final recoverRequest = RecoverPasswordRequest(
+        phoneNumber: phoneNumber,
+      );
+      await AuthService.sendResetPasswordCode(recoverRequest);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(_getErrorMessage(e));
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  // Reset Password - cambia la contraseña usando el token de reset
+  Future<bool> resetPassword(String newPassword) async {
+    if (_resetToken == null) {
+      _setError('Token de reset no válido');
+      return false;
+    }
+
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final resetRequest = ResetPasswordRequest(
+        token: _resetToken!,
+        newPassword: newPassword,
+      );
+      await AuthService.resetPassword(resetRequest);
+      _resetToken = null; // Limpiar el token después del uso
       _setLoading(false);
       return true;
     } catch (e) {
@@ -148,11 +193,12 @@ class AuthProvider extends ChangeNotifier {
   void _setError(String error) {
     _errorMessage = error;
     notifyListeners();
-  }
-  void _clearError() {
+  }  void _clearError() {
     _errorMessage = null;
     _userStatus = null;
-    _redirectTo = null;  }
+    _redirectTo = null;
+    // No limpiar _resetToken aquí para mantenerlo entre llamadas
+  }
   // Logout - limpia tokens y estado del usuario
   Future<void> logout() async {
     _setLoading(true);

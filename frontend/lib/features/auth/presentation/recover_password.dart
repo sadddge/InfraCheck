@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
+import '../../../core/providers/auth_provider.dart';
 
 class RecoverPasswordScreen extends StatefulWidget {
   const RecoverPasswordScreen({Key? key}) : super(key: key);
@@ -21,30 +23,51 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
     _phoneNumberController.dispose();
     super.dispose();
   }
-
   Future<void> _recoverPassword() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+    if (!_formKey.currentState!.validate()) return;
 
-      // Simular llamada al servicio de recuperación de contraseña
-      // En producción, aquí se haría la llamada real al backend
-      // Aca para enviar codigo de recuperación al teléfono
-      await Future.delayed(const Duration(seconds: 2));
+    setState(() {
+      _isLoading = true;
+    });
 
-      setState(() {
-        _isLoading = false;
-      });      if (mounted) {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.sendResetPasswordCode(_phoneNumberController.text.trim());
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Se ha enviado un código de recuperación a tu teléfono'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Navegar a la pantalla de verificación de código de recuperación
+          context.go('/verify-recover-password', extra: _phoneNumberController.text.trim());
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authProvider.errorMessage ?? 'Error al enviar el código'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Se ha enviado un código de recuperación a tu teléfono'),
-            backgroundColor: Colors.green,
+            content: Text('Error inesperado. Inténtalo de nuevo.'),
+            backgroundColor: Colors.red,
           ),
         );
-        
-        // Navegar a la pantalla de verificación de código de recuperación
-        context.go('/verify-recover-password', extra: _phoneNumberController.text.trim());
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }

@@ -28,23 +28,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
-  }
-  Future<void> _handleResetPassword() async {
+  }  Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
-    // TODO: Implementar la llamada al servicio de reset password
-    // final success = await authProvider.resetPassword(
-    //   widget.phoneNumber,
-    //   _passwordController.text.trim(),
-    // );
+    final success = await authProvider.resetPassword(_passwordController.text);
 
-    // Simulación temporal - remover cuando se implemente el servicio
-    setState(() {});
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (mounted) {
+    if (success && mounted) {
       // Mostrar mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -55,25 +46,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       
       // Navegar al login
       context.go('/login');
+    } else if (mounted && authProvider.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage!),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-
-    // Código para cuando se implemente el servicio real:
-    // if (success && mounted) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('Tu contraseña ha sido restablecida exitosamente'),
-    //       backgroundColor: Colors.green,
-    //     ),
-    //   );
-    //   context.go('/login');
-    // } else if (mounted && authProvider.errorMessage != null) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(
-    //       content: Text(authProvider.errorMessage!),
-    //       backgroundColor: Colors.red,
-    //     ),
-    //   );
-    // }
   }
 
   String? _validatePassword(String? value) {

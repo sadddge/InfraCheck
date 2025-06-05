@@ -61,6 +61,28 @@ Map<String, dynamic> _$VerifyRecoverPasswordRequestToJson(
   'code': instance.code,
 };
 
+RecoverPasswordRequest _$RecoverPasswordRequestFromJson(
+  Map<String, dynamic> json,
+) => RecoverPasswordRequest(phoneNumber: json['phoneNumber'] as String);
+
+Map<String, dynamic> _$RecoverPasswordRequestToJson(
+  RecoverPasswordRequest instance,
+) => <String, dynamic>{'phoneNumber': instance.phoneNumber};
+
+ResetPasswordRequest _$ResetPasswordRequestFromJson(
+  Map<String, dynamic> json,
+) => ResetPasswordRequest(
+  token: json['token'] as String,
+  newPassword: json['newPassword'] as String,
+);
+
+Map<String, dynamic> _$ResetPasswordRequestToJson(
+  ResetPasswordRequest instance,
+) => <String, dynamic>{
+  'token': instance.token,
+  'newPassword': instance.newPassword,
+};
+
 RegisterResponse _$RegisterResponseFromJson(Map<String, dynamic> json) =>
     RegisterResponse(
       id: (json['id'] as num).toInt(),
@@ -91,3 +113,11 @@ Map<String, dynamic> _$AuthResponseToJson(AuthResponse instance) =>
       'refreshToken': instance.refreshToken,
       'user': instance.user,
     };
+
+VerifyRecoverPasswordResponse _$VerifyRecoverPasswordResponseFromJson(
+  Map<String, dynamic> json,
+) => VerifyRecoverPasswordResponse(resetToken: json['resetToken'] as String);
+
+Map<String, dynamic> _$VerifyRecoverPasswordResponseToJson(
+  VerifyRecoverPasswordResponse instance,
+) => <String, dynamic>{'resetToken': instance.resetToken};
