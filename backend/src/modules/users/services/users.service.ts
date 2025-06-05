@@ -4,10 +4,10 @@ import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
 import type { Repository } from 'typeorm';
-import type { RegisterDto } from '../auth/dto/register.dto';
-import type { UpdateUserDto } from './dto/update-user.dto';
-import type { UserDto } from './dto/user.dto';
-import { IUserService } from './interfaces/user-service.interface';
+import type { RegisterDto } from '../../auth/dto/register.dto';
+import type { UpdateUserDto } from '../dto/update-user.dto';
+import type { UserDto } from '../dto/user.dto';
+import { IUserService } from '../interfaces/user-service.interface';
 
 /**
  * User management service providing CRUD operations and user-related business logic.

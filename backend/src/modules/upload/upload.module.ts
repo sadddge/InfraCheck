@@ -14,5 +14,6 @@ import { StorageModule } from './storage/storage.module';
             useClass: UploadService,
         },
     ],
+    exports: [UPLOAD_SERVICE],
 })
 export class UploadModule {}

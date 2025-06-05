@@ -1,3 +1,6 @@
+import { ReportCategory } from 'src/common/enums/report-category.enums';
+import { ReportChangeType } from 'src/common/enums/report-change-type.enums';
+import { ReportState } from 'src/common/enums/report-state.enums';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Report } from './report.entity';
 import { User } from './user.entity';
@@ -19,8 +22,17 @@ export class ReportChange {
     )
     report: Report;
 
-    @Column({ type: 'text' })
-    content: string;
+    @Column({
+        type: 'enum',
+        enum: ReportChangeType,
+    })
+    changeType: ReportChangeType;
+
+    @Column()
+    from: ReportCategory | ReportState;
+
+    @Column()
+    to: ReportCategory | ReportState;
 
     @Column({
         type: 'timestamp',

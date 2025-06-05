@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
-import { TwilioVerificationService } from './twilio-verification.service';
+import { TwilioVerificationService } from './services/twilio-verification.service';
 
 /**
  * SMS verification module providing Twilio-based verification services.

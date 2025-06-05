@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import { Twilio } from 'twilio';
-import type { IVerificationService } from './interfaces/verification-service.interface';
+import type { IVerificationService } from '../interfaces/verification-service.interface';
 
 /**
  * Twilio-based SMS verification service for phone number validation.
