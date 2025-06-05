@@ -35,9 +35,7 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
 
       setState(() {
         _isLoading = false;
-      });
-
-      if (mounted) {
+      });      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Se ha enviado un código de recuperación a tu teléfono'),
@@ -45,8 +43,8 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
           ),
         );
         
-        // Por ahora regresamos a login, pero en producción iríamos a verificar código
-        context.go('/login');
+        // Navegar a la pantalla de verificación de código de recuperación
+        context.go('/verify-recover-password', extra: _phoneNumberController.text.trim());
       }
     }
   }
@@ -295,30 +293,6 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
                     
                     const SizedBox(height: 24),
                     
-                    // Back to login link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '¿Recordaste tu contraseña?',
-                          style: AppTextStyles.smallText.copyWith(
-                            color: AppColors.textWhite,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            context.go('/login');
-                          },
-                          child: Text(
-                            'Inicia sesión',
-                            style: AppTextStyles.smallLinkText.copyWith(
-                              color: AppColors.textWhite,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),

@@ -47,6 +47,20 @@ Map<String, dynamic> _$VerifyRegisterCodeRequestToJson(
   'code': instance.code,
 };
 
+VerifyRecoverPasswordRequest _$VerifyRecoverPasswordRequestFromJson(
+  Map<String, dynamic> json,
+) => VerifyRecoverPasswordRequest(
+  phoneNumber: json['phoneNumber'] as String,
+  code: json['code'] as String,
+);
+
+Map<String, dynamic> _$VerifyRecoverPasswordRequestToJson(
+  VerifyRecoverPasswordRequest instance,
+) => <String, dynamic>{
+  'phoneNumber': instance.phoneNumber,
+  'code': instance.code,
+};
+
 RegisterResponse _$RegisterResponseFromJson(Map<String, dynamic> json) =>
     RegisterResponse(
       id: (json['id'] as num).toInt(),

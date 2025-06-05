@@ -24,10 +24,19 @@ class AuthService {
     );
     
     return RegisterResponse.fromJson(response);
-  }
-  // Verify register code
+  }  // Verify register code
   static Future<void> verifyRegisterCode(VerifyRegisterCodeRequest request) async {
     final uri = '${ApiConfig.verifyRegisterCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
+    await ApiService.post(
+      uri,
+      includeAuth: false,
+    );
+    // No retorna datos, solo confirma que el código es válido
+  }
+
+  // Verify recover password code
+  static Future<void> verifyRecoverPassword(VerifyRecoverPasswordRequest request) async {
+    final uri = '${ApiConfig.verifyRecoverCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
     await ApiService.post(
       uri,
       includeAuth: false,

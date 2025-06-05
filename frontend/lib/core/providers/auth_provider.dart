@@ -82,7 +82,6 @@ class AuthProvider extends ChangeNotifier {
       return null;
     }
   }
-
   // Verify Register Code - authentica al usuario después de verificar el código
   Future<bool> verifyRegisterCode(String phoneNumber, String code) async {
     _setLoading(true);
@@ -97,6 +96,26 @@ class AuthProvider extends ChangeNotifier {
         // En producción, aquí se obtendría la información del usuario desde el backend
       // Por ahora, se marca como no autenticado ya que no tenemos la implementación completa
       _setUnauthenticated();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(_getErrorMessage(e));
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  // Verify Recover Password Code - verifica el código para recuperación de contraseña
+  Future<bool> verifyRecoverPassword(String phoneNumber, String code) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final verifyRequest = VerifyRecoverPasswordRequest(
+        phoneNumber: phoneNumber,
+        code: code,
+      );
+      await AuthService.verifyRecoverPassword(verifyRequest);
       _setLoading(false);
       return true;
     } catch (e) {

@@ -8,9 +8,9 @@ import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  final String? token;
+  final String phoneNumber;
   
-  const ResetPasswordScreen({Key? key, this.token}) : super(key: key);
+  const ResetPasswordScreen({Key? key, required this.phoneNumber}) : super(key: key);
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -29,15 +29,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
-
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
     // TODO: Implementar la llamada al servicio de reset password
     // final success = await authProvider.resetPassword(
-    //   widget.token ?? '',
+    //   widget.phoneNumber,
     //   _passwordController.text.trim(),
     // );
 
