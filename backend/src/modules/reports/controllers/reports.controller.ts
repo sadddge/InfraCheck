@@ -5,6 +5,7 @@ import {
     Get,
     Inject,
     Param,
+    Patch,
     Post,
     Req,
     UploadedFiles,
@@ -13,7 +14,11 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { ReportState } from 'src/common/enums/report-state.enums';
+import { Role } from 'src/common/enums/roles.enums';
 import { CreateReportDto } from '../dto/create-report.dto';
+import { ReportChangeDto } from '../dto/report-change.dto';
 import { ReportDto } from '../dto/report.dto';
 import { IReportsService, REPORTS_SERVICE } from '../interfaces/reports-service.interface';
 
@@ -57,5 +62,19 @@ export class ReportsController {
         const creatorId = req.user.id ?? 5; // Assuming user ID is available in the request
 
         return await this.reportsService.createReport(dto, files, creatorId);
+    }
+
+    @Get(':id/history')
+    async getReportHistory(@Param('id') id: string): Promise<ReportChangeDto[]> {
+        return await this.reportsService.findHistoryByReportId(+id);
+    }
+
+    @Patch(':id/state')
+    @Roles(Role.ADMIN)
+    async updateReportState(
+        @Param('id') id: string,
+        @Body('state') state: ReportState,
+    ): Promise<ReportDto> {
+        return await this.reportsService.updateState(+id, state);
     }
 }
