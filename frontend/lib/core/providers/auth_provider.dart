@@ -1,6 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../models/auth_models.dart';
+import '../models/auth_error_models.dart';
+import '../enums/user_status.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 
@@ -10,67 +12,36 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.unknown;
   User? _user;
   String? _errorMessage;
+  UserStatus? _userStatus;
+  String? _redirectTo;
   bool _isLoading = false;
 
   AuthStatus get status => _status;
   User? get user => _user;
   String? get errorMessage => _errorMessage;
+  UserStatus? get userStatus => _userStatus;
+  String? get redirectTo => _redirectTo;
   bool get isLoading => _isLoading;
-  bool get isAuthenticated => _status == AuthStatus.authenticated;
-  AuthProvider() {
-    // TEMPORAL: Para pruebas sin base de datos
-    _simulateAuthenticatedUser();
-    // _checkAuthStatus(); // Comentado temporalmente
-  }
-  // MÉTODO TEMPORAL: Simular usuario autenticado
-  void _simulateAuthenticatedUser() {
-    _user = User(
-      id: 'test-user-123',
-      email: 'test@example.com',
-      name: 'Usuario de Prueba',
-      phone: '+1234567890',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    _status = AuthStatus.authenticated;
-    _errorMessage = null;
-    _isLoading = false;
-    notifyListeners();
-  }
-  // Verificar estado de autenticación al inicializar
-  // Comentado temporalmente para usar datos simulados
-  /*
+  bool get isAuthenticated => _status == AuthStatus.authenticated;AuthProvider() {
+    _checkAuthStatus();
+  }  // Verificar estado de autenticación al inicializar
   Future<void> _checkAuthStatus() async {
     _setLoading(true);
     
     try {
       final isAuth = await AuthService.isAuthenticated();
-      if (isAuth) {
-        // Intentar obtener el perfil del usuario
-        final user = await AuthService.getUserProfile();
-        _setAuthenticated(user);
+      if (isAuth) {        // En producción, aquí se obtendría la información del usuario desde el backend
+        // Por ahora se marca como no autenticado ya que no tenemos la implementación completa
+        _setUnauthenticated();
       } else {
         _setUnauthenticated();
       }
     } catch (e) {
-      // Si hay error, intentar refresh token
-      final refreshed = await AuthService.refreshToken();
-      if (refreshed) {
-        try {
-          final user = await AuthService.getUserProfile();
-          _setAuthenticated(user);
-        } catch (e) {
-          _setUnauthenticated();
-        }
-      } else {
-        _setUnauthenticated();
-      }
+      _setUnauthenticated();
     }
     
     _setLoading(false);
   }
-  */
-
   // Login
   Future<bool> login(String phoneNumber, String password) async {
     _setLoading(true);
@@ -78,11 +49,10 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final loginRequest = LoginRequest(phoneNumber: phoneNumber, password: password);
-      await AuthService.login(loginRequest);
+      final authResponse = await AuthService.login(loginRequest);
       
-      // Obtener perfil del usuario después del login
-      final user = await AuthService.getUserProfile();
-      _setAuthenticated(user);
+      // Usar datos del usuario de la respuesta
+      _setAuthenticated(authResponse.user);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -90,10 +60,8 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return false;
     }
-  }
-
-  // Register
-  Future<bool> register(String phoneNumber, String password, String name, String lastName) async {
+  }  // Register
+  Future<RegisterResponse?> register(String phoneNumber, String password, String name, String lastName) async {
     _setLoading(true);
     _clearError();
 
@@ -104,11 +72,31 @@ class AuthProvider extends ChangeNotifier {
         name: name,
         lastName: lastName
       );
-      await AuthService.register(registerRequest);
+      final registerResponse = await AuthService.register(registerRequest);
       
-      // Obtener perfil del usuario después del registro
-      final user = await AuthService.getUserProfile();
-      _setAuthenticated(user);
+      _setLoading(false);
+      return registerResponse;
+    } catch (e) {
+      _setError(_getErrorMessage(e));
+      _setLoading(false);
+      return null;
+    }
+  }
+
+  // Verify Register Code - authentica al usuario después de verificar el código
+  Future<bool> verifyRegisterCode(String phoneNumber, String code) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final verifyRequest = VerifyRegisterCodeRequest(
+        phoneNumber: phoneNumber,
+        code: code,
+      );
+      await AuthService.verifyRegisterCode(verifyRequest);
+        // En producción, aquí se obtendría la información del usuario desde el backend
+      // Por ahora, se marca como no autenticado ya que no tenemos la implementación completa
+      _setUnauthenticated();
       _setLoading(false);
       return true;
     } catch (e) {
@@ -131,20 +119,6 @@ class AuthProvider extends ChangeNotifier {
     _setUnauthenticated();
     _setLoading(false);
   }
-
-  // Actualizar perfil del usuario
-  Future<void> updateUserProfile() async {
-    if (_status != AuthStatus.authenticated) return;
-    
-    try {
-      final user = await AuthService.getUserProfile();
-      _user = user;
-      notifyListeners();
-    } catch (e) {
-      // Manejar error silenciosamente o mostrar notificación
-    }
-  }
-
   // Métodos privados
   void _setAuthenticated(User user) {
     _status = AuthStatus.authenticated;
@@ -169,18 +143,21 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = error;
     notifyListeners();
   }
-
   void _clearError() {
     _errorMessage = null;
+    _userStatus = null;
+    _redirectTo = null;
   }
-
   String _getErrorMessage(dynamic error) {
-    if (error is ApiException) {
+    if (error is AuthErrorException) {
+      _userStatus = error.userStatus;
+      _redirectTo = error.redirectTo;
+      return error.message;
+    } else if (error is ApiException) {
       return error.message;
     }
     return 'Ha ocurrido un error inesperado';
   }
-
   // Limpiar errores manualmente
   void clearError() {
     _clearError();

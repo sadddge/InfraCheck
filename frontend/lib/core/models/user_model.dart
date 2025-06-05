@@ -5,47 +5,69 @@ part 'user_model.g.dart';
 
 @JsonSerializable()
 class User extends Equatable {
-  final String id;
-  final String email;
+  final int id;
+  final String phoneNumber;
   final String name;
-  final String? phone;
-  final String? avatar;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final String? lastName;
+  final String role;
+  final String? status;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const User({
     required this.id,
-    required this.email,
+    required this.phoneNumber,
     required this.name,
-    this.phone,
-    this.avatar,
-    required this.createdAt,
-    required this.updatedAt,
+    this.lastName,
+    required this.role,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
   });
-
-  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  factory User.fromJson(Map<String, dynamic> json) {
+    try {
+      return _$UserFromJson(json);
+    } catch (e) {      // Fallback para manejar inconsistencias del backend
+      return User(
+        id: json['id'] as int,
+        phoneNumber: json['phoneNumber'] as String,
+        name: json['name'] as String,
+        lastName: json['lastName'] as String?, // Puede ser null
+        role: json['role'] as String,
+        status: json['status'] as String?,
+        createdAt: json['createdAt'] != null 
+            ? DateTime.parse(json['createdAt'] as String) 
+            : null,
+        updatedAt: json['updatedAt'] != null 
+            ? DateTime.parse(json['updatedAt'] as String) 
+            : null,
+      );
+    }
+  }
+  
   Map<String, dynamic> toJson() => _$UserToJson(this);
-
   User copyWith({
-    String? id,
-    String? email,
+    int? id,
+    String? phoneNumber,
     String? name,
-    String? phone,
-    String? avatar,
+    String? lastName,
+    String? role,
+    String? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return User(
       id: id ?? this.id,
-      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       name: name ?? this.name,
-      phone: phone ?? this.phone,
-      avatar: avatar ?? this.avatar,
+      lastName: lastName ?? this.lastName,
+      role: role ?? this.role,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   @override
-  List<Object?> get props => [id, email, name, phone, avatar, createdAt, updatedAt];
+  List<Object?> get props => [id, phoneNumber, name, lastName, role, status, createdAt, updatedAt];
 }

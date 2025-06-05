@@ -7,21 +7,27 @@ part of 'user_model.dart';
 // **************************************************************************
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
-  id: json['id'] as String,
-  email: json['email'] as String,
+  id: (json['id'] as num).toInt(),
+  phoneNumber: json['phoneNumber'] as String,
   name: json['name'] as String,
-  phone: json['phone'] as String?,
-  avatar: json['avatar'] as String?,
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  lastName: json['lastName'] as String?,
+  role: json['role'] as String,
+  status: json['status'] as String?,
+  createdAt: json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
 );
 
 Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
   'id': instance.id,
-  'email': instance.email,
+  'phoneNumber': instance.phoneNumber,
   'name': instance.name,
-  'phone': instance.phone,
-  'avatar': instance.avatar,
-  'createdAt': instance.createdAt.toIso8601String(),
-  'updatedAt': instance.updatedAt.toIso8601String(),
+  'lastName': instance.lastName,
+  'role': instance.role,
+  'status': instance.status,
+  'createdAt': instance.createdAt?.toIso8601String(),
+  'updatedAt': instance.updatedAt?.toIso8601String(),
 };

@@ -33,7 +33,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
-
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -49,21 +48,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
-    final success = await authProvider.register(
+    final registerResponse = await authProvider.register(
       _phoneNumberController.text.trim(),
       _passwordController.text.trim(),
       _nameController.text.trim(),
-      _lastNameController.text.trim(), // phone es opcional
-    );
-
-    if (success && mounted) {
+      _lastNameController.text.trim(),
+    );    if (registerResponse != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cuenta creada exitosamente'),
+        SnackBar(
+          content: Text('Usuario registrado exitosamente. Se ha enviado un código de verificación a ${registerResponse.phoneNumber}'),
           backgroundColor: Colors.green,
         ),
       );
-      context.go('/login');
+      
+      // Navegar a la pantalla de verificación de código usando Go Router
+      context.go('/verify-register-code/${_phoneNumberController.text.trim()}');
     } else if (mounted && authProvider.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -84,7 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             height: MediaQuery.of(context).size.height,
             width: MediaQuery.of(context).size.width,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.5),
+              color: AppColors.primary.withOpacity(0.5),
             ),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
@@ -179,8 +178,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 if (value == null || value.isEmpty) {
                                   return 'Por favor ingresa tu número de telefono';
                                 }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                  return 'Por favor ingresa un número de telefono válido';
+                                // Regex actualizada para el formato +569xxxxxxxx
+                                if (!RegExp(r'^\+569\d{8}$').hasMatch(value)) {
+                                  return 'El formato debe ser +569xxxxxxxx (ej: +56912345678)';
                                 }
                                 return null;
                               },
