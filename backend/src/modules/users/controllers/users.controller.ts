@@ -22,11 +22,11 @@ import {
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserAccessGuard } from 'src/common/guards/user-access.guard';
-import { UpdateUserStatusDto } from './dto/update-user-status.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UserQueryDto } from './dto/user-query.dto';
-import { UserDto } from './dto/user.dto';
-import { IUserService, USER_SERVICE } from './interfaces/user-service.interface';
+import { UpdateUserStatusDto } from '../dto/update-user-status.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
+import { UserQueryDto } from '../dto/user-query.dto';
+import { UserDto } from '../dto/user.dto';
+import { IUserService, USER_SERVICE } from '../interfaces/user-service.interface';
 
 /**
  * User management controller providing RESTful endpoints for user operations.

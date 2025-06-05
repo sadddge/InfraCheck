@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
+import { UsersController } from './controllers/users.controller';
 import { USER_SERVICE } from './interfaces/user-service.interface';
-import { UsersController } from './users.controller';
-import { UsersService } from './users.service';
+import { UsersService } from './services/users.service';
 
 /**
  * User management module providing complete user operations and profile management.
