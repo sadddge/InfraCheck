@@ -116,8 +116,8 @@ Map<String, dynamic> _$AuthResponseToJson(AuthResponse instance) =>
 
 VerifyRecoverPasswordResponse _$VerifyRecoverPasswordResponseFromJson(
   Map<String, dynamic> json,
-) => VerifyRecoverPasswordResponse(resetToken: json['resetToken'] as String);
+) => VerifyRecoverPasswordResponse(resetToken: json['token'] as String);
 
 Map<String, dynamic> _$VerifyRecoverPasswordResponseToJson(
   VerifyRecoverPasswordResponse instance,
-) => <String, dynamic>{'resetToken': instance.resetToken};
+) => <String, dynamic>{'token': instance.resetToken};

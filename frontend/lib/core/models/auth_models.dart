@@ -157,6 +157,7 @@ class AuthResponse extends Equatable {
 
 @JsonSerializable()
 class VerifyRecoverPasswordResponse extends Equatable {
+  @JsonKey(name: 'token')
   final String resetToken;
 
   const VerifyRecoverPasswordResponse({

@@ -41,9 +41,9 @@ class AuthService {
       ApiConfig.verifyRegisterCodeEndpoint,
       data: request.toJson(),
       includeAuth: false,
-    );
-    // No retorna datos, solo confirma que el código es válido
-  }// Verify recover password code
+    );    // No retorna datos, solo confirma que el código es válido
+  }
+  // Verify recover password code
   static Future<VerifyRecoverPasswordResponse> verifyRecoverPassword(VerifyRecoverPasswordRequest request) async {
     final response = await ApiService.post(
       ApiConfig.verifyRecoverCodeEndpoint,
