@@ -77,10 +77,15 @@ export class AuthService implements IAuthService {
                 throw new UnauthorizedException('Invalid credentials');
             }
             throw error;
-        }
-
+        }   
+        
         if (!(await bcrypt.compare(dto.password, user.password))) {
             throw new UnauthorizedException('Invalid credentials');
+        }
+
+        // Check if user status is ACTIVE
+        if (user.status !== UserStatus.ACTIVE) {
+            throw new UnauthorizedException('Account is not active. Please contact support.');
         }
 
         const accessToken = await this.jwtService.signAsync(
