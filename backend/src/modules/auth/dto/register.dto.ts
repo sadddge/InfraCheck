@@ -7,9 +7,7 @@ export class RegisterDto {
         example: '+56912345678',
         required: true,
         type: String,
-        pattern: '^\\+569\\d{8}$', // Matches Chilean phone numbers starting with +569
-        minLength: 12,
-        maxLength: 13,
+        pattern: '^\\+569\\d{8}$',
     })
     @IsPhoneNumber('CL')
     phoneNumber: string;

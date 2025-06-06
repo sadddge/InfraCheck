@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'dart:ui';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
+import '../../../shared/widgets/user_status_widget.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/enums/user_status.dart';
 import 'widgets/custom_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -25,9 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _phoneNumberController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _handleLogin() async {
+  }  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -40,31 +40,85 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success && mounted) {
       context.go('/home');
     } else if (mounted && authProvider.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage!),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // Verificar si es un error específico de estado de usuario
+      if (authProvider.userStatus != null) {
+        _showUserStatusDialog(authProvider.userStatus!);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+  }
+
+  void _showUserStatusDialog(UserStatus userStatus) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: UserStatusWidget(
+            userStatus: userStatus,
+            onRetry: userStatus == UserStatus.pendingVerification
+                ? () {
+                    context.go('/verify-register-code/${_phoneNumberController.text}');
+                    // Navegar a verificación si es necesario
+                    if (userStatus == UserStatus.pendingVerification) {
+                      context.go('/verify-register-code/${_phoneNumberController.text}');
+                    }
+                  }
+                : null,
+            onContactSupport: userStatus == UserStatus.rejected
+                ? () {
+                    Navigator.of(context).pop();
+                    // TODO: Implementar contacto con soporte
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Funcionalidad de soporte en desarrollo'),
+                        backgroundColor: Colors.blue,
+                      ),
+                    );
+                  }
+                : null,
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
+    return Scaffold(      body: Stack(
         children: [
-          // Blur background
+          // Background with gradient and blur effect
           Container(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
+            width: double.infinity,
+            height: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.5),
+              gradient: LinearGradient(
+                begin: const Alignment(0.50, 0.00),
+                end: const Alignment(0.50, 1.00),
+                colors: [
+                  const Color(0xFF9BD6D1),
+                  const Color(0xFFDCEDC8),
+                ],
+              ),
             ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-              child: Container(),
-            ),
+          ),
+          // Overlay with opacity
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.black.withOpacity(0.35),
+          ),
+          // Blur effect
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(),
           ),
           // Main content
           SafeArea(
@@ -122,10 +176,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               hintText: '+56912345678',
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Por favor ingresa tu numero de telefono';
+                                  return 'Por favor ingresa tu número de telefono';
                                 }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                  return 'Por favor ingresa un número de telefono válido';
+                                // Regex actualizada para el formato +569xxxxxxxx
+                                if (!RegExp(r'^\+569\d{8}$').hasMatch(value)) {
+                                  return 'El formato debe ser +569xxxxxxxx (ej: +56912345678)';
                                 }
                                 return null;
                               },
@@ -192,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: () {
-                                  // TODO: Implementar recuperación de contraseña
+                                  context.go('/recover-password');
                                 },
                                 child: Text(
                                   '¿Has olvidado la contraseña?',
@@ -200,8 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            Row(
+                            const SizedBox(height: 16),                            Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(

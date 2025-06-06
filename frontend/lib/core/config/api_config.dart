@@ -1,22 +1,23 @@
 class ApiConfig {
   // Configuración base para desarrollo local
-  static const String baseUrl = 'http://localhost:3000/api';
-  
+  static const String baseUrl = 'http://localhost:3000/api';  
+
   // Endpoints de autenticación
-  static const String loginEndpoint = '/auth/login';
-  static const String registerEndpoint = '/auth/register';
-  static const String logoutEndpoint = '/auth/logout';
-  static const String refreshTokenEndpoint = '/auth/refresh';
+  static const String loginEndpoint = '/v1/auth/login';
+  static const String refreshTokenEndpoint = '/v1/auth/refresh';
+  static const String registerEndpoint = '/v1/auth/register';
+  static const String verifyRegisterCodeEndpoint = '/v1/auth/verify-register-code';
+  static const String recoverPasswordEndpoint = '/v1/auth/recover-password';
+  static const String verifyRecoverCodeEndpoint = '/v1/auth/verify-recover-password';
+  static const String resetPasswordEndpoint = '/v1/auth/reset-password';
   
-  // Endpoints de usuarios
-  static const String userProfileEndpoint = '/users/profile';
-  static const String updateProfileEndpoint = '/users/profile';
-  
-  // Endpoints de reportes
-  static const String reportsEndpoint = '/reports';
-  static const String createReportEndpoint = '/reports';
-  static const String myReportsEndpoint = '/reports/my-reports';
-  
+  // Endpoints de usuario
+  static const String getUsersEndpoint = '/v1/users';
+  static const String getUserByIdEndpoint = '/v1/users/:id';
+  static const String updateUserByIdEndpoint = '/v1/users/:id';
+  static const String deleteUserByIdEndpoint = '/v1/users/:id';
+  static const String updateUserStatusByIdEndpoint = '/v1/users/:id/status';
+
   // Headers comunes
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',

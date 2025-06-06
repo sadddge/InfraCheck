@@ -1,26 +1,56 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { UsersModule } from '../users/users.module';
-import { AUTH_SERVICE } from './interfaces/auth-service.interface';
+import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
-import { JwtStrategy } from './strategies/jwt.strategy';
+import { UsersModule } from '../users/users.module';
+import { VerificationModule } from '../verification/verification.module';
+import { AuthController } from './controllers/auth.controller';
+import { AUTH_SERVICE } from './interfaces/auth-service.interface';
+import { AuthService } from './services/auth.service';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
-import { VerificationService } from './verification/verification.service';
-import { VERIFICATION_SERVICE } from './interfaces/verification-service.interface';
+import { JwtResetStrategy } from './strategies/jwt-reset.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
+/**
+ * Authentication module providing complete authentication functionality for the application.
+ * Configures JWT-based authentication with multiple token types and SMS verification integration.
+ *
+ * @class AuthModule
+ * @description Comprehensive authentication module that provides:
+ * - JWT access token authentication
+ * - Refresh token management
+ * - Password reset token handling
+ * - SMS verification integration
+ * - User registration and login
+ * - Password recovery workflows
+ *
+ * @example
+ * ```typescript
+ * // Module is automatically imported in AppModule
+ * // Provides authentication endpoints at /api/v1/auth/*
+ * // Configures JWT strategies for different token types
+ *
+ * // Available endpoints:
+ * // POST /api/v1/auth/login
+ * // POST /api/v1/auth/register
+ * // POST /api/v1/auth/refresh
+ * // POST /api/v1/auth/recover-password
+ * // POST /api/v1/auth/reset-password
+ * ```
+ *
+ * @since 1.0.0
+ */
 @Module({
     imports: [
         UsersModule,
         ConfigModule,
         PassportModule,
+        VerificationModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
-            useFactory: async (cfg: ConfigService) => ({
+            useFactory: (cfg: ConfigService) => ({
                 secret: cfg.getOrThrow<string>('JWT_SECRET'),
                 signOptions: {
                     expiresIn: cfg.getOrThrow<string>('JWT_EXPIRATION'),
@@ -36,13 +66,9 @@ import { VERIFICATION_SERVICE } from './interfaces/verification-service.interfac
             provide: AUTH_SERVICE,
             useClass: AuthService,
         },
-        {
-            provide: VERIFICATION_SERVICE,
-            useClass: VerificationService,
-        },
         JwtStrategy,
         JwtRefreshStrategy,
-        VerificationService,
+        JwtResetStrategy,
     ],
 })
 export class AuthModule {}

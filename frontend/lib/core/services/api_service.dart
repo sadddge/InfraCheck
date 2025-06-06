@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/api_config.dart';
 import '../models/auth_models.dart';
+import '../models/auth_error_models.dart';
+import '../enums/user_status.dart';
 
 class ApiException implements Exception {
   final String message;
@@ -53,19 +55,63 @@ class ApiService {
     }
     
     return headers;
-  }
-
-  // Manejar respuesta HTTP
+  }  // Manejar respuesta HTTP
   static dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
-      return json.decode(response.body);
+      
+      final responseData = json.decode(response.body);
+      
+      // El backend envuelve las respuestas con ResponseInterceptor
+      // que tiene la estructura: { success: boolean, data: any, message?: string }
+      if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+        return responseData['data'];
+      }
+      
+      return responseData;
     } else {
       String errorMessage = 'Error desconocido';
+      UserStatus? userStatus;
+      String? redirectTo;
+      
       try {
         final errorData = json.decode(response.body);
-        errorMessage = errorData['message'] ?? errorMessage;
+          // Manejar errores del backend que también están envueltos
+        if (errorData is Map<String, dynamic>) {
+          // Primero intentar obtener el mensaje del campo 'error'
+          if (errorData.containsKey('error') && errorData['error'] is Map) {
+            final error = errorData['error'] as Map<String, dynamic>;
+            if (error.containsKey('details') && error['details'] is String) {
+              errorMessage = error['details'];
+            } else if (error.containsKey('message') && error['message'] is String) {
+              errorMessage = error['message'];
+            }
+          }
+          // Si no hay campo 'error', intentar con el campo 'message' directo
+          else if (errorData.containsKey('message') && errorData['message'] is String) {
+            errorMessage = errorData['message'];
+            
+            // Detectar errores específicos de estado de usuario
+            if (errorData.containsKey('userStatus')) {
+              userStatus = UserStatus.fromString(errorData['userStatus']);
+              redirectTo = errorData['redirectTo'];
+              
+              throw AuthErrorException(
+                errorMessage,
+                userStatus: userStatus,
+                redirectTo: redirectTo,
+                statusCode: response.statusCode,
+              );
+            }
+          } 
+          // Último intento con el campo 'data'
+          else if (errorData.containsKey('data') && errorData['data'] is Map) {
+            final data = errorData['data'] as Map<String, dynamic>;
+            errorMessage = data['message'] ?? errorMessage;
+          }
+        }
       } catch (e) {
+        if (e is AuthErrorException) rethrow;
         errorMessage = 'Error: ${response.statusCode}';
       }
       throw ApiException(errorMessage, response.statusCode);

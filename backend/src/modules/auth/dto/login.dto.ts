@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsPhoneNumber, Length } from 'class-validator';
+import { IsNotEmpty, IsPhoneNumber } from 'class-validator';
 
 export class LoginDto {
     @ApiProperty({
@@ -7,9 +7,7 @@ export class LoginDto {
         example: '+56912345678',
         required: true,
         type: String,
-        pattern: '^\\+569\\d{8}$', // Matches Chilean phone numbers starting with +569
-        minLength: 12,
-        maxLength: 13,
+        pattern: '^\\+569\\d{8}$',
     })
     @IsPhoneNumber('CL')
     phoneNumber: string;
