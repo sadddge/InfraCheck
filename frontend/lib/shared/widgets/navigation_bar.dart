@@ -9,6 +9,7 @@ class InfraNavigationBar extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
   }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
@@ -89,64 +90,78 @@ class _NavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isSelected = currentIndex == index;    if (isCenter) {
+    final bool isSelected = currentIndex == index;
+    
+    if (isCenter) {
       // Botón central especial (Reportar)
       return Container(
         width: double.infinity,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Transformamos el botón para que se eleve hacia arriba
-            Transform.translate(
-              offset: const Offset(0, -16), // Mueve el botón 16px hacia arriba
-              child: GestureDetector(
-                onTap: () => onTap(index),
-                child: Container(
-                  padding: const EdgeInsets.all(22.0),
-                  clipBehavior: Clip.antiAlias,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFFFC400),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.10),
-                    ),
-                    shadows: const [
-                      BoxShadow(
-                        color: Color(0x3F000000),
-                        blurRadius: 5.88,
-                        offset: Offset(0, 2.94),
-                        spreadRadius: 0,
-                      )
-                    ],
+        clipBehavior: Clip.none, // Permite desbordamiento hacia arriba
+        child: SizedBox(
+          height: 80, // Altura fija para controlar el desbordamiento hacia abajo
+          child: Stack(
+            clipBehavior: Clip.none, // Permite que el botón se desborde hacia arriba
+            children: [
+              // El texto en su posición normal (parte inferior)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF104641),
+                    fontSize: 12,
+                    fontFamily: 'Open Sans',
+                    fontWeight: FontWeight.w700,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(
-                        selectedIcon,
-                        size: 40.0,
-                        color: const Color(0xFF104641),
+                ),
+              ),              // El botón elevado hacia arriba
+              Positioned(
+                bottom: 20, // Posicionamos el botón 20px desde abajo
+                left: 0,
+                right: 0,
+                child: Center( // Centrar el botón dentro del espacio disponible
+                  child: GestureDetector(
+                    onTap: () => onTap(index),
+                    child: Container(
+                      width: 85, // Ahora sí controlará el ancho del botón
+                      height: 85, // Altura fija para hacer el botón cuadrado
+                      padding: const EdgeInsets.all(12.0), // Padding para el icono
+                      clipBehavior: Clip.antiAlias,
+                      decoration: ShapeDecoration(
+                        color: const Color(0xFFFFC400),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0), // Radio ligeramente mayor para mejor apariencia
+                        ),
+                        shadows: const [
+                          BoxShadow(
+                            color: Color(0x3F000000),
+                            blurRadius: 5.88,
+                            offset: Offset(0, 2.94),
+                            spreadRadius: 0,
+                          )
+                        ],
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            selectedIcon,
+                            size: 40.0, // Tamaño ajustado para el botón cuadrado
+                            color: const Color(0xFF104641),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF104641),
-                fontSize: 12,
-                fontFamily: 'Open Sans',
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     } else {
