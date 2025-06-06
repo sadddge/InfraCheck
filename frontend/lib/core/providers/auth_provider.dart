@@ -167,8 +167,7 @@ class AuthProvider extends ChangeNotifier {
       _setError(_getErrorMessage(e));
       _setLoading(false);
       return false;
-    }
-  }
+    }  }
 
   // Métodos privados
   void _setAuthenticated(User user) {
