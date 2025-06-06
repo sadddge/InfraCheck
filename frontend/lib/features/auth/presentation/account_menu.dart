@@ -211,7 +211,7 @@ class AccountMenuScreen extends StatelessWidget {
         onTap: (index) {
           switch (index) {
             case 0:
-              context.go('/');
+              context.go('/home');
               break;
             case 1:
               context.go('/'); // TODO: Navegar a página de reportes
