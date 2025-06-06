@@ -55,16 +55,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       );
     }
   }
-
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Por favor ingresa tu nueva contraseña';
     }
-    if (value.length < 8) {
-      return 'La contraseña debe tener al menos 8 caracteres';
-    }
-    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
-      return 'La contraseña debe contener al menos una mayúscula, una minúscula y un número';
+    if (value.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres';
     }
     return null;
   }
@@ -215,39 +211,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                     _obscureConfirmPassword = !_obscureConfirmPassword;
                                   });
                                 },
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            
-                            // Password requirements
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppColors.teal800.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: AppColors.teal800.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'La contraseña debe tener:',
-                                    style: AppTextStyles.inputLabel.copyWith(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  _buildRequirement('Al menos 8 caracteres'),
-                                  _buildRequirement('Una letra mayúscula'),
-                                  _buildRequirement('Una letra minúscula'),
-                                  _buildRequirement('Un número'),
-                                ],
-                              ),
-                            ),
+                              ),                            ),
                             
                             const SizedBox(height: 24),
                             Consumer<AuthProvider>(
