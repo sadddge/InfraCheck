@@ -119,10 +119,9 @@ class AccountMenuScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              
-              // Contenido del menú
+                // Contenido del menú
               Expanded(
-                child: Padding(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
@@ -152,7 +151,8 @@ class AccountMenuScreen extends StatelessWidget {
                           );
                         },
                       ),
-                        _buildMenuItem(
+                      
+                      _buildMenuItem(
                         context,
                         icon: Icons.settings,
                         title: 'Configuración',
@@ -167,21 +167,9 @@ class AccountMenuScreen extends StatelessWidget {
                       
                       // Mostrar menú de administrador solo si el usuario es admin
                       if (user?.role == 'ADMIN') ...[
-                        _buildMenuItem(
-                          context,
-                          icon: Icons.admin_panel_settings,
-                          title: 'Menú Administrador',
-                          subtitle: 'Panel de administración del sistema',
-                          onTap: () {
-                            // TODO: Navegar a página de administración
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Navegando a Menú Administrador...')),
-                            );
-                          },
-                        ),
+                        _buildAdminMenuSection(context),
                       ],
-                      
-                      const SizedBox(height: 20),
+                        const SizedBox(height: 20),
                       
                       // Botón cerrar sesión
                       Container(
@@ -213,6 +201,9 @@ class AccountMenuScreen extends StatelessWidget {
                           },
                         ),
                       ),
+                      
+                      // Padding adicional para el bottom navigation bar
+                      const SizedBox(height: 80),
                     ],
                   ),
                 ),
@@ -239,7 +230,6 @@ class AccountMenuScreen extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildMenuItem(
     BuildContext context, {
     required IconData icon,
@@ -297,6 +287,48 @@ class AccountMenuScreen extends StatelessWidget {
         ),
         onTap: onTap,
       ),
+    );
+  }
+
+  Widget _buildAdminMenuSection(BuildContext context) {
+    return Column(
+      children: [
+        // Título de la sección de administrador
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            'Panel de Administración',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+          // Administración de solicitudes de ingreso
+        _buildMenuItem(
+          context,
+          icon: Icons.person_add,
+          title: 'Solicitudes de Ingreso',
+          subtitle: 'Aprobar o rechazar nuevas cuentas',
+          onTap: () {
+            context.go('/admin/requests');
+          },
+        ),
+        
+        // Administración de usuarios
+        _buildMenuItem(
+          context,
+          icon: Icons.people_alt,
+          title: 'Gestión de Usuarios',
+          subtitle: 'Administrar cuentas de usuarios existentes',
+          onTap: () {
+            context.go('/admin/users');
+          },
+        ),
+      ],
     );
   }
 
