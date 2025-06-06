@@ -9,7 +9,6 @@ class InfraNavigationBar extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
   }) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
@@ -20,10 +19,11 @@ class InfraNavigationBar extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 8),
         decoration: const BoxDecoration(
           color: Color(0xFFFCFDFA),
-        ),        child: Row(
+        ),
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             // Botón Mapa
             Expanded(
@@ -89,47 +89,49 @@ class _NavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isSelected = currentIndex == index;
-      if (isCenter) {
+    final bool isSelected = currentIndex == index;    if (isCenter) {
       // Botón central especial (Reportar)
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.only(bottom: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            GestureDetector(
-              onTap: () => onTap(index),
-              child: Container(
-                padding: const EdgeInsets.all(20.75),
-                clipBehavior: Clip.antiAlias,
-                decoration: ShapeDecoration(
-                  color: const Color(0xFFFFC400),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14.10),
-                  ),
-                  shadows: const [
-                    BoxShadow(
-                      color: Color(0x3F000000),
-                      blurRadius: 5.88,
-                      offset: Offset(0, 2.94),
-                      spreadRadius: 0,
-                    )
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      selectedIcon,
-                      size: 40.0,
-                      color: const Color(0xFF104641),
+            // Transformamos el botón para que se eleve hacia arriba
+            Transform.translate(
+              offset: const Offset(0, -16), // Mueve el botón 16px hacia arriba
+              child: GestureDetector(
+                onTap: () => onTap(index),
+                child: Container(
+                  padding: const EdgeInsets.all(22.0),
+                  clipBehavior: Clip.antiAlias,
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFFFC400),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.10),
                     ),
-                  ],
+                    shadows: const [
+                      BoxShadow(
+                        color: Color(0x3F000000),
+                        blurRadius: 5.88,
+                        offset: Offset(0, 2.94),
+                        spreadRadius: 0,
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        selectedIcon,
+                        size: 40.0,
+                        color: const Color(0xFF104641),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
