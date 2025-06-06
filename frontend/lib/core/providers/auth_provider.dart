@@ -6,16 +6,54 @@ import '../enums/user_status.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 
-enum AuthStatus { unknown, authenticated, unauthenticated }
+/// Estados posibles de autenticación del usuario
+enum AuthStatus { 
+  /// Estado inicial, verificando autenticación
+  unknown, 
+  /// Usuario autenticado exitosamente
+  authenticated, 
+  /// Usuario no autenticado
+  unauthenticated 
+}
 
-class AuthProvider extends ChangeNotifier {
+/// Proveedor de estado para manejo de autenticación en toda la aplicación.
+/// 
+/// Gestiona el estado de autenticación del usuario, incluyendo login, registro,
+/// verificación de códigos, recuperación de contraseña y manejo de errores
+/// específicos del sistema. Utiliza el patrón Provider para notificar cambios
+/// de estado a los widgets que lo consumen.
+/// 
+/// Características principales:
+/// - Gestión centralizada del estado de autenticación
+/// - Manejo de errores específicos de estado de usuario
+/// - Soporte completo para flujo de registro con verificación SMS
+/// - Recuperación de contraseña con códigos de verificación
+/// - Notificación automática de cambios de estado
+/// - Persistencia de sesión entre reinicios de la app
+class AuthProvider extends ChangeNotifier {  /// Estado actual de autenticación del usuario
   AuthStatus _status = AuthStatus.unknown;
+  
+  /// Datos del usuario autenticado (null si no está autenticado)
   User? _user;
+  
+  /// Mensaje de error más reciente (null si no hay errores)
   String? _errorMessage;
+  
+  /// Estado específico del usuario cuando hay errores de autenticación
   UserStatus? _userStatus;
+  
+  /// URL de redirección sugerida para ciertos estados de usuario
   String? _redirectTo;
+  
+  /// Indica si hay una operación de autenticación en progreso
   bool _isLoading = false;
-  String? _resetToken; // Token para reset de contraseña
+  
+  /// Token temporal para restablecimiento de contraseña
+  String? _resetToken;
+
+  // ==========================================
+  // GETTERS PÚBLICOS
+  // ==========================================
 
   AuthStatus get status => _status;
   User? get user => _user;
@@ -23,9 +61,22 @@ class AuthProvider extends ChangeNotifier {
   UserStatus? get userStatus => _userStatus;
   String? get redirectTo => _redirectTo;
   bool get isLoading => _isLoading;
-  bool get isAuthenticated => _status == AuthStatus.authenticated;AuthProvider() {
+  bool get isAuthenticated => _status == AuthStatus.authenticated;
+
+  /// Constructor que verifica automáticamente el estado de autenticación
+  AuthProvider() {
     _checkAuthStatus();
-  }  // Verificar estado de autenticación al inicializar
+  }
+
+  // ==========================================
+  // VERIFICACIÓN DE ESTADO INICIAL
+  // ==========================================
+
+  /// Verifica el estado de autenticación al inicializar el proveedor.
+  /// 
+  /// Comprueba si existe una sesión activa válida y actualiza el estado
+  /// en consecuencia. En producción, también obtendría los datos del
+  /// usuario desde el backend.
   Future<void> _checkAuthStatus() async {
     _setLoading(true);
     
@@ -40,10 +91,20 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       _setUnauthenticated();
     }
-    
-    _setLoading(false);
+      _setLoading(false);
   }
-  // Login
+
+  // ==========================================
+  // OPERACIONES DE AUTENTICACIÓN
+  // ==========================================
+
+  /// Inicia sesión con las credenciales del usuario.
+  /// 
+  /// [phoneNumber] es el número de teléfono del usuario.
+  /// [password] es la contraseña del usuario.
+  /// 
+  /// Retorna `true` si el login fue exitoso, `false` en caso contrario.
+  /// En caso de error, actualiza [errorMessage] y [userStatus] con información específica.
   Future<bool> login(String phoneNumber, String password) async {
     _setLoading(true);
     _clearError();
@@ -59,9 +120,19 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       _setError(_getErrorMessage(e));
       _setLoading(false);
-      return false;
-    }
-  }  // Register
+      return false;    }
+  }
+
+  /// Registra un nuevo usuario en el sistema.
+  /// 
+  /// [phoneNumber] es el número de teléfono del usuario.
+  /// [password] es la contraseña deseada.
+  /// [name] es el nombre del usuario.
+  /// [lastName] es el apellido del usuario.
+  /// 
+  /// Retorna [RegisterResponse] con los datos del usuario registrado si es exitoso,
+  /// `null` en caso de error. Después del registro exitoso, se envía automáticamente
+  /// un código de verificación por SMS.
   Future<RegisterResponse?> register(String phoneNumber, String password, String name, String lastName) async {
     _setLoading(true);
     _clearError();
@@ -80,10 +151,16 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       _setError(_getErrorMessage(e));
       _setLoading(false);
-      return null;
-    }
+      return null;    }
   }
-  // Verify Register Code - authentica al usuario después de verificar el código
+
+  /// Verifica el código SMS enviado durante el registro.
+  /// 
+  /// [phoneNumber] es el número de teléfono del usuario.
+  /// [code] es el código de verificación recibido por SMS.
+  /// 
+  /// Retorna `true` si la verificación fue exitosa, `false` en caso contrario.
+  /// Una vez verificado exitosamente, el usuario podrá iniciar sesión normalmente.
   Future<bool> verifyRegisterCode(String phoneNumber, String code) async {
     _setLoading(true);
     _clearError();
@@ -167,8 +244,7 @@ class AuthProvider extends ChangeNotifier {
       _setError(_getErrorMessage(e));
       _setLoading(false);
       return false;
-    }
-  }
+    }  }
 
   // Métodos privados
   void _setAuthenticated(User user) {

@@ -6,16 +6,25 @@ import 'features/auth/presentation/home_screen.dart';
 import 'features/auth/presentation/recover_password.dart';
 import 'features/auth/presentation/verify_recover_password.dart';
 import 'features/auth/presentation/reset_password_screen.dart';
+import 'features/auth/presentation/pending_approval_screen.dart';
+import 'features/auth/presentation/account_menu.dart';
+import 'features/auth/presentation/admin_requests_screen.dart';
+import 'features/auth/presentation/admin_users_screen.dart';
 
-
-/// Configuración principal de navegación de la aplicación InfraCheck
+/// Configuración principal de navegación para la aplicación InfraCheck.
 /// 
-/// El router maneja:
-/// - Redirección automática por autenticación
-/// - Rutas públicas (login, register, verify) y protegidas (las que van después de login)
-/// - Navegación entre pantallas
-
-
+/// Maneja el routing completo de la aplicación incluyendo:
+/// - Rutas de autenticación (login, registro, verificación, recuperación)
+/// - Rutas principales de la aplicación (home, administración)
+/// - Rutas de gestión de usuario (perfil, configuraciones)
+/// - Navegación programática y parámetros de ruta
+/// 
+/// Características del router:
+/// - Ruta inicial configurada en login
+/// - Logs de depuración habilitados para desarrollo
+/// - Soporte para parámetros de ruta dinámicos
+/// - Rutas organizadas por funcionalidad
+/// - Manejo de errores de navegación
 final GoRouter router = GoRouter(
   // Ruta inicial cuando se abre la aplicación
   initialLocation: '/login',
@@ -71,8 +80,7 @@ final GoRouter router = GoRouter(
         return VerifyRecoverPassword(phoneNumber: phoneNumber);
       },
     ),
-    
-    // RUTA: Restablecimiento de contraseña
+      // RUTA: Restablecimiento de contraseña
     GoRoute(
       path: '/reset-password',
       name: 'reset-password',
@@ -80,6 +88,31 @@ final GoRouter router = GoRouter(
         final phoneNumber = state.extra as String;
         return ResetPasswordScreen(phoneNumber: phoneNumber);
       },
+    ),    // RUTA: Pantalla de aprobación pendiente
+    GoRoute(
+      path: '/pending-approval',
+      name: 'pending-approval',
+      builder: (context, state) => const PendingApprovalScreen(),
+    ),
+      // RUTA: Pantalla de cuenta de usuario
+    GoRoute(
+      path: '/account',
+      name: 'account',
+      builder: (context, state) => const AccountMenuScreen(),
+    ),
+    
+    // RUTA: Administración de solicitudes de ingreso (solo admin)
+    GoRoute(
+      path: '/admin/requests',
+      name: 'admin-requests',
+      builder: (context, state) => const AdminRequestsScreen(),
+    ),
+    
+    // RUTA: Administración de usuarios (solo admin)
+    GoRoute(
+      path: '/admin/users',
+      name: 'admin-users',
+      builder: (context, state) => const AdminUsersScreen(),
     ),
   ],
 

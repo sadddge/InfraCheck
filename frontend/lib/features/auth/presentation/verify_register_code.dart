@@ -42,17 +42,15 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
 
       setState(() {
         _isLoading = false;
-      });
-
-      if (success) {
+      });      if (success) {
         // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Código verificado exitosamente'),
             backgroundColor: Colors.green,
           ),
-        );        // Navegar a la pantalla principal usando Go Router esto modificar
-        context.go('/home');
+        );        // Navegar a la pantalla de pending approval
+        context.go('/pending-approval');
       } else {
         // Mostrar mensaje de error del provider
         final errorMessage = authProvider.errorMessage ?? 'Error al verificar el código';

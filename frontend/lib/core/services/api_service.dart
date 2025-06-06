@@ -6,44 +6,92 @@ import '../models/auth_models.dart';
 import '../models/auth_error_models.dart';
 import '../enums/user_status.dart';
 
+/// Excepción personalizada para errores de API.
+/// 
+/// Se lanza cuando ocurre un error durante las comunicaciones HTTP con el backend.
+/// Incluye información del mensaje de error y opcionalmente el código de estado HTTP.
 class ApiException implements Exception {
+  /// Mensaje descriptivo del error
   final String message;
+  
+  /// Código de estado HTTP asociado al error (opcional)
   final int? statusCode;
 
+  /// Crea una nueva instancia de [ApiException].
+  /// 
+  /// [message] es el mensaje descriptivo del error.
+  /// [statusCode] es opcional y representa el código de estado HTTP.
   ApiException(this.message, [this.statusCode]);
 
   @override
   String toString() => 'ApiException: $message (Status: $statusCode)';
 }
 
-class ApiService {
+/// Servicio principal para realizar comunicaciones HTTP con el backend.
+/// 
+/// Proporciona métodos para realizar peticiones GET, POST, PUT y DELETE,
+/// manejo automático de tokens de autenticación, almacenamiento seguro
+/// de credenciales y manejo de errores de API.
+/// 
+/// Características principales:
+/// - Gestión automática de tokens de acceso y refresh tokens
+/// - Almacenamiento seguro de credenciales usando FlutterSecureStorage
+/// - Manejo consistente de respuestas y errores del backend
+/// - Soporte para timeout en peticiones HTTP
+/// - Detección automática de errores de autenticación y estado de usuario
+class ApiService {  /// Instancia de almacenamiento seguro para tokens y credenciales
   static const _storage = FlutterSecureStorage();
+  
+  /// Clave para almacenar el token de acceso en el almacenamiento seguro
   static const String _tokenKey = 'auth_token';
+  
+  /// Clave para almacenar el refresh token en el almacenamiento seguro
   static const String _refreshTokenKey = 'refresh_token';
 
-  // Guardar tokens
+  // ==========================================
+  // GESTIÓN DE TOKENS
+  // ==========================================
+
+  /// Guarda los tokens de autenticación en el almacenamiento seguro.
+  /// 
+  /// [authResponse] contiene tanto el access token como el refresh token
+  /// que se almacenarán de forma segura en el dispositivo.
   static Future<void> saveTokens(AuthResponse authResponse) async {
     await _storage.write(key: _tokenKey, value: authResponse.accessToken);
     await _storage.write(key: _refreshTokenKey, value: authResponse.refreshToken);
   }
 
-  // Obtener token de acceso
+  /// Obtiene el token de acceso desde el almacenamiento seguro.
+  /// 
+  /// Retorna el token de acceso si existe, `null` en caso contrario.
   static Future<String?> getAccessToken() async {
     return await _storage.read(key: _tokenKey);
   }
 
-  // Obtener refresh token
+  /// Obtiene el refresh token desde el almacenamiento seguro.
+  /// 
+  /// Retorna el refresh token si existe, `null` en caso contrario.
   static Future<String?> getRefreshToken() async {
     return await _storage.read(key: _refreshTokenKey);
   }
 
-  // Limpiar tokens
+  /// Elimina todos los tokens del almacenamiento seguro.
+  /// 
+  /// Útil para cerrar sesión o limpiar credenciales cuando expiran.
   static Future<void> clearTokens() async {
     await _storage.delete(key: _tokenKey);
     await _storage.delete(key: _refreshTokenKey);
   }
 
-  // Headers con autenticación
+  // ==========================================
+  // CONFIGURACIÓN DE PETICIONES HTTP
+  // ==========================================
+
+  /// Genera los headers HTTP necesarios para las peticiones.
+  /// 
+  /// [includeAuth] determina si se debe incluir el token de autorización.
+  /// Por defecto es `true`. Retorna un mapa con los headers necesarios
+  /// incluyendo Content-Type y Authorization si corresponde.
   static Future<Map<String, String>> _getHeaders({bool includeAuth = true}) async {
     final headers = Map<String, String>.from(ApiConfig.defaultHeaders);
     
@@ -53,9 +101,22 @@ class ApiService {
         headers['Authorization'] = 'Bearer $token';
       }
     }
-    
-    return headers;
-  }  // Manejar respuesta HTTP
+      return headers;
+  }
+
+  // ==========================================
+  // MANEJO DE RESPUESTAS HTTP
+  // ==========================================
+
+  /// Procesa y maneja las respuestas HTTP del backend.
+  /// 
+  /// Desenvuelve las respuestas que vienen envueltas por el ResponseInterceptor
+  /// del backend y maneja errores específicos como problemas de autenticación
+  /// y estados de usuario. Lanza [ApiException] o [AuthErrorException] según
+  /// el tipo de error encontrado.
+  /// 
+  /// [response] es la respuesta HTTP a procesar.
+  /// Retorna los datos extraídos de la respuesta o lanza una excepción en caso de error.
   static dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
@@ -114,11 +175,19 @@ class ApiService {
         if (e is AuthErrorException) rethrow;
         errorMessage = 'Error: ${response.statusCode}';
       }
-      throw ApiException(errorMessage, response.statusCode);
-    }
+      throw ApiException(errorMessage, response.statusCode);    }
   }
 
-  // GET request
+  // ==========================================
+  // MÉTODOS HTTP
+  // ==========================================
+
+  /// Realiza una petición HTTP GET.
+  /// 
+  /// [endpoint] es la ruta del endpoint a consultar (sin la URL base).
+  /// [includeAuth] determina si incluir el token de autorización (por defecto true).
+  /// 
+  /// Retorna los datos de la respuesta o lanza [ApiException] en caso de error.
   static Future<dynamic> get(String endpoint, {bool includeAuth = true}) async {
     final headers = await _getHeaders(includeAuth: includeAuth);
     final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
@@ -130,10 +199,15 @@ class ApiService {
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Error de conexión: ${e.toString()}');
-    }
-  }
+    }  }
 
-  // POST request
+  /// Realiza una petición HTTP POST.
+  /// 
+  /// [endpoint] es la ruta del endpoint a consultar (sin la URL base).
+  /// [data] son los datos a enviar en el cuerpo de la petición (opcional).
+  /// [includeAuth] determina si incluir el token de autorización (por defecto true).
+  /// 
+  /// Retorna los datos de la respuesta o lanza [ApiException] en caso de error.
   static Future<dynamic> post(String endpoint, {
     Map<String, dynamic>? data,
     bool includeAuth = true,
@@ -152,10 +226,15 @@ class ApiService {
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Error de conexión: ${e.toString()}');
-    }
-  }
+    }  }
 
-  // PUT request
+  /// Realiza una petición HTTP PUT.
+  /// 
+  /// [endpoint] es la ruta del endpoint a consultar (sin la URL base).
+  /// [data] son los datos a enviar en el cuerpo de la petición (opcional).
+  /// [includeAuth] determina si incluir el token de autorización (por defecto true).
+  /// 
+  /// Retorna los datos de la respuesta o lanza [ApiException] en caso de error.
   static Future<dynamic> put(String endpoint, {
     Map<String, dynamic>? data,
     bool includeAuth = true,
@@ -174,10 +253,14 @@ class ApiService {
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Error de conexión: ${e.toString()}');
-    }
-  }
+    }  }
 
-  // DELETE request
+  /// Realiza una petición HTTP DELETE.
+  /// 
+  /// [endpoint] es la ruta del endpoint a consultar (sin la URL base).
+  /// [includeAuth] determina si incluir el token de autorización (por defecto true).
+  /// 
+  /// Retorna los datos de la respuesta o lanza [ApiException] en caso de error.
   static Future<dynamic> delete(String endpoint, {bool includeAuth = true}) async {
     final headers = await _getHeaders(includeAuth: includeAuth);
     final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
@@ -189,16 +272,27 @@ class ApiService {
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Error de conexión: ${e.toString()}');
-    }
-  }
+    }  }
 
-  // Verificar si el usuario está autenticado
+  // ==========================================
+  // UTILIDADES DE AUTENTICACIÓN
+  // ==========================================
+
+  /// Verifica si el usuario tiene una sesión activa.
+  /// 
+  /// Retorna `true` si existe un token de acceso almacenado,
+  /// `false` en caso contrario. No valida si el token es válido o ha expirado.
   static Future<bool> isAuthenticated() async {
     final token = await getAccessToken();
-    return token != null;
-  }
+    return token != null;  }
 
-  // Refresh token
+  /// Renueva el token de acceso usando el refresh token.
+  /// 
+  /// Intenta obtener un nuevo token de acceso utilizando el refresh token
+  /// almacenado. Si la renovación es exitosa, guarda los nuevos tokens.
+  /// Si falla, limpia todos los tokens almacenados.
+  /// 
+  /// Retorna `true` si la renovación fue exitosa, `false` en caso contrario.
   static Future<bool> refreshToken() async {
     try {
       final refreshToken = await getRefreshToken();
