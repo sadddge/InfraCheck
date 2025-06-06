@@ -34,12 +34,12 @@ class AuthService {
       includeAuth: false,
     );
     // No retorna datos, solo envía el código por SMS
-  }
-  // Verify register code
+  }  // Verify register code
   static Future<void> verifyRegisterCode(VerifyRegisterCodeRequest request) async {
+    // El backend espera los parámetros como query parameters, no como JSON body
+    final endpoint = '${ApiConfig.verifyRegisterCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
     await ApiService.post(
-      ApiConfig.verifyRegisterCodeEndpoint,
-      data: request.toJson(),
+      endpoint,
       includeAuth: false,
     );    // No retorna datos, solo confirma que el código es válido
   }
