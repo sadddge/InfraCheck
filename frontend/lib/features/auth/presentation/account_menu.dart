@@ -152,8 +152,7 @@ class AccountMenuScreen extends StatelessWidget {
                           );
                         },
                       ),
-                      
-                      _buildMenuItem(
+                        _buildMenuItem(
                         context,
                         icon: Icons.settings,
                         title: 'Configuración',
@@ -165,6 +164,22 @@ class AccountMenuScreen extends StatelessWidget {
                           );
                         },
                       ),
+                      
+                      // Mostrar menú de administrador solo si el usuario es admin
+                      if (user?.role == 'ADMIN') ...[
+                        _buildMenuItem(
+                          context,
+                          icon: Icons.admin_panel_settings,
+                          title: 'Menú Administrador',
+                          subtitle: 'Panel de administración del sistema',
+                          onTap: () {
+                            // TODO: Navegar a página de administración
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Navegando a Menú Administrador...')),
+                            );
+                          },
+                        ),
+                      ],
                       
                       const SizedBox(height: 20),
                       
