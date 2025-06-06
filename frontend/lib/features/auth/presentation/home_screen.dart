@@ -42,9 +42,9 @@ class _HomeScreenState extends State<HomeScreen> {
             duration: Duration(seconds: 2),
           ),
         );
-        break;
-      case 2:
-        // Ya estamos en cuenta/perfil, no hay que hacer nada
+        break;      case 2:
+        // Navegar a página de cuenta
+        context.go('/account');
         break;
     }
   }

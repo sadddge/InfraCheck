@@ -7,6 +7,7 @@ import 'features/auth/presentation/recover_password.dart';
 import 'features/auth/presentation/verify_recover_password.dart';
 import 'features/auth/presentation/reset_password_screen.dart';
 import 'features/auth/presentation/pending_approval_screen.dart';
+import 'features/auth/presentation/account_menu.dart';
 
 
 /// Configuración principal de navegación de la aplicación InfraCheck
@@ -85,6 +86,13 @@ final GoRouter router = GoRouter(
       path: '/pending-approval',
       name: 'pending-approval',
       builder: (context, state) => const PendingApprovalScreen(),
+    ),
+    
+    // RUTA: Pantalla de cuenta de usuario
+    GoRoute(
+      path: '/account',
+      name: 'account',
+      builder: (context, state) => const AccountMenuScreen(),
     ),
   ],
 
