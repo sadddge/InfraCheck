@@ -24,24 +24,42 @@ class AuthService {
     );
     
     return RegisterResponse.fromJson(response);
-  }  // Verify register code
-  static Future<void> verifyRegisterCode(VerifyRegisterCodeRequest request) async {
-    final uri = '${ApiConfig.verifyRegisterCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
-    await ApiService.post(
-      uri,
-      includeAuth: false,
-    );
-    // No retorna datos, solo confirma que el código es válido
   }
 
-  // Verify recover password code
-  static Future<void> verifyRecoverPassword(VerifyRecoverPasswordRequest request) async {
-    final uri = '${ApiConfig.verifyRecoverCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
+  // Send reset password code
+  static Future<void> sendResetPasswordCode(RecoverPasswordRequest request) async {
     await ApiService.post(
-      uri,
+      ApiConfig.recoverPasswordEndpoint,
+      data: request.toJson(),
       includeAuth: false,
     );
-    // No retorna datos, solo confirma que el código es válido
+    // No retorna datos, solo envía el código por SMS
+  }  // Verify register code
+  static Future<void> verifyRegisterCode(VerifyRegisterCodeRequest request) async {
+    // El backend espera los parámetros como query parameters, no como JSON body
+    final endpoint = '${ApiConfig.verifyRegisterCodeEndpoint}?phoneNumber=${Uri.encodeComponent(request.phoneNumber)}&code=${Uri.encodeComponent(request.code)}';
+    await ApiService.post(
+      endpoint,
+      includeAuth: false,
+    );    // No retorna datos, solo confirma que el código es válido
+  }
+  // Verify recover password code
+  static Future<VerifyRecoverPasswordResponse> verifyRecoverPassword(VerifyRecoverPasswordRequest request) async {
+    final response = await ApiService.post(
+      ApiConfig.verifyRecoverCodeEndpoint,
+      data: request.toJson(),
+      includeAuth: false,
+    );
+    return VerifyRecoverPasswordResponse.fromJson(response);
+  }
+  // Reset password
+  static Future<void> resetPassword(ResetPasswordRequest request) async {
+    await ApiService.post(
+      ApiConfig.resetPasswordEndpoint,
+      data: request.toJson(),
+      includeAuth: false,
+    );
+    // No retorna datos, solo confirma que la contraseña se ha restablecido
   }
 
   // Verificar si está autenticado

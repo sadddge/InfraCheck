@@ -28,23 +28,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
-  }
-  Future<void> _handleResetPassword() async {
+  }  Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
-    // TODO: Implementar la llamada al servicio de reset password
-    // final success = await authProvider.resetPassword(
-    //   widget.phoneNumber,
-    //   _passwordController.text.trim(),
-    // );
+    final success = await authProvider.resetPassword(_passwordController.text);
 
-    // Simulación temporal - remover cuando se implemente el servicio
-    setState(() {});
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (mounted) {
+    if (success && mounted) {
       // Mostrar mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -55,36 +46,21 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       
       // Navegar al login
       context.go('/login');
+    } else if (mounted && authProvider.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage!),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-
-    // Código para cuando se implemente el servicio real:
-    // if (success && mounted) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('Tu contraseña ha sido restablecida exitosamente'),
-    //       backgroundColor: Colors.green,
-    //     ),
-    //   );
-    //   context.go('/login');
-    // } else if (mounted && authProvider.errorMessage != null) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(
-    //       content: Text(authProvider.errorMessage!),
-    //       backgroundColor: Colors.red,
-    //     ),
-    //   );
-    // }
   }
-
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Por favor ingresa tu nueva contraseña';
     }
-    if (value.length < 8) {
-      return 'La contraseña debe tener al menos 8 caracteres';
-    }
-    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
-      return 'La contraseña debe contener al menos una mayúscula, una minúscula y un número';
+    if (value.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres';
     }
     return null;
   }
@@ -235,39 +211,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                     _obscureConfirmPassword = !_obscureConfirmPassword;
                                   });
                                 },
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            
-                            // Password requirements
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppColors.teal800.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: AppColors.teal800.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'La contraseña debe tener:',
-                                    style: AppTextStyles.inputLabel.copyWith(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  _buildRequirement('Al menos 8 caracteres'),
-                                  _buildRequirement('Una letra mayúscula'),
-                                  _buildRequirement('Una letra minúscula'),
-                                  _buildRequirement('Un número'),
-                                ],
-                              ),
-                            ),
+                              ),                            ),
                             
                             const SizedBox(height: 24),
                             Consumer<AuthProvider>(

@@ -81,6 +81,39 @@ class VerifyRecoverPasswordRequest extends Equatable {
 }
 
 @JsonSerializable()
+class RecoverPasswordRequest extends Equatable {
+  @JsonKey(name: 'phoneNumber')
+  final String phoneNumber;
+
+  const RecoverPasswordRequest({
+    required this.phoneNumber,
+  });
+
+  factory RecoverPasswordRequest.fromJson(Map<String, dynamic> json) => _$RecoverPasswordRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$RecoverPasswordRequestToJson(this);
+
+  @override
+  List<Object> get props => [phoneNumber];
+}
+
+@JsonSerializable()
+class ResetPasswordRequest extends Equatable {
+  final String token;
+  final String newPassword;
+
+  const ResetPasswordRequest({
+    required this.token,
+    required this.newPassword,
+  });
+
+  factory ResetPasswordRequest.fromJson(Map<String, dynamic> json) => _$ResetPasswordRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$ResetPasswordRequestToJson(this);
+
+  @override
+  List<Object> get props => [token, newPassword];
+}
+
+@JsonSerializable()
 class RegisterResponse extends Equatable {
   final int id;
   final String phoneNumber;
@@ -120,4 +153,20 @@ class AuthResponse extends Equatable {
 
   @override
   List<Object> get props => [accessToken, refreshToken, user];
+}
+
+@JsonSerializable()
+class VerifyRecoverPasswordResponse extends Equatable {
+  @JsonKey(name: 'token')
+  final String resetToken;
+
+  const VerifyRecoverPasswordResponse({
+    required this.resetToken,
+  });
+
+  factory VerifyRecoverPasswordResponse.fromJson(Map<String, dynamic> json) => _$VerifyRecoverPasswordResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$VerifyRecoverPasswordResponseToJson(this);
+
+  @override
+  List<Object> get props => [resetToken];
 }
