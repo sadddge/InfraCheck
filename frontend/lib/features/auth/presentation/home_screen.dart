@@ -45,8 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         'InfraCheck',
                         style: AppTextStyles.heading.copyWith(fontSize: 24),
                       ),
-                      const Spacer(),
-                      IconButton(
+                      const Spacer(),                      IconButton(
                         icon: const Icon(
                           Icons.notifications_outlined,
                           color: AppColors.textWhite,
@@ -54,6 +53,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         onPressed: () {
                           // TODO: Implementar notificaciones
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.camera_alt,
+                          color: AppColors.textWhite,
+                          size: 24,
+                        ),
+                        onPressed: () {
+                          context.go('/camera');
                         },
                       ),
                       IconButton(
