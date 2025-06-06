@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
+import '../../../shared/widgets/navigation_bar.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/enums/user_status.dart';
 
@@ -15,6 +16,39 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 2; // Iniciamos en la pestaña de cuenta (perfil)
+
+  void _onNavigationTap(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    // Manejar navegación según el índice
+    switch (index) {
+      case 0:
+        // TODO: Navegar a mapa
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Funcionalidad de Mapa en desarrollo'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        break;
+      case 1:
+        // TODO: Navegar a reportar
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Funcionalidad de Reportar en desarrollo'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        break;
+      case 2:
+        // Ya estamos en cuenta/perfil, no hay que hacer nada
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,8 +103,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                // Page content - Solo perfil
+                // Page content - Solo perfil por ahora
                 const Expanded(child: _ProfilePage()),
+                // Barra de navegación
+                InfraNavigationBar(
+                  currentIndex: _currentIndex,
+                  onTap: _onNavigationTap,
+                ),
               ],
             ),
           ),
