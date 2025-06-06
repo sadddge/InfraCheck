@@ -20,11 +20,10 @@ class InfraNavigationBar extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 8),
         decoration: const BoxDecoration(
           color: Color(0xFFFCFDFA),
-        ),
-        child: Row(
+        ),        child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Botón Mapa
             Expanded(
@@ -91,10 +90,10 @@ class _NavigationItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSelected = currentIndex == index;
-    
-    if (isCenter) {
+      if (isCenter) {
       // Botón central especial (Reportar)
       return Container(
+        width: double.infinity,
         padding: const EdgeInsets.only(bottom: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -104,10 +103,10 @@ class _NavigationItem extends StatelessWidget {
             GestureDetector(
               onTap: () => onTap(index),
               child: Container(
-                padding: const EdgeInsets.all(30.75),
+                padding: const EdgeInsets.all(20.75),
                 clipBehavior: Clip.antiAlias,
                 decoration: ShapeDecoration(
-                  color: const Color(0xFFFFC400), // Color amarillo como en el diseño
+                  color: const Color(0xFFFFC400),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14.10),
                   ),
@@ -120,10 +119,17 @@ class _NavigationItem extends StatelessWidget {
                     )
                   ],
                 ),
-                child: Icon(
-                  selectedIcon,
-                  size: 16.69,
-                  color: const Color(0xFF104641), // Color teal del texto
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      selectedIcon,
+                      size: 40.0,
+                      color: const Color(0xFF104641),
+                    ),
+                  ],
                 ),
               ),
             ),
