@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 
+/// Barra de navegación inferior personalizada para InfraCheck
+/// 
+/// Implementa una navegación de 3 pestañas con un botón central elevado
+/// especial para la función de "Reportar"
 class InfraNavigationBar extends StatelessWidget {
+  /// Índice de la pestaña actualmente seleccionada
   final int currentIndex;
+  
+  /// Callback que se ejecuta cuando se toca una pestaña
+  /// Recibe el índice de la pestaña tocada
   final Function(int) onTap;
 
   const InfraNavigationBar({
@@ -69,6 +77,10 @@ class InfraNavigationBar extends StatelessWidget {
   }
 }
 
+/// Widget interno para cada elemento de navegación
+/// 
+/// Maneja la presentación visual de cada botón de la barra de navegación,
+/// con lógica especial para el botón central elevado
 class _NavigationItem extends StatelessWidget {
   final int index;
   final int currentIndex;
@@ -76,7 +88,7 @@ class _NavigationItem extends StatelessWidget {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
-  final bool isCenter;
+  final bool isCenter; // Indica si es el botón central especial
 
   const _NavigationItem({
     required this.index,
@@ -90,19 +102,18 @@ class _NavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isSelected = currentIndex == index;
-    
+    final bool isSelected = currentIndex == index;    
     if (isCenter) {
-      // Botón central especial (Reportar)
+      // Botón central especial con diseño elevado
       return Container(
         width: double.infinity,
-        clipBehavior: Clip.none, // Permite desbordamiento hacia arriba
+        clipBehavior: Clip.none, // Permite que el botón se extienda fuera del contenedor
         child: SizedBox(
-          height: 80, // Altura fija para controlar el desbordamiento hacia abajo
+          height: 80,
           child: Stack(
-            clipBehavior: Clip.none, // Permite que el botón se desborde hacia arriba
+            clipBehavior: Clip.none,
             children: [
-              // El texto en su posición normal (parte inferior)
+              // Etiqueta del botón en la parte inferior
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -117,24 +128,26 @@ class _NavigationItem extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-              ),              // El botón elevado hacia arriba
+              ),              
+              
+              // Botón principal elevado
               Positioned(
-                bottom: 20, // Posicionamos el botón 20px desde abajo
+                bottom: 20, // Elevado 20px desde la base
                 left: 0,
-                right: 0,
-                child: Center( // Centrar el botón dentro del espacio disponible
+                right: 0,                child: Center(
                   child: GestureDetector(
                     onTap: () => onTap(index),
                     child: Container(
-                      width: 85, // Ahora sí controlará el ancho del botón
-                      height: 85, // Altura fija para hacer el botón cuadrado
-                      padding: const EdgeInsets.all(12.0), // Padding para el icono
+                      width: 85,
+                      height: 85,
+                      padding: const EdgeInsets.all(12.0),
                       clipBehavior: Clip.antiAlias,
                       decoration: ShapeDecoration(
-                        color: const Color(0xFFFFC400),
+                        color: const Color(0xFFFFC400), // Color amarillo destacado
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0), // Radio ligeramente mayor para mejor apariencia
+                          borderRadius: BorderRadius.circular(16.0),
                         ),
+                        // Sombra para dar efecto de elevación
                         shadows: const [
                           BoxShadow(
                             color: Color(0x3F000000),
@@ -144,17 +157,10 @@ class _NavigationItem extends StatelessWidget {
                           )
                         ],
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(
-                            selectedIcon,
-                            size: 40.0, // Tamaño ajustado para el botón cuadrado
-                            color: const Color(0xFF104641),
-                          ),
-                        ],
+                      child: Icon(
+                        selectedIcon,
+                        size: 40.0,
+                        color: const Color(0xFF104641),
                       ),
                     ),
                   ),
@@ -163,69 +169,48 @@ class _NavigationItem extends StatelessWidget {
             ],
           ),
         ),
-      );
-    } else {
-      // Botones laterales normales
+      );    } else {
+      // Botones laterales con diseño estándar
       return GestureDetector(
         onTap: () => onTap(index),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          clipBehavior: Clip.antiAlias,
-          decoration: const BoxDecoration(),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: double.infinity,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Círculo de fondo cuando está seleccionado
+                  if (isSelected)
                     Container(
-                      width: double.infinity,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Círculo de fondo cuando está seleccionado
-                          if (isSelected)
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: const ShapeDecoration(
-                                color: Color(0xFFBCE3E0),
-                                shape: OvalBorder(),
-                              ),
-                            ),
-                          // Icono
-                          Container(
-                            width: 40,
-                            height: 40,
-                            padding: const EdgeInsets.all(6.67),
-                            child: Icon(
-                              isSelected ? selectedIcon : icon,
-                              size: 26.67,
-                              color: const Color(0xFF104641),
-                            ),
-                          ),
-                        ],
+                      width: 56,
+                      height: 56,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFBCE3E0),
+                        shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    // Texto del label
-                    Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFF104641),
-                        fontSize: 12,
-                        fontFamily: 'Open Sans',
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                  
+                  // Icono del botón
+                  Icon(
+                    isSelected ? selectedIcon : icon,
+                    size: 26.67,
+                    color: const Color(0xFF104641),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              
+              // Etiqueta del botón
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFF104641),
+                  fontSize: 12,
+                  fontFamily: 'Open Sans',
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],

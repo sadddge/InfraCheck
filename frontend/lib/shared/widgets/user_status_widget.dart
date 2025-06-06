@@ -3,9 +3,18 @@ import '../../core/enums/user_status.dart';
 import '../../shared/theme/colors.dart';
 import '../../shared/theme/text_styles.dart';
 
+/// Widget que muestra el estado actual del usuario de forma visual
+/// 
+/// Presenta información sobre el estado de la cuenta del usuario
+/// (activo, rechazado, pendiente, etc.) con iconos y colores apropiados
 class UserStatusWidget extends StatelessWidget {
+  /// Estado actual del usuario a mostrar
   final UserStatus userStatus;
+  
+  /// Callback opcional para reintentar una acción (ej: reenviar código)
   final VoidCallback? onRetry;
+  
+  /// Callback opcional para contactar soporte
   final VoidCallback? onContactSupport;
 
   const UserStatusWidget({

@@ -1,12 +1,28 @@
+/// Estados posibles para un usuario en el sistema InfraCheck
+/// 
+/// Define los diferentes estados que puede tener una cuenta de usuario
+/// durante el ciclo de vida de registro y activación
 enum UserStatus {
+  /// Usuario activo con acceso completo al sistema
   active('ACTIVE'),
+  
+  /// Usuario rechazado por un administrador
   rejected('REJECTED'),
+  
+  /// Usuario registrado esperando aprobación de administrador
   pendingApproval('PENDING_APPROVAL'),
+  
+  /// Usuario registrado esperando verificación de teléfono
   pendingVerification('PENDING_VERIFICATION');
 
   const UserStatus(this.value);
+  
+  /// Valor string que se envía al backend
   final String value;
-
+  /// Convierte un string del backend a un UserStatus
+  /// 
+  /// Parámetro [value]: String recibido del backend
+  /// Retorna: UserStatus correspondiente o pendingVerification por defecto
   static UserStatus fromString(String value) {
     return UserStatus.values.firstWhere(
       (status) => status.value == value,
@@ -14,6 +30,7 @@ enum UserStatus {
     );
   }
 
+  /// Nombre legible para mostrar en la UI
   String get displayName {
     switch (this) {
       case UserStatus.active:
@@ -24,9 +41,9 @@ enum UserStatus {
         return 'Pendiente de Aprobación';
       case UserStatus.pendingVerification:
         return 'Pendiente de Verificación';
-    }
-  }
+    }  }
 
+  /// Descripción detallada del estado para mostrar al usuario
   String get description {
     switch (this) {
       case UserStatus.active:

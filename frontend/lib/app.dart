@@ -11,15 +11,20 @@ import 'features/auth/presentation/account_menu.dart';
 import 'features/auth/presentation/admin_requests_screen.dart';
 import 'features/auth/presentation/admin_users_screen.dart';
 
-
-/// Configuración principal de navegación de la aplicación InfraCheck
+/// Configuración principal de navegación para la aplicación InfraCheck.
 /// 
-/// El router maneja:
-/// - Redirección automática por autenticación
-/// - Rutas públicas (login, register, verify) y protegidas (las que van después de login)
-/// - Navegación entre pantallas
-
-
+/// Maneja el routing completo de la aplicación incluyendo:
+/// - Rutas de autenticación (login, registro, verificación, recuperación)
+/// - Rutas principales de la aplicación (home, administración)
+/// - Rutas de gestión de usuario (perfil, configuraciones)
+/// - Navegación programática y parámetros de ruta
+/// 
+/// Características del router:
+/// - Ruta inicial configurada en login
+/// - Logs de depuración habilitados para desarrollo
+/// - Soporte para parámetros de ruta dinámicos
+/// - Rutas organizadas por funcionalidad
+/// - Manejo de errores de navegación
 final GoRouter router = GoRouter(
   // Ruta inicial cuando se abre la aplicación
   initialLocation: '/login',

@@ -24,9 +24,11 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
   Future<void> _loadPendingUsers() async {
     setState(() {
       _isLoading = true;
-    });
-
-    // TODO: Implementar llamada al backend para obtener usuarios pendientes
+    });    // TODO: Implementar llamada al backend para obtener usuarios pendientes
+    // - Endpoint: GET /v1/admin/users/pending
+    // - Filtros: por fecha, rol, estado
+    // - Paginación para manejar grandes cantidades
+    // - Refresh automático cada X minutos
     // Por ahora simulamos datos de ejemplo
     await Future.delayed(const Duration(seconds: 1));
     
