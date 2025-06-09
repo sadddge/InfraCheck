@@ -5,6 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
 import { JwtResetPayload } from '../../../common/interfaces/jwt-payload.interface';
+import { jwtConfig } from '../config/jwt.config';
 
 /**
  * @class JwtResetStrategy
@@ -55,14 +56,14 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
      * ```
      */
     constructor(
-        private readonly configService: ConfigService,
+        configService: ConfigService,
         @Inject(USER_SERVICE)
         private readonly usersService: IUserService,
     ) {
         super({
             jwtFromRequest: ExtractJwt.fromBodyField('token'),
             ignoreExpiration: false,
-            secretOrKey: configService.getOrThrow<string>('JWT_RESET_SECRET'),
+            secretOrKey: jwtConfig(configService).resetSecret,
         });
     }
 
