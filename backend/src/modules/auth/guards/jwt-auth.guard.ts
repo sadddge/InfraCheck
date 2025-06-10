@@ -2,6 +2,7 @@ import { type ExecutionContext, Injectable, Logger, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import type { Observable } from 'rxjs';
+import { InvalidAccessTokenException } from '../exceptions/auth.exceptions';
 
 /**
  * JWT authentication guard that validates access tokens and handles public endpoints.
@@ -67,7 +68,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             context.getHandler(),
             context.getClass(),
         ]);
-        this.logger.debug(`isPublic: ${isPublic}`);
         if (isPublic) {
             return true;
         }
@@ -95,7 +95,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
      */
     handleRequest<TUser = unknown>(err: unknown, user: unknown): TUser {
         if (err || !user) {
-            throw err ?? new UnauthorizedException('Unauthorized');
+            this.logger.warn(
+                `Authentication failed: ${err instanceof Error ? err.message : 'User not found'}`,
+            );
+            throw err ?? new InvalidAccessTokenException();
         }
         return user as TUser;
     }
