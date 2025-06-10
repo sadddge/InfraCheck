@@ -1,5 +1,4 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
 import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
@@ -18,7 +17,6 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         @Inject(VERIFICATION.RECOVER_PASSWORD_TOKEN)
         private readonly verificationService: IVerificationService,
         private readonly tokenFactory: TokenFactoryService,
-        private readonly configService: ConfigService,
     ) { }
 
     async sendResetPasswordCode(phoneNumber: string): Promise<void> {
@@ -52,7 +50,6 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             const user = await this.usersService.findByPhoneNumber(phoneNumber);
             this.logger.log(`Generating reset password token for user: ${user?.id}`);
             const token = await this.tokenFactory.generateResetPasswordToken(user as User); 
-            this.logger.log(`Reset password token generated for ${phoneNumber}`);
             return {
                 token,
                 message: 'Password reset token generated successfully',
@@ -69,12 +66,9 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         try {
             this.logger.log(`Resetting password for user ID: ${id}`);
             const user = await this.usersService.findByIdWithPassword(id);
-            this.logger.log(`User found: ${user?.id}`);
             const newHashedPassword = await bcrypt.hash(newPassword, 10);
-            this.logger.log(`New password hashed for user ID: ${id}`);
             user.password = newHashedPassword;
             user.passwordUpdatedAt = new Date();
-            this.logger.log(`Updating user password in database for user ID: ${id}`);
             await this.usersService.update(user.id, user);
             return 'Password reset successful';
         } catch (error) {
