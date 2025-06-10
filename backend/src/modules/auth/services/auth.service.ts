@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import type { User } from 'src/database/entities/user.entity';
-import type { Repository } from 'typeorm';
+import { Equal, type Repository } from 'typeorm';
 import { type IUserService, USER_SERVICE } from '../../users/interfaces/user-service.interface';
 import type { LoginResponseDto } from '../dto/login-response.dto';
 import type { LoginDto } from '../dto/login.dto';
@@ -59,7 +59,7 @@ export class AuthService implements IAuthService {
 
         // Find the token entity to invalidate it
         const tokenEntity = await this.refreshTokenRepository.findOne({
-            where: { token: refreshToken, user: { id: userId } },
+            where: { token: Equal(refreshToken) , user: { id: Equal(userId) } },
         });
 
         if (tokenEntity) {
@@ -79,7 +79,7 @@ export class AuthService implements IAuthService {
 
     async getUserIfRefreshTokenMatches(refreshToken: string, userId: number): Promise<User | null> {
         const token = await this.refreshTokenRepository.findOne({
-            where: { token: refreshToken, user: { id: userId } },
+            where: { token: Equal(refreshToken), user: { id: Equal(userId) } },
             relations: ['user'],
         });
 
