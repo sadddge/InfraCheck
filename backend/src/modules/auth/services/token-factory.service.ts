@@ -23,6 +23,17 @@ export class TokenFactoryService {
         return { accessToken, refreshToken };
     }
 
+    async generateResetPasswordToken(user: User): Promise<string> {
+        const payload = {
+            sub: user.id,
+            scope: 'reset_password' as const,
+        }
+        return this.jwtService.signAsync(payload, {
+            expiresIn: this.jwtConfig.resetTokenExpiration,
+            secret: this.jwtConfig.resetSecret,
+        });
+    }
+
     private async generateAccessToken(user: User): Promise<string> {
         return this.jwtService.signAsync(
             {

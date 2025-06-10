@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -34,6 +34,7 @@ import { jwtConfig } from '../config/jwt.config';
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+    private readonly logger = new Logger(JwtStrategy.name);
     /**
      * Creates a new JwtStrategy instance with configuration.
      *
@@ -64,6 +65,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
      * ```
      */
     validate(payload: JwtPayload) {
+        this.logger.debug(`Validating JWT payload: ${JSON.stringify(payload)}`);
         return {
             id: payload.sub,
             phoneNumber: payload.phoneNumber,

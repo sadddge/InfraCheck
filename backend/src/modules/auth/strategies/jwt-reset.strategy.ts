@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -36,6 +36,7 @@ import { jwtConfig } from '../config/jwt.config';
  */
 @Injectable()
 export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
+    private readonly logger = new Logger(JwtResetStrategy.name);
     /**
      * @constructor
      * @description Initializes the JWT reset strategy with configuration and user service.
@@ -115,10 +116,12 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
             throw new UnauthorizedException('Password has already been changed');
         }
 
+        this.logger.log(
+            `JWT Reset Strategy: User ${user.id} validated for password reset`,
+        );
+
         return {
-            user: {
-                id: user.id,
-            },
+            id: user.id,
         };
     }
 }
