@@ -59,23 +59,28 @@ export class RolesGuard implements CanActivate {
      * // User with NEIGHBOR role accessing @Roles(Role.ADMIN): denied
      * // Endpoint without @Roles() decorator: allowed for all authenticated users
      * ```
-     */
-    canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+     */ canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
         const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
             context.getHandler(),
             context.getClass(),
         ]);
-        if (!requiredRoles) {
-            return true; // No role requirements, allow access
+        if (!requiredRoles || requiredRoles.length === 0) {
+            return true; // No role requirements or empty array, allow access
         }
         this.logger.debug(`requiredRoles: ${requiredRoles}`);
         const req = context.switchToHttp().getRequest();
         const user = req.user;
 
+        if (!user) {
+            this.logger.warn('No user found in request - authentication may have failed');
+            return false;
+        }
+
         if (user.role === Role.ADMIN) {
             return true; // Admins have access to everything
         }
 
-        return requiredRoles.some(role => user.role?.includes(role));
+        // Fix: Use exact comparison instead of includes() to prevent partial matches
+        return requiredRoles.some(role => user.role === role);
     }
 }

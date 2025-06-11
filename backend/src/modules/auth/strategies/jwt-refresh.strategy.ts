@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { jwtConfig } from '../config/jwt.config';
 import { AUTH_SERVICE, type IAuthService } from '../interfaces/auth-service.interface';
 
 /**
@@ -54,13 +55,13 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
      * ```
      */
     constructor(
-        private readonly config: ConfigService,
+        config: ConfigService,
         @Inject(AUTH_SERVICE)
         private readonly authService: IAuthService,
     ) {
         super({
             jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
-            secretOrKey: config.getOrThrow('JWT_REFRESH_SECRET'),
+            secretOrKey: jwtConfig(config).refreshSecret,
             passReqToCallback: true,
         });
     }

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
-import type { Repository } from 'typeorm';
+import { Equal, type Repository } from 'typeorm';
 import type { RegisterDto } from '../../auth/dto/register.dto';
 import type { UpdateUserDto } from '../dto/update-user.dto';
 import type { UserDto } from '../dto/user.dto';
@@ -47,7 +47,7 @@ export class UsersService implements IUserService {
      * ```
      */
     async findAll(status?: UserStatus): Promise<UserDto[]> {
-        const where = status ? { status: status } : {};
+        const where = status ? { status: Equal(status) } : {};
         return this.userRepository.find({
             where,
             select: {
@@ -82,7 +82,7 @@ export class UsersService implements IUserService {
     async findById(id: number): Promise<UserDto> {
         const user = await this.userRepository.findOne({
             where: {
-                id: id,
+                id: Equal(id),
             },
             select: {
                 id: true,
@@ -123,7 +123,7 @@ export class UsersService implements IUserService {
     async findByPhoneNumber(phoneNumber: string): Promise<UserDto> {
         const user = await this.userRepository.findOne({
             where: {
-                phoneNumber: phoneNumber,
+                phoneNumber: Equal(phoneNumber),
             },
             select: {
                 id: true,
@@ -187,7 +187,7 @@ export class UsersService implements IUserService {
      */
     async updateStatus(id: number, status: UserStatus): Promise<UserDto> {
         const user = await this.userRepository.findOne({
-            where: { id },
+            where: { id: Equal(id) },
         });
         if (!user) {
             throw new NotFoundException(`User with ID ${id} not found`);
@@ -220,7 +220,7 @@ export class UsersService implements IUserService {
     async registerNeighbor(user: RegisterDto): Promise<UserDto> {
         const existingUser = await this.userRepository.findOne({
             where: {
-                phoneNumber: user.phoneNumber,
+                phoneNumber: Equal(user.phoneNumber),
             },
         });
         if (existingUser) {
@@ -256,7 +256,7 @@ export class UsersService implements IUserService {
     async createAdmin(user: RegisterDto): Promise<UserDto> {
         const existingUser = await this.userRepository.findOne({
             where: {
-                phoneNumber: user.phoneNumber,
+                phoneNumber: Equal(user.phoneNumber),
             },
         });
         if (existingUser) {
@@ -314,7 +314,7 @@ export class UsersService implements IUserService {
      */
     async findByIdWithPassword(id: number): Promise<User> {
         const user = await this.userRepository.findOne({
-            where: { id },
+            where: { id: Equal(id) },
             select: {
                 id: true,
                 phoneNumber: true,
@@ -351,7 +351,7 @@ export class UsersService implements IUserService {
      */
     async findByPhoneNumberWithPassword(phoneNumber: string): Promise<User> {
         const user = await this.userRepository.findOne({
-            where: { phoneNumber },
+            where: { phoneNumber: Equal(phoneNumber) },
             select: {
                 id: true,
                 phoneNumber: true,

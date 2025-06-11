@@ -28,6 +28,14 @@ import { VerifyRecoverPasswordDto } from '../dto/verify-recover-password.dto';
 import { JwtRefreshGuard } from '../guards/jwt-refresh.guard';
 import { JwtResetGuard } from '../guards/jwt-reset.guard';
 import { AUTH_SERVICE, type IAuthService } from '../interfaces/auth-service.interface';
+import {
+    type IPasswordRecoveryService,
+    PASSWORD_RECOVERY_SERVICE,
+} from '../interfaces/password-recovery-service.interface';
+import {
+    type IUserRegistrationService,
+    USER_REGISTRATION_SERVICE,
+} from '../interfaces/user-registration-service..interface';
 
 /**
  * Authentication controller handling user registration, login, password recovery, and token management.
@@ -62,6 +70,10 @@ export class AuthController {
     constructor(
         @Inject(AUTH_SERVICE)
         private readonly authService: IAuthService,
+        @Inject(USER_REGISTRATION_SERVICE)
+        private readonly userRegistrationService: IUserRegistrationService,
+        @Inject(PASSWORD_RECOVERY_SERVICE)
+        private readonly passwordRecoveryService: IPasswordRecoveryService,
     ) {}
 
     /**
@@ -142,8 +154,8 @@ export class AuthController {
     @ApiUnauthorizedResponse({
         description: 'Invalid or expired refresh token.',
     })
-    async refresh(@Body() dto: RefreshTokenDto): Promise<LoginResponseDto> {
-        return await this.authService.refreshToken(dto.refreshToken);
+    async refresh(@Body() dto: RefreshTokenDto, @Request() req): Promise<LoginResponseDto> {
+        return await this.authService.refreshToken(dto.refreshToken, req.user.id);
     }
 
     /**
@@ -192,7 +204,7 @@ export class AuthController {
         description: 'Invalid registration data provided.',
     })
     async register(@Body() dto: RegisterDto): Promise<RegisterResponseDto> {
-        return await this.authService.register(dto);
+        return await this.userRegistrationService.register(dto);
     }
 
     /**
@@ -235,7 +247,7 @@ export class AuthController {
         @Query('phoneNumber') phoneNumber: string,
         @Query('code') code: string,
     ): Promise<void> {
-        await this.authService.verifyRegisterCode(phoneNumber, code);
+        await this.userRegistrationService.verifyRegisterCode(phoneNumber, code);
     }
 
     /**
@@ -276,7 +288,7 @@ export class AuthController {
         description: 'Invalid phone number provided.',
     })
     async sendResetPasswordCode(@Body() recoverPasswordDto: RecoverPasswordDto): Promise<string> {
-        await this.authService.sendResetPasswordCode(recoverPasswordDto.phoneNumber);
+        await this.passwordRecoveryService.sendResetPasswordCode(recoverPasswordDto.phoneNumber);
         return 'Password recovery code sent successfully.';
     }
 
@@ -323,7 +335,7 @@ export class AuthController {
     async verifyRecoverPasswordCode(
         @Body() verifyRecoverPasswordDto: VerifyRecoverPasswordDto,
     ): Promise<unknown> {
-        return await this.authService.generateResetPasswordToken(
+        return await this.passwordRecoveryService.generateResetPasswordToken(
             verifyRecoverPasswordDto.phoneNumber,
             verifyRecoverPasswordDto.code,
         );
@@ -376,6 +388,9 @@ export class AuthController {
         @Body() resetPasswordDto: ResetPasswordDto,
         @Request() req,
     ): Promise<string> {
-        return await this.authService.resetPassword(req.user.id, resetPasswordDto.newPassword);
+        return await this.passwordRecoveryService.resetPassword(
+            req.user.id,
+            resetPasswordDto.newPassword,
+        );
     }
 }
