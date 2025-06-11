@@ -15,6 +15,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { ReportCategory } from 'src/common/enums/report-category.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { Role } from 'src/common/enums/roles.enums';
 import { CreateReportDto } from '../dto/create-report.dto';
@@ -76,5 +77,10 @@ export class ReportsController {
         @Body('state') state: ReportState,
     ): Promise<ReportDto> {
         return await this.reportsService.updateState(+id, state);
+    }
+
+    @Get('categories')
+    getReportCategories(): string[] {
+        return Object.values(ReportCategory);
     }
 }
