@@ -35,7 +35,7 @@ import {
 import {
     type IUserRegistrationService,
     USER_REGISTRATION_SERVICE,
-} from '../interfaces/user-registration-service..interface';
+} from '../interfaces/user-registration-service.interface';
 
 /**
  * Authentication controller handling user registration, login, password recovery, and token management.

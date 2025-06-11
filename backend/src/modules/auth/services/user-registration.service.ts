@@ -7,7 +7,7 @@ import { IVerificationService } from 'src/modules/verification/interfaces/verifi
 import { RegisterResponseDto } from '../dto/register-response.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { InvalidVerificationCodeException } from '../exceptions/auth.exceptions';
-import { IUserRegistrationService } from '../interfaces/user-registration-service..interface';
+import { IUserRegistrationService } from '../interfaces/user-registration-service.interface';
 
 @Injectable()
 export class UserRegistrationService implements IUserRegistrationService {
