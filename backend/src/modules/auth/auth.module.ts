@@ -9,7 +9,7 @@ import { VerificationModule } from '../verification/verification.module';
 import { AuthController } from './controllers/auth.controller';
 import { AUTH_SERVICE } from './interfaces/auth-service.interface';
 import { PASSWORD_RECOVERY_SERVICE } from './interfaces/password-recovery-service.interface';
-import { USER_REGISTRATION_SERVICE } from './interfaces/user-registration-service..interface';
+import { USER_REGISTRATION_SERVICE } from './interfaces/user-registration-service.interface';
 import { AuthService } from './services/auth.service';
 import { PasswordRecoveryService } from './services/password-recovery.service';
 import { TokenFactoryService } from './services/token-factory.service';
