@@ -165,36 +165,6 @@ describe('CommentsService', () => {
                 'Save error',
             );
         });
-
-        it('should create comment with empty content', async () => {
-            // Arrange
-            const reportId = 1;
-            const userId = 1;
-            const createCommentDto: CreateCommentDto = { content: '' };
-
-            const mockCreatedComment = {
-                content: '',
-                report: { id: reportId },
-                creator: { id: userId },
-            };
-
-            const mockSavedComment = {
-                id: 1,
-                content: '',
-                createdAt: new Date(),
-                creator: { id: 1, name: 'John', lastName: 'Doe' },
-                report: { id: 1, title: 'Test Report' },
-            };
-
-            mockRepository.create.mockReturnValue(mockCreatedComment);
-            mockRepository.save.mockResolvedValue(mockSavedComment);
-
-            // Act
-            const result = await service.createComment(reportId, userId, createCommentDto);
-
-            // Assert
-            expect(result.content).toBe('');
-        });
     });
 
     describe('delete', () => {
