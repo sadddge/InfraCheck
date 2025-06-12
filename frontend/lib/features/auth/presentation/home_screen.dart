@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../../../shared/widgets/navigation_bar.dart';
+import '../../../shared/widgets/google_map_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -73,68 +75,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            
-            // Placeholder del mapa
+              // Mapa de Google Maps
             Expanded(
-              child: Container(
-                width: double.infinity,
-                color: Colors.grey.shade200,
-                child: Stack(
-                  children: [
-                    // Patrón de cuadrícula para simular un mapa
-                    CustomPaint(
-                      painter: GridPainter(),
-                      size: Size.infinite,
+              child: GoogleMapWidget(
+                initialLocation: const LatLng(-33.4489, -70.6693), // Santiago, Chile
+                initialZoom: 14.0,
+                showMyLocationButton: true,
+                onMapTap: (LatLng position) {
+                  // TODO: Manejar toque en el mapa para futuras funcionalidades
+                  print('Tocado en: ${position.latitude}, ${position.longitude}');
+                },
+                markers: {
+                  // Ejemplo de marcador - puedes agregar más marcadores aquí
+                  const Marker(
+                    markerId: MarkerId('example'),
+                    position: LatLng(-33.4489, -70.6693),
+                    infoWindow: InfoWindow(
+                      title: 'Santiago Centro',
+                      snippet: 'Ubicación de ejemplo',
                     ),
-                    // Contenido central
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.map_outlined,
-                            size: 80,
-                            color: AppColors.primary.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Mapa en desarrollo',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Funcionalidad en desarrollo',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.iconGrey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Botón flotante para futuras funciones del mapa
-                    Positioned(
-                      bottom: 20,
-                      right: 20,
-                      child: FloatingActionButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Funciones del mapa en desarrollo')),
-                          );
-                        },
-                        backgroundColor: AppColors.accent,
-                        child: Icon(
-                          Icons.my_location,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                },
               ),
             ),
           ],
@@ -146,37 +107,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-// Painter para crear un patrón de cuadrícula que simule un mapa
-class GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 1;
-
-    const gridSize = 50.0;
-
-    // Líneas verticales
-    for (double x = 0; x < size.width; x += gridSize) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        paint,
-      );
-    }
-
-    // Líneas horizontales
-    for (double y = 0; y < size.height; y += gridSize) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
