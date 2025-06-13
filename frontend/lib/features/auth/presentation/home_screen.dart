@@ -74,8 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-            ),
-              // Mapa de Google Maps
+            ),            // Mapa de Google Maps
             Expanded(
               child: GoogleMapWidget(
                 initialLocation: const LatLng(-33.4489, -70.6693), // Santiago, Chile
@@ -85,17 +84,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   // TODO: Manejar toque en el mapa para futuras funcionalidades
                   print('Tocado en: ${position.latitude}, ${position.longitude}');
                 },
-                markers: {
-                  // Ejemplo de marcador - puedes agregar más marcadores aquí
-                  const Marker(
-                    markerId: MarkerId('example'),
-                    position: LatLng(-33.4489, -70.6693),
-                    infoWindow: InfoWindow(
-                      title: 'Santiago Centro',
-                      snippet: 'Ubicación de ejemplo',
-                    ),
-                  ),
-                },
+                // Sin marcadores por defecto, solo el círculo de ubicación actual
+                markers: const {},
               ),
             ),
           ],

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -45,24 +46,22 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
   LatLng? _currentLocation;
   bool _isLoadingLocation = false;
   Set<Marker> _markers = {};
-
+  StreamSubscription<Position>? _positionStream;
+  bool _isInitialLocationSet = false;
   @override
   void initState() {
     super.initState();
     _markers = widget.markers;
+    // Obtener ubicación actual automáticamente al iniciar
     _getCurrentLocation();
   }
-
   @override
   void dispose() {
     _mapController?.dispose();
+    _positionStream?.cancel();
     super.dispose();
-  }
-
-  /// Obtiene la ubicación actual del usuario
+  }  /// Obtiene la ubicación actual del usuario y configura el seguimiento continuo
   Future<void> _getCurrentLocation() async {
-    if (!widget.showMyLocationButton) return;
-
     setState(() {
       _isLoadingLocation = true;
     });
@@ -79,21 +78,15 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
           return;
         }
 
-        // Obtener ubicación actual
+        // Obtener ubicación actual una vez
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
         );
 
-        setState(() {
-          _currentLocation = LatLng(position.latitude, position.longitude);
-        });
+        _updateLocationAndFollowUser(position);
 
-        // Animar hacia la ubicación actual
-        if (_mapController != null) {
-          _mapController!.animateCamera(
-            CameraUpdate.newLatLng(_currentLocation!),
-          );
-        }
+        // Configurar seguimiento continuo de ubicación
+        _startLocationTracking();
       } else {
         _showPermissionDialog();
       }
@@ -103,6 +96,46 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
       setState(() {
         _isLoadingLocation = false;
       });
+    }
+  }
+
+  /// Inicia el seguimiento continuo de la ubicación del usuario
+  void _startLocationTracking() {
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 5, // Actualizar cada 5 metros
+    );    _positionStream = Geolocator.getPositionStream(
+      locationSettings: locationSettings,
+    ).listen(
+      (Position position) {
+        _updateLocationAndFollowUser(position);
+      },
+      onError: (error) {
+        _showErrorSnackBar('Error en seguimiento de ubicación: $error');
+      },
+    );
+  }
+  /// Actualiza la ubicación actual y mueve la cámara para seguir al usuario
+  void _updateLocationAndFollowUser(Position position) {
+    final newLocation = LatLng(position.latitude, position.longitude);
+    
+    setState(() {
+      _currentLocation = newLocation;
+    });
+
+    // Mover la cámara para seguir al usuario automáticamente
+    if (_mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLng(newLocation),
+      );
+    }
+
+    // Si es la primera vez que obtenemos la ubicación, hacer zoom también
+    if (!_isInitialLocationSet && _mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(newLocation, 16.0),
+      );
+      _isInitialLocationSet = true;
     }
   }
 
@@ -195,17 +228,16 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
   @override
   Widget build(BuildContext context) {
     return Stack(
-      children: [
-        // Mapa de Google
+      children: [        // Mapa de Google
         GoogleMap(
           onMapCreated: _onMapCreated,
           initialCameraPosition: CameraPosition(
-            target: widget.initialLocation,
+            target: _currentLocation ?? widget.initialLocation,
             zoom: widget.initialZoom,
           ),
           markers: _markers,
           onTap: widget.onMapTap,
-          myLocationEnabled: _currentLocation != null,
+          myLocationEnabled: true, // Habilitar el indicador nativo de Google
           myLocationButtonEnabled: false, // Usamos nuestro botón personalizado
           zoomControlsEnabled: false, // Ocultamos controles por defecto
           mapToolbarEnabled: false,
@@ -244,10 +276,8 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
                       size: 20,
                     ),
             ),
-          ),
-
-        // Indicador de carga del mapa
-        if (_mapController == null)
+          ),        // Indicador de carga del mapa
+        if (_currentLocation == null && _isLoadingLocation)
           Container(
             color: Colors.grey.shade200,
             child: Center(
@@ -259,7 +289,7 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Cargando mapa...',
+                    'Obteniendo ubicación actual...',
                     style: TextStyle(
                       color: AppColors.primary,
                       fontSize: 16,
