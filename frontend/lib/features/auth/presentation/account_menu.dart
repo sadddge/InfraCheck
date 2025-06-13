@@ -6,6 +6,18 @@ import '../../../shared/theme/text_styles.dart';
 import '../../../shared/widgets/navigation_bar.dart';
 import '../../../core/providers/auth_provider.dart';
 
+/// Pantalla de menú de cuenta del usuario en InfraCheck.
+/// 
+/// Proporciona acceso a funcionalidades relacionadas con la gestión de la cuenta
+/// del usuario, incluyendo perfil, configuraciones, administración (para admins)
+/// y opciones de cierre de sesión.
+/// 
+/// Características principales:
+/// - Información del perfil del usuario
+/// - Acceso a configuraciones de la cuenta
+/// - Opciones administrativas (solo para usuarios admin)
+/// - Cerrar sesión con confirmación
+/// - Navegación integrada con la barra de navegación inferior
 class AccountMenuScreen extends StatelessWidget {
   const AccountMenuScreen({super.key});
 
@@ -226,10 +238,20 @@ class AccountMenuScreen extends StatelessWidget {
               // Ya estamos en cuenta, no hacer nada
               break;
           }
-        },
-      ),
+        },      ),
     );
   }
+  
+  /// Construye un elemento de menú con diseño consistente.
+  /// 
+  /// Crea una tarjeta con icono, título, subtítulo y funcionalidad de toque
+  /// siguiendo el diseño visual establecido para la pantalla de cuenta.
+  /// 
+  /// [context] Contexto de build necesario para la construcción del widget
+  /// [icon] Icono a mostrar en el elemento del menú
+  /// [title] Título principal del elemento del menú  
+  /// [subtitle] Descripción secundaria del elemento del menú
+  /// [onTap] Callback que se ejecuta cuando se toca el elemento
   Widget _buildMenuItem(
     BuildContext context, {
     required IconData icon,
@@ -329,9 +351,16 @@ class AccountMenuScreen extends StatelessWidget {
           },
         ),
       ],
-    );
-  }
+    );  }
 
+  /// Muestra un diálogo de confirmación para cerrar sesión.
+  /// 
+  /// Presenta al usuario un diálogo modal con opción de confirmar o cancelar
+  /// el proceso de cierre de sesión. Si se confirma, ejecuta el logout y
+  /// navega automáticamente a la pantalla de login.
+  /// 
+  /// [context] Contexto necesario para mostrar el diálogo
+  /// [authProvider] Proveedor de autenticación para ejecutar el logout
   void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
     showDialog(
       context: context,

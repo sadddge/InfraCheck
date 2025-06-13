@@ -6,7 +6,21 @@ import '../../../shared/theme/colors.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
 
+/// Pantalla de verificación de código de registro para InfraCheck.
+/// 
+/// Permite a los nuevos usuarios verificar su número de teléfono ingresando
+/// el código de 6 dígitos enviado por SMS durante el proceso de registro.
+/// Una vez verificado exitosamente, completa el registro del usuario.
+/// 
+/// Características principales:
+/// - Verificación de código SMS de 6 dígitos
+/// - Validación del código con el backend
+/// - Manejo de errores de verificación
+/// - Finalización del proceso de registro
+/// - Interfaz moderna con efectos visuales
+/// - Navegación automática tras verificación exitosa
 class VerifyRegisterCodeScreen extends StatefulWidget {
+  /// Número de teléfono del usuario al que se envió el código
   final String phoneNumber;
 
   const VerifyRegisterCodeScreen({

@@ -6,7 +6,21 @@ import '../../../shared/theme/colors.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
 
+/// Pantalla de verificación de código para recuperación de contraseña.
+/// 
+/// Permite a los usuarios verificar su identidad ingresando el código de
+/// 6 dígitos enviado por SMS durante el proceso de recuperación de contraseña.
+/// Una vez verificado, permite proceder al restablecimiento de la contraseña.
+/// 
+/// Características principales:
+/// - Verificación de código SMS de 6 dígitos
+/// - Validación con el sistema de autenticación
+/// - Manejo de errores de verificación
+/// - Navegación al siguiente paso (restablecer contraseña)
+/// - Interfaz moderna con efectos visuales
+/// - Timeout y manejo de códigos expirados
 class VerifyRecoverPassword extends StatefulWidget {
+  /// Número de teléfono del usuario al que se envió el código de recuperación
   final String phoneNumber;
 
   const VerifyRecoverPassword({

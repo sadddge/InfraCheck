@@ -7,7 +7,21 @@ import '../../../shared/theme/text_styles.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
 
+/// Pantalla de restablecimiento de contraseña para InfraCheck.
+/// 
+/// Permite a los usuarios establecer una nueva contraseña después de haber
+/// verificado exitosamente su identidad con el código SMS. Incluye validación
+/// de contraseña segura y verificación de coincidencia.
+/// 
+/// Características principales:
+/// - Formulario de nueva contraseña con validación
+/// - Confirmación de contraseña
+/// - Validación de fortaleza de contraseña
+/// - Actualización segura de credenciales
+/// - Navegación automática al login tras éxito
+/// - Interfaz moderna con efectos visuales
 class ResetPasswordScreen extends StatefulWidget {
+  /// Número de teléfono del usuario que está restableciendo la contraseña
   final String phoneNumber;
   
   const ResetPasswordScreen({Key? key, required this.phoneNumber}) : super(key: key);

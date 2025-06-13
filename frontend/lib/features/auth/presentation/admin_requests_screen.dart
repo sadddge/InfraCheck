@@ -4,6 +4,18 @@ import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../../../shared/widgets/navigation_bar.dart';
 
+/// Pantalla de gestión de solicitudes de ingreso para administradores.
+/// 
+/// Permite a los administradores revisar y aprobar/rechazar solicitudes
+/// de nuevos usuarios que han completado el registro y están pendientes
+/// de aprobación administrativa.
+/// 
+/// Características principales:
+/// - Lista de usuarios pendientes de aprobación
+/// - Botones para aprobar o rechazar solicitudes
+/// - Información detallada de cada solicitante
+/// - Actualización en tiempo real del estado de solicitudes
+/// - Interfaz administrativa integrada con navegación
 class AdminRequestsScreen extends StatefulWidget {
   const AdminRequestsScreen({super.key});
 
@@ -361,7 +373,11 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
   }
 }
 
-// Modelo temporal para usuarios pendientes
+/// Modelo temporal para representar usuarios pendientes de aprobación.
+/// 
+/// TODO: Migrar a un modelo compartido en core/models cuando se integre con el backend.
+/// Este modelo contiene la información mínima necesaria para mostrar
+/// solicitudes pendientes en la interfaz administrativa.
 class PendingUser {
   final int id;
   final String name;

@@ -6,6 +6,19 @@ import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../../../core/providers/auth_provider.dart';
 
+/// Pantalla de recuperación de contraseña para InfraCheck.
+/// 
+/// Permite a los usuarios iniciar el proceso de recuperación de contraseña
+/// ingresando su número de teléfono registrado. El sistema enviará un código
+/// de verificación por SMS para proceder con el restablecimiento.
+/// 
+/// Características principales:
+/// - Formulario de solicitud de recuperación con validación
+/// - Envío de código de verificación por SMS
+/// - Validación de formato de número telefónico chileno
+/// - Integración con el sistema de autenticación
+/// - Interfaz moderna con efectos visuales
+/// - Navegación al siguiente paso del proceso de recuperación
 class RecoverPasswordScreen extends StatefulWidget {
   const RecoverPasswordScreen({Key? key}) : super(key: key);
 
