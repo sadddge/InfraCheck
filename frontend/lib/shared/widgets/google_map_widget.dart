@@ -36,17 +36,31 @@ class GoogleMapWidget extends StatefulWidget {
     this.markers = const {},
     this.showMyLocationButton = true,
   }) : super(key: key);
-
   @override
   State<GoogleMapWidget> createState() => _GoogleMapWidgetState();
 }
 
+/// Estado interno del widget GoogleMapWidget
+/// 
+/// Maneja la lógica de ubicación, permisos, controlador del mapa y
+/// seguimiento continuo de la posición del usuario
 class _GoogleMapWidgetState extends State<GoogleMapWidget> {
+  /// Controlador para interactuar con el mapa de Google Maps
   GoogleMapController? _mapController;
+  
+  /// Ubicación actual del usuario
   LatLng? _currentLocation;
+  
+  /// Indica si se está cargando la ubicación
   bool _isLoadingLocation = false;
+  
+  /// Set de marcadores que se muestran en el mapa
   Set<Marker> _markers = {};
+  
+  /// Stream subscription para el seguimiento continuo de ubicación
   StreamSubscription<Position>? _positionStream;
+  
+  /// Flag para controlar si ya se estableció la ubicación inicial
   bool _isInitialLocationSet = false;
   @override
   void initState() {
@@ -135,10 +149,13 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
       _mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(newLocation, 16.0),
       );
-      _isInitialLocationSet = true;
-    }
+      _isInitialLocationSet = true;    }
   }
 
+  /// Muestra un diálogo informativo cuando el servicio de ubicación está deshabilitado
+  /// 
+  /// Informa al usuario que debe habilitar la ubicación en la configuración del dispositivo
+  /// para poder usar las funcionalidades relacionadas con la ubicación
   void _showLocationServiceDialog() {
     showDialog(
       context: context,
@@ -162,9 +179,12 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
           ],
         );
       },
-    );
-  }
+    );  }
 
+  /// Muestra un diálogo para solicitar permisos de ubicación al usuario
+  /// 
+  /// Explica por qué la aplicación necesita acceso a la ubicación y proporciona
+  /// opciones para cancelar o ir a la configuración del sistema
   void _showPermissionDialog() {
     showDialog(
       context: context,
@@ -201,25 +221,34 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
           ],
         );
       },
-    );
-  }
+    );  }
 
+  /// Muestra un mensaje de error en forma de SnackBar
+  /// 
+  /// [message] El mensaje de error a mostrar al usuario
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 3),
-      ),
-    );
+      ),    );
   }
+  
+  /// Callback ejecutado cuando el mapa se ha creado y está listo para usar
+  /// 
+  /// [controller] El controlador del mapa de Google Maps
+  /// Aplica estilos personalizados para ocultar POIs innecesarios
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
     
     // Aplicar estilo personalizado para ocultar POIs
-    _mapController!.setMapStyle(_mapStyleNoPOI);
-  }
+    _mapController!.setMapStyle(_mapStyleNoPOI);  }
 
+  /// Maneja el evento de presionar el botón "Mi ubicación"
+  /// 
+  /// Solicita una nueva obtención de la ubicación actual del usuario
+  /// No hace nada si ya se está cargando la ubicación
   void _onMyLocationPressed() {
     if (_isLoadingLocation) return;
     _getCurrentLocation();

@@ -82,13 +82,26 @@ class InfraNavigationBar extends StatelessWidget {
 /// Maneja la presentación visual de cada botón de la barra de navegación,
 /// con lógica especial para el botón central elevado
 class _NavigationItem extends StatelessWidget {
+  /// Índice del elemento en la barra de navegación
   final int index;
+  
+  /// Índice del elemento actualmente seleccionado
   final int currentIndex;
+  
+  /// Callback ejecutado cuando se toca el elemento
   final Function(int) onTap;
+  
+  /// Icono mostrado cuando el elemento no está seleccionado
   final IconData icon;
+  
+  /// Icono mostrado cuando el elemento está seleccionado
   final IconData selectedIcon;
+  
+  /// Etiqueta de texto del elemento
   final String label;
-  final bool isCenter; // Indica si es el botón central especial
+  
+  /// Indica si es el botón central especial con diseño elevado
+  final bool isCenter;
 
   const _NavigationItem({
     required this.index,
