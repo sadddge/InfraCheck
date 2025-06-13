@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../shared/theme/colors.dart';
-import '../../../shared/theme/text_styles.dart';
 import '../../../shared/widgets/navigation_bar.dart';
 import '../../../shared/widgets/google_map_widget.dart';
 
@@ -44,48 +43,78 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
+      backgroundColor: AppColors.background,      body: SafeArea(
+        child: Stack(
           children: [
-            // Header de la app
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: AppColors.primary,
+            // Mapa de Google Maps (ocupa toda la pantalla)
+            GoogleMapWidget(
+              initialLocation: const LatLng(-33.4489, -70.6693), // Santiago, Chile
+              initialZoom: 14.0,
+              showMyLocationButton: true,
+              onMapTap: (LatLng position) {
+                // TODO: Manejar toque en el mapa para futuras funcionalidades
+                print('Tocado en: ${position.latitude}, ${position.longitude}');
+              },
+              // Sin marcadores por defecto, solo el círculo de ubicación actual
+              markers: const {},
+            ),            // Botones flotantes arriba de la barra de navegación
+            Positioned(
+              bottom: 24, // Ajusta este valor para cambiar la distancia a la barra
+              left: 24,
+              right: 24,
               child: Row(
-                children: [
-                  Text(
-                    'InfraCheck',
-                    style: AppTextStyles.heading.copyWith(fontSize: 24),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: AppColors.textWhite,
-                      size: 24,
-                    ),
-                    onPressed: () {
-                      // TODO: Implementar notificaciones
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [                  // Botón de notificaciones
+                  GestureDetector(
+                    onTap: () {
+                      // TODO: Implementar notificaciones de reportes seguidos
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Notificaciones en desarrollo')),
+                        const SnackBar(
+                          content: Text('Notificaciones de reportes en desarrollo'),
+                          duration: Duration(seconds: 2),
+                        ),
                       );
                     },
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFBCE3E0),
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: const Icon(
+                        Icons.notifications_outlined,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                  // Botón de chat
+                  GestureDetector(
+                    onTap: () {
+                      // TODO: Navegar al chat en desarrollo
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Chat en desarrollo'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFBCE3E0),
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: const Icon(
+                        Icons.chat_bubble_outline,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ],
-              ),
-            ),            // Mapa de Google Maps
-            Expanded(
-              child: GoogleMapWidget(
-                initialLocation: const LatLng(-33.4489, -70.6693), // Santiago, Chile
-                initialZoom: 14.0,
-                showMyLocationButton: true,
-                onMapTap: (LatLng position) {
-                  // TODO: Manejar toque en el mapa para futuras funcionalidades
-                  print('Tocado en: ${position.latitude}, ${position.longitude}');
-                },
-                // Sin marcadores por defecto, solo el círculo de ubicación actual
-                markers: const {},
               ),
             ),
           ],
