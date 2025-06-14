@@ -178,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Ingresa tu email y contraseña para iniciar sesión',
+                          'Ingresa tu telefono y contraseña para iniciar sesión',
                           style: AppTextStyles.subtitle,
                           textAlign: TextAlign.center,
                         ),

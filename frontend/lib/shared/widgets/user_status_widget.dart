@@ -144,10 +144,16 @@ class UserStatusWidget extends StatelessWidget {
           textAlign: TextAlign.center,
         );
       case UserStatus.active:
-        return const SizedBox.shrink();
-    }
+        return const SizedBox.shrink();    }
   }
 
+  /// Obtiene el icono apropiado según el estado del usuario
+  /// 
+  /// Retorna el [IconData] correspondiente a cada [UserStatus]:
+  /// - active: check_circle (verificado)
+  /// - rejected: cancel (rechazado)  
+  /// - pendingApproval: hourglass_empty (esperando)
+  /// - pendingVerification: verified_user (verificación)
   IconData _getIcon() {
     switch (userStatus) {
       case UserStatus.active:
@@ -158,9 +164,15 @@ class UserStatusWidget extends StatelessWidget {
         return Icons.hourglass_empty;
       case UserStatus.pendingVerification:
         return Icons.verified_user;
-    }
-  }
+    }  }
 
+  /// Obtiene el color de fondo del contenedor según el estado del usuario
+  /// 
+  /// Retorna colores suaves que complementan el tema visual:
+  /// - active: verde claro
+  /// - rejected: rojo claro
+  /// - pendingApproval: naranja claro  
+  /// - pendingVerification: azul claro
   Color _getBackgroundColor() {
     switch (userStatus) {
       case UserStatus.active:
@@ -171,9 +183,15 @@ class UserStatusWidget extends StatelessWidget {
         return Colors.orange.shade50;
       case UserStatus.pendingVerification:
         return Colors.blue.shade50;
-    }
-  }
+    }  }
 
+  /// Obtiene el color del borde del contenedor según el estado del usuario
+  /// 
+  /// Retorna colores más intensos que el fondo para crear contraste visual:
+  /// - active: verde medio
+  /// - rejected: rojo medio
+  /// - pendingApproval: naranja medio
+  /// - pendingVerification: azul medio
   Color _getBorderColor() {
     switch (userStatus) {
       case UserStatus.active:
@@ -184,9 +202,16 @@ class UserStatusWidget extends StatelessWidget {
         return Colors.orange.shade300;
       case UserStatus.pendingVerification:
         return Colors.blue.shade300;
-    }
-  }
+    }  }
 
+  /// Obtiene el color de fondo del círculo del icono según el estado del usuario
+  /// 
+  /// Retorna colores intermedios entre el fondo y el borde para crear
+  /// una jerarquía visual clara en el componente:
+  /// - active: verde claro-medio
+  /// - rejected: rojo claro-medio  
+  /// - pendingApproval: naranja claro-medio
+  /// - pendingVerification: azul claro-medio
   Color _getIconBackgroundColor() {
     switch (userStatus) {
       case UserStatus.active:
@@ -197,9 +222,15 @@ class UserStatusWidget extends StatelessWidget {
         return Colors.orange.shade100;
       case UserStatus.pendingVerification:
         return Colors.blue.shade100;
-    }
-  }
+    }  }
 
+  /// Obtiene el color del icono según el estado del usuario
+  /// 
+  /// Retorna colores oscuros que contrastan bien con el fondo del círculo:
+  /// - active: verde oscuro
+  /// - rejected: rojo oscuro
+  /// - pendingApproval: naranja oscuro  
+  /// - pendingVerification: azul oscuro
   Color _getIconColor() {
     switch (userStatus) {
       case UserStatus.active:
@@ -210,9 +241,15 @@ class UserStatusWidget extends StatelessWidget {
         return Colors.orange.shade700;
       case UserStatus.pendingVerification:
         return Colors.blue.shade700;
-    }
-  }
+    }  }
 
+  /// Obtiene el color del texto según el estado del usuario
+  /// 
+  /// Retorna colores muy oscuros para asegurar buena legibilidad:
+  /// - active: verde muy oscuro
+  /// - rejected: rojo muy oscuro
+  /// - pendingApproval: naranja muy oscuro
+  /// - pendingVerification: azul muy oscuro
   Color _getTextColor() {
     switch (userStatus) {
       case UserStatus.active:

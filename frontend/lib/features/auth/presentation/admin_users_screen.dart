@@ -4,6 +4,18 @@ import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../../../shared/widgets/navigation_bar.dart';
 
+/// Pantalla de administración de usuarios existentes para administradores.
+/// 
+/// Permite a los administradores gestionar usuarios ya registrados en el sistema,
+/// incluyendo la capacidad de suspender/activar cuentas, eliminar usuarios
+/// y buscar dentro de la base de usuarios.
+/// 
+/// Características principales:
+/// - Lista de todos los usuarios registrados
+/// - Funcionalidad de búsqueda por nombre o teléfono
+/// - Cambio de estado de usuarios (activo/suspendido)
+/// - Eliminación de usuarios con confirmación
+/// - Interfaz administrativa con navegación integrada
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
 
@@ -565,6 +577,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 }
 
 // Modelo temporal para usuarios existentes
+/// Modelo temporal para representar usuarios existentes en el sistema.
+/// 
+/// TODO: Migrar a un modelo compartido en core/models cuando se integre con el backend.
+/// Este modelo contiene la información necesaria para mostrar y gestionar
+/// usuarios registrados en la interfaz administrativa.
 class ExistingUser {
   final int id;
   final String name;

@@ -1,9 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../shared/theme/colors.dart';
-import '../../../shared/theme/text_styles.dart';
 import '../../../shared/widgets/navigation_bar.dart';
+import '../../../shared/widgets/google_map_widget.dart';
 
+/// Pantalla principal de la aplicación InfraCheck.
+/// 
+/// Presenta el mapa principal donde los usuarios pueden ver su ubicación actual,
+/// reportes de infraestructura cercanos y acceder a funcionalidades principales
+/// como notificaciones y chat comunitario.
+/// 
+/// Características principales:
+/// - Mapa de Google Maps con ubicación actual del usuario
+/// - Botones flotantes para notificaciones y chat
+/// - Navegación a diferentes secciones de la aplicación
+/// - Interfaz optimizada para interacciones con reportes de infraestructura
+/// - Barra de navegación inferior con acceso a reportar y cuenta
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -11,9 +24,21 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+/// Estado interno del widget HomeScreen
+/// 
+/// Maneja la navegación entre pestañas y las interacciones del usuario
+/// con los diferentes elementos de la interfaz principal
 class _HomeScreenState extends State<HomeScreen> {
+  /// Índice de la pestaña actualmente seleccionada en la barra de navegación
+  /// 0: Mapa, 1: Reportar, 2: Cuenta
   int _currentIndex = 0; // Iniciamos en la pestaña de mapa
 
+  /// Maneja los toques en las pestañas de la barra de navegación
+  /// 
+  /// [index] El índice de la pestaña tocada
+  /// - 0: Mantiene el usuario en el mapa (no hace nada)
+  /// - 1: Muestra mensaje de funcionalidad en desarrollo
+  /// - 2: Navega a la página de cuenta del usuario
   void _onNavigationTap(int index) {
     setState(() {
       _currentIndex = index;
@@ -37,104 +62,84 @@ class _HomeScreenState extends State<HomeScreen> {
         // Navegar a página de cuenta
         context.go('/account');
         break;
-    }
-  }
+    }  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Header de la app
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: AppColors.primary,
+            // Mapa de Google Maps (ocupa toda la pantalla)
+            GoogleMapWidget(
+              initialLocation: const LatLng(-33.4489, -70.6693), // Santiago, Chile
+              initialZoom: 14.0,
+              showMyLocationButton: true,
+              onMapTap: (LatLng position) {
+                // TODO: Manejar toque en el mapa para futuras funcionalidades
+                print('Tocado en: ${position.latitude}, ${position.longitude}');
+              },
+              // Sin marcadores por defecto, solo el círculo de ubicación actual
+              markers: const {},
+            ),            // Botones flotantes arriba de la barra de navegación
+            Positioned(
+              bottom: 24, // Ajusta este valor para cambiar la distancia a la barra
+              left: 24,
+              right: 24,
               child: Row(
-                children: [
-                  Text(
-                    'InfraCheck',
-                    style: AppTextStyles.heading.copyWith(fontSize: 24),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      color: AppColors.textWhite,
-                      size: 24,
-                    ),
-                    onPressed: () {
-                      // TODO: Implementar notificaciones
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [                  // Botón de notificaciones
+                  GestureDetector(
+                    onTap: () {
+                      // TODO: Implementar notificaciones de reportes seguidos
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Notificaciones en desarrollo')),
+                        const SnackBar(
+                          content: Text('Notificaciones de reportes en desarrollo'),
+                          duration: Duration(seconds: 2),
+                        ),
                       );
                     },
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFBCE3E0),
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: const Icon(
+                        Icons.notifications_outlined,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                  // Botón de chat
+                  GestureDetector(
+                    onTap: () {
+                      // TODO: Navegar al chat en desarrollo
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Chat en desarrollo'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFBCE3E0),
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: const Icon(
+                        Icons.chat_bubble_outline,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ],
-              ),
-            ),
-            
-            // Placeholder del mapa
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                color: Colors.grey.shade200,
-                child: Stack(
-                  children: [
-                    // Patrón de cuadrícula para simular un mapa
-                    CustomPaint(
-                      painter: GridPainter(),
-                      size: Size.infinite,
-                    ),
-                    // Contenido central
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.map_outlined,
-                            size: 80,
-                            color: AppColors.primary.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Mapa en desarrollo',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Funcionalidad en desarrollo',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.iconGrey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Botón flotante para futuras funciones del mapa
-                    Positioned(
-                      bottom: 20,
-                      right: 20,
-                      child: FloatingActionButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Funciones del mapa en desarrollo')),
-                          );
-                        },
-                        backgroundColor: AppColors.accent,
-                        child: Icon(
-                          Icons.my_location,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ],
@@ -146,37 +151,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-// Painter para crear un patrón de cuadrícula que simule un mapa
-class GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey.shade300
-      ..strokeWidth = 1;
-
-    const gridSize = 50.0;
-
-    // Líneas verticales
-    for (double x = 0; x < size.width; x += gridSize) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        paint,
-      );
-    }
-
-    // Líneas horizontales
-    for (double y = 0; y < size.height; y += gridSize) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

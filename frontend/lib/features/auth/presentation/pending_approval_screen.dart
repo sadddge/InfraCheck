@@ -4,8 +4,21 @@ import 'dart:ui';
 import '../../../shared/widgets/user_status_widget.dart';
 import '../../../core/enums/user_status.dart';
 
+/// Pantalla mostrada cuando un usuario registrado está esperando aprobación administrativa.
+/// 
+/// Se presenta después de que un usuario ha completado exitosamente su registro
+/// y verificación de SMS, pero necesita aprobación de un administrador para
+/// acceder al sistema completo.
+/// 
+/// Características principales:
+/// - Información clara sobre el estado de la solicitud
+/// - Widget de estado visual con iconografía apropiada
+/// - Instrucciones sobre próximos pasos del proceso
+/// - Opciones para cerrar sesión y revisar el estado
+/// - Interfaz moderna con efectos visuales
+/// - Mensaje educativo sobre tiempos de espera
 class PendingApprovalScreen extends StatelessWidget {
-  const PendingApprovalScreen({Key? key}) : super(key: key);  @override
+  const PendingApprovalScreen({Key? key}) : super(key: key);@override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
