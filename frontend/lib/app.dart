@@ -7,7 +7,7 @@ import 'features/auth/presentation/recover_password.dart';
 import 'features/auth/presentation/verify_recover_password.dart';
 import 'features/auth/presentation/reset_password_screen.dart';
 import 'features/camera/presentation/camera_screen.dart';
-import 'features/camera/presentation/photo_gallery_screen.dart';
+import 'features/camera/presentation/gallery_screen.dart';
 
 
 /// Configuración principal de navegación de la aplicación InfraCheck
@@ -91,7 +91,7 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/photo-gallery',
       name: 'photo-gallery',
-      builder: (context, state) => const PhotoGalleryScreen(),
+      builder: (context, state) => const GalleryScreen(),
     ),
   ],
 
