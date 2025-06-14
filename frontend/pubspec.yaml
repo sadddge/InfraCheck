@@ -43,11 +43,14 @@ dependencies:
   path_provider: ^2.1.4
   permission_handler: ^11.3.1
   geolocator: ^13.0.1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
   google_maps_flutter: ^2.9.0
   sqflite: ^2.4.1
   uuid: ^4.5.1
   geocoding: ^3.0.0
   path: ^1.9.0
+  intl: ^0.19.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -58,6 +61,7 @@ dev_dependencies:
     sdk: flutter
   json_serializable: ^6.8.0
   build_runner: ^2.4.13
+  hive_generator: ^2.0.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
