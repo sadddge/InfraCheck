@@ -76,6 +76,8 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
     super.dispose();
   }  /// Obtiene la ubicación actual del usuario y configura el seguimiento continuo
   Future<void> _getCurrentLocation() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoadingLocation = true;
     });
@@ -88,7 +90,7 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
         // Verificar si el servicio de ubicación está habilitado
         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!serviceEnabled) {
-          _showLocationServiceDialog();
+          if (mounted) _showLocationServiceDialog();
           return;
         }
 
@@ -102,18 +104,21 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
         // Configurar seguimiento continuo de ubicación
         _startLocationTracking();
       } else {
-        _showPermissionDialog();
+        if (mounted) _showPermissionDialog();
       }
     } catch (e) {
-      _showErrorSnackBar('Error al obtener ubicación: $e');
+      if (mounted) _showErrorSnackBar('Error al obtener ubicación: $e');
     } finally {
-      setState(() {
-        _isLoadingLocation = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingLocation = false;
+        });
+      }
     }
-  }
-  /// Inicia el seguimiento continuo de la ubicación del usuario
+  }  /// Inicia el seguimiento continuo de la ubicación del usuario
   void _startLocationTracking() {
+    if (!mounted) return;
+    
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
       distanceFilter: 10, // Actualizar cada 10 metros (menos frecuente)
@@ -123,15 +128,20 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
       locationSettings: locationSettings,
     ).listen(
       (Position position) {
-        _updateLocationAndFollowUser(position);
+        if (mounted) {
+          _updateLocationAndFollowUser(position);
+        }
       },
       onError: (error) {
-        _showErrorSnackBar('Error en seguimiento de ubicación: $error');
+        if (mounted) {
+          _showErrorSnackBar('Error en seguimiento de ubicación: $error');
+        }
       },
     );
-  }
-  /// Actualiza la ubicación actual y mueve la cámara para seguir al usuario
+  }/// Actualiza la ubicación actual y mueve la cámara para seguir al usuario
   void _updateLocationAndFollowUser(Position position) {
+    if (!mounted) return;
+    
     final newLocation = LatLng(position.latitude, position.longitude);
     
     setState(() {
@@ -150,14 +160,16 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
       _mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(newLocation, 16.0),
       );
-      _isInitialLocationSet = true;    }
+      _isInitialLocationSet = true;
+    }
   }
-
   /// Muestra un diálogo informativo cuando el servicio de ubicación está deshabilitado
   /// 
   /// Informa al usuario que debe habilitar la ubicación en la configuración del dispositivo
   /// para poder usar las funcionalidades relacionadas con la ubicación
   void _showLocationServiceDialog() {
+    if (!mounted) return;
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -180,13 +192,15 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
           ],
         );
       },
-    );  }
-
+    );
+  }
   /// Muestra un diálogo para solicitar permisos de ubicación al usuario
   /// 
   /// Explica por qué la aplicación necesita acceso a la ubicación y proporciona
   /// opciones para cancelar o ir a la configuración del sistema
   void _showPermissionDialog() {
+    if (!mounted) return;
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -222,18 +236,21 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
           ],
         );
       },
-    );  }
-
+    );
+  }
   /// Muestra un mensaje de error en forma de SnackBar
   /// 
   /// [message] El mensaje de error a mostrar al usuario
   void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 3),
-      ),    );
+      ),
+    );
   }
   /// Callback ejecutado cuando el mapa se ha creado y está listo para usar
   /// 
