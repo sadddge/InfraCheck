@@ -225,20 +225,21 @@ class AccountMenuScreen extends StatelessWidget {
         },
       ),
       bottomNavigationBar: InfraNavigationBar(
-        currentIndex: 2,
+        currentIndex: 2,        
         onTap: (index) {
           switch (index) {
             case 0:
               context.go('/home');
               break;
             case 1:
-              context.go('/'); // TODO: Navegar a página de reportes
+              context.go('/camera'); // Navegar a cámara para reportar
               break;
             case 2:
               // Ya estamos en cuenta, no hacer nada
               break;
           }
-        },      ),
+        },
+      ),
     );
   }
   

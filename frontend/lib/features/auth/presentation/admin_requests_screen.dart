@@ -231,14 +231,14 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
         ],
       ),
       bottomNavigationBar: InfraNavigationBar(
-        currentIndex: 2,
+        currentIndex: 2,        
         onTap: (index) {
           switch (index) {
             case 0:
               context.go('/home');
               break;
             case 1:
-              context.go('/');
+              context.go('/camera');
               break;
             case 2:
               context.go('/account');
