@@ -161,35 +161,41 @@ class _LoginScreenState extends State<LoginScreen> {
               bottom: MediaQuery.of(context).padding.bottom,
             ),
             child: SingleChildScrollView(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 393),
-                padding: const EdgeInsets.all(24),
-                margin: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width > 393
-                      ? (MediaQuery.of(context).size.width - 393) / 2
-                      : 0,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - 
+                            MediaQuery.of(context).padding.top - 
+                            MediaQuery.of(context).padding.bottom,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 32),
-                    // Header section
-                    Column(
-                      children: [
-                        Text(
-                          'Inicia sesión en tu cuenta',
-                          style: AppTextStyles.heading,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Ingresa tu telefono y contraseña para iniciar sesión',
-                          style: AppTextStyles.subtitle,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                child: IntrinsicHeight(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 393),
+                    padding: const EdgeInsets.all(24),
+                    margin: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width > 393
+                          ? (MediaQuery.of(context).size.width - 393) / 2
+                          : 0,
                     ),
-                    const SizedBox(height: 32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Header section
+                        Column(
+                          children: [
+                            Text(
+                              'Inicia sesión en tu cuenta',
+                              style: AppTextStyles.heading,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Ingresa tu telefono y contraseña para iniciar sesión',
+                              style: AppTextStyles.subtitle,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
                     // Form container
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -279,10 +285,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                 );
                               },
-                            ),
-                            const SizedBox(height: 24),
+                            ),                            const SizedBox(height: 16), // Reducido de 24 a 16
                             Align(
-                              alignment: Alignment.centerRight,
+                              alignment: Alignment.center, // Centrado en lugar de centerRight
                               child: TextButton(
                                 onPressed: () {
                                   context.go('/recover-password');
@@ -291,17 +296,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                   '¿Has olvidado la contraseña?',
                                   style: AppTextStyles.linkText,
                                 ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),                            Row(
+                              ),                            ),
+                            const SizedBox(height: 8), // Reducido de 16 a 8
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
                                   '¿No tienes una cuenta?',
                                   style: AppTextStyles.smallText,
                                 ),
-                                TextButton(
-                                  onPressed: () {
+                                TextButton(onPressed: () {
                                     context.go('/register');
                                   },
                                   child: Text(
@@ -315,7 +319,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
