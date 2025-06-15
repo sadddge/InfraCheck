@@ -33,11 +33,10 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     });
   }
-
   @override
   void dispose() {
-    // Restaurar la barra de estado al salir
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    // Restaurar la barra de estado al salir - modo estándar
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
     super.dispose();
   }
 

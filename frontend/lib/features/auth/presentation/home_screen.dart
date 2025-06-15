@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -34,11 +35,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// Índice de la pestaña actualmente seleccionada en la barra de navegación
   /// 0: Mapa, 1: Reportar, 2: Cuenta
   int _currentIndex = 0; // Iniciamos en la pestaña de mapa
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    
+    // Asegurar que siempre estemos en modo estándar (con barras del sistema visibles)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+    });
   }
 
   @override
@@ -49,9 +54,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
-    // Cuando la app se resume (regresa del background o de otra pantalla)
+      // Cuando la app se resume (regresa del background o de otra pantalla)
     if (state == AppLifecycleState.resumed) {
+      // Asegurar que siempre estemos en modo estándar
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+      
       // Liberar cualquier recurso de cámara que pueda estar colgando
       try {
         final cameraProvider = context.read<CameraProvider>();
