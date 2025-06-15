@@ -9,45 +9,49 @@ import 'package:path_provider/path_provider.dart';
 class PhotoService {
   final _box = Hive.box<PhotoEntry>('photos');
 
-  Future<PhotoEntry?> savePhoto(XFile image) async {
-    // Verificar y solicitar permisos de ubicación
-    Position? coords;
+  Future<Position?> _getCoordinates() async {
     try {
       // Verificar si el servicio de ubicación está habilitado
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         // El servicio de ubicación está deshabilitado, usar coordenadas por defecto
-        coords = null;
-      } else {
-        // Verificar permisos de ubicación
-        LocationPermission permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
-          if (permission == LocationPermission.denied) {
-            // Permisos denegados, usar coordenadas por defecto
-            coords = null;
-          }
-        }
-        
-        if (permission == LocationPermission.deniedForever) {
-          // Permisos denegados permanentemente, usar coordenadas por defecto
-          coords = null;
-        }
+        return null;
+      }
 
-        // Si tenemos permisos, obtener la posición
-        if (permission == LocationPermission.whileInUse ||
-            permission == LocationPermission.always) {
-          coords = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high,
-            timeLimit: const Duration(seconds: 10),
-          );
+      // Verificar permisos de ubicación
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          // Permisos denegados, usar coordenadas por defecto
+          return null;
         }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        // Permisos denegados permanentemente, usar coordenadas por defecto
+        return null;
+      }
+
+      // Si tenemos permisos, obtener la posición
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
+        return await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 10),
+        );
       }
     } catch (e) {
       // En caso de error, usar coordenadas por defecto
       print('Error obteniendo ubicación: $e');
-      coords = null;
+      return null;
     }
+    return null;
+  }
+  
+  Future<PhotoEntry?> savePhoto(XFile image) async {
+    // Verificar y solicitar permisos de ubicación
+    Position? coords = await _getCoordinates();
 
     final dir = await getApplicationDocumentsDirectory();
     final newPath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
