@@ -398,22 +398,25 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       ),
           ),
         ],
-      ),
-      bottomNavigationBar: InfraNavigationBar(
-        currentIndex: 2,        
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/home');
-              break;
-            case 1:
-              context.go('/camera');
-              break;
-            case 2:
-              context.go('/account');
-              break;
-          }
-        },
+      ),      bottomNavigationBar: Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+        color: const Color(0xFFFCFDFA), // Mismo color que la navbar
+        child: InfraNavigationBar(
+          currentIndex: 2,        
+          onTap: (index) {
+            switch (index) {
+              case 0:
+                context.go('/home');
+                break;
+              case 1:
+                context.go('/camera');
+                break;
+              case 2:
+                context.go('/account');
+                break;
+            }
+          },
+        ),
       ),
     );
   }

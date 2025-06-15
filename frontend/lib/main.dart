@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'app.dart';
@@ -13,12 +14,24 @@ import 'features/camera/domain/models/photo_entry.dart';
 /// necesarios para el funcionamiento de la aplicación.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Configurar estilo global del sistema UI
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  ));
+  
   // Initialize Hive
   await Hive.initFlutter();
   // Register adapters
   Hive.registerAdapter(PhotoEntryAdapter());
   // Open boxes
   await Hive.openBox<PhotoEntry>('photos');
+  
   runApp(const MyApp());
 }
 

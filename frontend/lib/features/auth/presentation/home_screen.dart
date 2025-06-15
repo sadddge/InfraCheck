@@ -34,15 +34,21 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// Índice de la pestaña actualmente seleccionada en la barra de navegación
   /// 0: Mapa, 1: Reportar, 2: Cuenta
-  int _currentIndex = 0; // Iniciamos en la pestaña de mapa
-  @override
+  int _currentIndex = 0; // Iniciamos en la pestaña de mapa  @override  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     
-    // Asegurar que siempre estemos en modo estándar (con barras del sistema visibles)
+    // Configurar las barras del sistema con estilo transparente
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ));
     });
   }
 
@@ -53,11 +59,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-      // Cuando la app se resume (regresa del background o de otra pantalla)
+    super.didChangeAppLifecycleState(state);    // Cuando la app se resume (regresa del background o de otra pantalla)
     if (state == AppLifecycleState.resumed) {
-      // Asegurar que siempre estemos en modo estándar
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+      // Restaurar el estilo transparente de las barras del sistema
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ));
       
       // Liberar cualquier recurso de cámara que pueda estar colgando
       try {
@@ -106,36 +118,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         context.go('/account');
         break;
     }  
-  }
-    @override
+  }    @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              width: double.infinity,
-              height: double.infinity,
-              child: GoogleMapWidget(
-                initialLocation: const LatLng(-33.4489, -70.6693), // Santiago, Chile
-                initialZoom: 14.0,
-                showMyLocationButton: true,
-                onMapTap: (LatLng position) {
-                  // TODO: Manejar toque en el mapa para futuras funcionalidades
-                  print('Tocado en: ${position.latitude}, ${position.longitude}');
-                },
-                // Sin marcadores por defecto, solo el círculo de ubicación actual
-                markers: const {},
-              ),
-            ),// Botones flotantes arriba de la barra de navegación
-            Positioned(
-              bottom: 24, // Ajusta este valor para cambiar la distancia a la barra
-              left: 24,
-              right: 24,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [                  // Botón de notificaciones
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      body: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            child: GoogleMapWidget(
+              initialLocation: const LatLng(-33.4489, -70.6693), // Santiago, Chile
+              initialZoom: 14.0,
+              showMyLocationButton: true,
+              onMapTap: (LatLng position) {
+                // TODO: Manejar toque en el mapa para futuras funcionalidades
+                print('Tocado en: ${position.latitude}, ${position.longitude}');
+              },
+              // Sin marcadores por defecto, solo el círculo de ubicación actual
+              markers: const {},
+            ),
+          ),          // Botones flotantes arriba de la barra de navegación
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom + 84 + 24, // Altura de navbar (84) + padding del sistema + espacio (24)
+            left: 24,
+            right: 24,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [// Botón de notificaciones
                   GestureDetector(
                     onTap: () {
                       // TODO: Implementar notificaciones de reportes seguidos
@@ -184,16 +196,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         size: 24,
                       ),
                     ),
-                  ),
-                ],
+                  ),                ],
               ),
             ),
           ],
+        ),      bottomNavigationBar: Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+        color: const Color(0xFFFCFDFA), // Mismo color que la navbar
+        child: InfraNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: _onNavigationTap,
         ),
-      ),
-      bottomNavigationBar: InfraNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onNavigationTap,
       ),
     );
   }

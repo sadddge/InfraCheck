@@ -106,10 +106,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(      body: Stack(
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      body: Stack(
         children: [
           // Background with gradient and blur effect
           Container(
@@ -136,9 +138,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
             child: Container(),
-          ),
-          // Main content
-          SafeArea(
+          ),          // Main content
+          Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top,
+              bottom: MediaQuery.of(context).padding.bottom,
+            ),
             child: SingleChildScrollView(
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 393),

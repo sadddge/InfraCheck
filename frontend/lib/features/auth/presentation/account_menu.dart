@@ -223,22 +223,25 @@ class AccountMenuScreen extends StatelessWidget {
             ],
           );
         },
-      ),
-      bottomNavigationBar: InfraNavigationBar(
-        currentIndex: 2,        
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/home');
-              break;
-            case 1:
-              context.go('/camera'); // Navegar a cámara para reportar
-              break;
-            case 2:
-              // Ya estamos en cuenta, no hacer nada
-              break;
-          }
-        },
+      ),      bottomNavigationBar: Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+        color: const Color(0xFFFCFDFA), // Mismo color que la navbar
+        child: InfraNavigationBar(
+          currentIndex: 2,        
+          onTap: (index) {
+            switch (index) {
+              case 0:
+                context.go('/home');
+                break;
+              case 1:
+                context.go('/camera'); // Navegar a cámara para reportar
+                break;
+              case 2:
+                // Ya estamos en cuenta, no hacer nada
+                break;
+            }
+          },
+        ),
       ),
     );
   }

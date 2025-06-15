@@ -32,11 +32,17 @@ class _CameraScreenState extends State<CameraScreen> {
         await context.read<CameraProvider>().initCamera();
       }
     });
-  }
-  @override
+  }  @override
   void dispose() {
-    // Restaurar la barra de estado al salir - modo estándar
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+    // Restaurar el estilo transparente al salir (no cambiar el modo inmersivo de la cámara)
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
     super.dispose();
   }
 
