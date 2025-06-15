@@ -303,13 +303,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       );
                     },
                   ),
-                ),
-                  // Barra inferior con fotos seleccionadas
+                ),                  // Barra inferior con fotos seleccionadas
                 if (_isSelectionMode)
                   SafeArea(
                     top: false,
                     child: Container(
-                      height: 100,
+                      height: 84, // Reducida de 100 a 84 para mejor proporción
                       decoration: BoxDecoration(
                         color: Colors.grey[900],
                         border: Border(
@@ -330,8 +329,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 
                                 return Container(
                                   margin: const EdgeInsets.only(right: 8),
-                                  width: 70,
-                                  height: 70,
+                                  width: 68, // Ajustado para que sea cuadrado perfecto
+                                  height: 68, // Ajustado para que sea cuadrado perfecto
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(color: AppColors.accent, width: 2),
@@ -343,8 +342,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                         Image.file(
                                           File(photo.filePath),
                                           fit: BoxFit.cover,
-                                          width: 70,
-                                          height: 70,
+                                          width: 68,
+                                          height: 68,
                                           errorBuilder: (context, error, stackTrace) {
                                             return Container(
                                               color: Colors.grey[700],
