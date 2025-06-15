@@ -9,6 +9,18 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/enums/user_status.dart';
 import 'widgets/custom_text_field.dart';
 
+/// Pantalla de inicio de sesión para la aplicación InfraCheck.
+/// 
+/// Permite a los usuarios autenticarse usando su número de teléfono y contraseña.
+/// Incluye validación de formularios, manejo de estados de usuario específicos
+/// y navegación automática según el resultado de la autenticación.
+/// 
+/// Características principales:
+/// - Formulario de login con validación
+/// - Manejo de diferentes estados de usuario (pendiente aprobación, rechazado, etc.)
+/// - Integración con el sistema de autenticación
+/// - Interfaz moderna con efectos visuales (blur, degradados)
+/// - Navegación a pantallas de registro y recuperación de contraseña
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -17,9 +29,16 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  /// Controla la visibilidad de la contraseña en el campo de texto
   bool _obscurePassword = true;
+  
+  /// Controlador para el campo de número de teléfono
   final TextEditingController _phoneNumberController = TextEditingController();
+  
+  /// Controlador para el campo de contraseña
   final TextEditingController _passwordController = TextEditingController();
+  
+  /// Clave global para validación del formulario
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -27,7 +46,14 @@ class _LoginScreenState extends State<LoginScreen> {
     _phoneNumberController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }  Future<void> _handleLogin() async {
+  }
+
+  /// Maneja el proceso de inicio de sesión.
+  /// 
+  /// Valida el formulario, realiza la autenticación a través del [AuthProvider]
+  /// y maneja la navegación según el resultado. Si hay errores específicos de
+  /// estado de usuario, muestra el widget correspondiente.
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -50,10 +76,14 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.red,
           ),
         );
-      }
-    }
+      }    }
   }
 
+  /// Muestra un diálogo modal con información sobre el estado del usuario.
+  /// 
+  /// [userStatus] determina qué tipo de mensaje y acciones mostrar.
+  /// Para usuarios pendientes de verificación, permite navegar a la pantalla
+  /// de verificación. Para usuarios rechazados, permite contactar soporte.
   void _showUserStatusDialog(UserStatus userStatus) {
     showDialog(
       context: context,
@@ -73,9 +103,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   }
                 : null,
             onContactSupport: userStatus == UserStatus.rejected
-                ? () {
+                                ? () {
                     Navigator.of(context).pop();
                     // TODO: Implementar contacto con soporte
+                    // - Integrar con sistema de tickets/helpdesk
+                    // - Opción de email directo o chat en vivo
+                    // - Formulario de contacto con categorías predefinidas
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Funcionalidad de soporte en desarrollo'),
@@ -145,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Ingresa tu email y contraseña para iniciar sesión',
+                          'Ingresa tu telefono y contraseña para iniciar sesión',
                           style: AppTextStyles.subtitle,
                           textAlign: TextAlign.center,
                         ),

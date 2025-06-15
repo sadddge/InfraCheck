@@ -1,10 +1,11 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
 import { JwtResetPayload } from '../../../common/interfaces/jwt-payload.interface';
+import { jwtConfig } from '../config/jwt.config';
 
 /**
  * @class JwtResetStrategy
@@ -35,6 +36,7 @@ import { JwtResetPayload } from '../../../common/interfaces/jwt-payload.interfac
  */
 @Injectable()
 export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
+    private readonly logger = new Logger(JwtResetStrategy.name);
     /**
      * @constructor
      * @description Initializes the JWT reset strategy with configuration and user service.
@@ -55,14 +57,14 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
      * ```
      */
     constructor(
-        private readonly configService: ConfigService,
+        configService: ConfigService,
         @Inject(USER_SERVICE)
         private readonly usersService: IUserService,
     ) {
         super({
             jwtFromRequest: ExtractJwt.fromBodyField('token'),
             ignoreExpiration: false,
-            secretOrKey: configService.getOrThrow<string>('JWT_RESET_SECRET'),
+            secretOrKey: jwtConfig(configService).resetSecret,
         });
     }
 
@@ -114,10 +116,12 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
             throw new UnauthorizedException('Password has already been changed');
         }
 
+        this.logger.log(
+            `JWT Reset Strategy: User ${user.id} validated for password reset`,
+        );
+
         return {
-            user: {
-                id: user.id,
-            },
+            id: user.id,
         };
     }
 }

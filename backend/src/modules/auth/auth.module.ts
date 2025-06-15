@@ -8,7 +8,12 @@ import { UsersModule } from '../users/users.module';
 import { VerificationModule } from '../verification/verification.module';
 import { AuthController } from './controllers/auth.controller';
 import { AUTH_SERVICE } from './interfaces/auth-service.interface';
+import { PASSWORD_RECOVERY_SERVICE } from './interfaces/password-recovery-service.interface';
+import { USER_REGISTRATION_SERVICE } from './interfaces/user-registration-service.interface';
 import { AuthService } from './services/auth.service';
+import { PasswordRecoveryService } from './services/password-recovery.service';
+import { TokenFactoryService } from './services/token-factory.service';
+import { UserRegistrationService } from './services/user-registration.service';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtResetStrategy } from './strategies/jwt-reset.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -66,6 +71,15 @@ import { JwtStrategy } from './strategies/jwt.strategy';
             provide: AUTH_SERVICE,
             useClass: AuthService,
         },
+        {
+            provide: USER_REGISTRATION_SERVICE,
+            useClass: UserRegistrationService,
+        },
+        {
+            provide: PASSWORD_RECOVERY_SERVICE,
+            useClass: PasswordRecoveryService,
+        },
+        TokenFactoryService,
         JwtStrategy,
         JwtRefreshStrategy,
         JwtResetStrategy,

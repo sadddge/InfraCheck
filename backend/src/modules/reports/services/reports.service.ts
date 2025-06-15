@@ -6,7 +6,7 @@ import {
     IUploadService,
     UPLOAD_SERVICE,
 } from 'src/modules/upload/interfaces/upload-service.interface';
-import { Repository } from 'typeorm';
+import { Equal, Repository } from 'typeorm';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportChangeDto } from '../dto/report-change.dto';
 import { ReportDto } from '../dto/report.dto';
@@ -48,7 +48,7 @@ export class ReportsService implements IReportsService {
 
     async findById(id: number): Promise<ReportDto> {
         const report = await this.reportRepository.findOne({
-            where: { id },
+            where: { id: Equal(id) },
             relations: ['creator', 'images'],
         });
 
@@ -78,7 +78,7 @@ export class ReportsService implements IReportsService {
 
     async findHistoryByReportId(reportId: number): Promise<ReportChangeDto[]> {
         const report = await this.reportRepository.findOne({
-            where: { id: reportId },
+            where: { id: Equal(reportId) },
             relations: ['changes', 'changes.creator'],
         });
         if (!report) {
@@ -156,7 +156,7 @@ export class ReportsService implements IReportsService {
 
     async updateState(id: number, state: ReportState): Promise<ReportDto> {
         const report = await this.reportRepository.findOne({
-            where: { id },
+            where: { id: Equal(id) },
             relations: ['creator', 'images'],
         });
 
