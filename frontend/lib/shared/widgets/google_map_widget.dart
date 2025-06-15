@@ -323,17 +323,21 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
           zoomGesturesEnabled: true,
           buildingsEnabled: false,
           trafficEnabled: false,
-        ),
-
-        // Botón de ubicación personalizado
+        ),        // Botón de ubicación personalizado
         if (widget.showMyLocationButton)
           Positioned(
-            bottom: 80, // Espacio para el navigation bar
-            right: 16,
+            bottom: 200, // Arriba del botón de chat (aproximadamente)
+            right: 28,
             child: FloatingActionButton(
               onPressed: _onMyLocationPressed,
               backgroundColor: AppColors.accent,
               mini: true,
+              shape: CircleBorder(
+                side: BorderSide(
+                  color: Colors.transparent,
+                  width: 2,
+                ),
+              ),
               child: _isLoadingLocation
                   ? SizedBox(
                       width: 20,
