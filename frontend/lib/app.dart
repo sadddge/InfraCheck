@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
@@ -12,6 +13,14 @@ import 'features/auth/presentation/pending_approval_screen.dart';
 import 'features/auth/presentation/account_menu.dart';
 import 'features/auth/presentation/admin_requests_screen.dart';
 import 'features/auth/presentation/admin_users_screen.dart';
+
+/// Crea una transición suave sin animación extraña para navegación de navbar
+Page<dynamic> _createPage(Widget child, GoRouterState state) {
+  return NoTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+  );
+}
 
 /// Configuración principal de navegación para la aplicación InfraCheck.
 /// 
@@ -49,12 +58,11 @@ final GoRouter router = GoRouter(
       name: 'register', 
       builder: (context, state) => const RegisterScreen(),
     ),
-    
-    // RUTA: Pantalla principal (requiere autenticación)
+      // RUTA: Pantalla principal (requiere autenticación)
     GoRoute(
       path: '/home',
       name: 'home',
-      builder: (context, state) => const HomeScreen(),
+      pageBuilder: (context, state) => _createPage(const HomeScreen(), state),
     ),
       // RUTA: Verificación de código de registro
     GoRoute(
@@ -94,7 +102,7 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/camera',
       name: 'camera',
-      builder: (context, state) => const CameraScreen(),
+      pageBuilder: (context, state) => _createPage(const CameraScreen(), state),
     ),
       // RUTA: Galería de fotos
     GoRoute(
@@ -106,26 +114,24 @@ final GoRouter router = GoRouter(
       path: '/pending-approval',
       name: 'pending-approval',
       builder: (context, state) => const PendingApprovalScreen(),
-    ),
-      // RUTA: Pantalla de cuenta de usuario
+    ),      // RUTA: Pantalla de cuenta de usuario
     GoRoute(
       path: '/account',
       name: 'account',
-      builder: (context, state) => const AccountMenuScreen(),
+      pageBuilder: (context, state) => _createPage(const AccountMenuScreen(), state),
     ),
-    
-    // RUTA: Administración de solicitudes de ingreso (solo admin)
+      // RUTA: Administración de solicitudes de ingreso (solo admin)
     GoRoute(
       path: '/admin/requests',
       name: 'admin-requests',
-      builder: (context, state) => const AdminRequestsScreen(),
+      pageBuilder: (context, state) => _createPage(const AdminRequestsScreen(), state),
     ),
     
     // RUTA: Administración de usuarios (solo admin)
     GoRoute(
       path: '/admin/users',
       name: 'admin-users',
-      builder: (context, state) => const AdminUsersScreen(),
+      pageBuilder: (context, state) => _createPage(const AdminUsersScreen(), state),
     ),
   ],
 
