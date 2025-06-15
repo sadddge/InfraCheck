@@ -15,6 +15,12 @@ import 'features/camera/domain/models/photo_entry.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Bloquear orientación a solo vertical
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  
   // Configurar estilo global del sistema UI
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
