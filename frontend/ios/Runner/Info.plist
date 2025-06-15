@@ -42,8 +42,16 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+	<true/>	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>	<key>NSCameraUsageDescription</key>
+	<string>Esta aplicación necesita acceso a la cámara para tomar fotos de infraestructura.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Esta aplicación necesita acceso a la galería de fotos para seleccionar imágenes.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Esta aplicación puede necesitar acceso al micrófono para grabación de video.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Esta aplicación necesita acceso a la ubicación para agregar coordenadas GPS a las fotos de infraestructura.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Esta aplicación necesita acceso a la ubicación para agregar coordenadas GPS a las fotos de infraestructura.</string>
 </dict>
 </plist>

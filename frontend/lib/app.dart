@@ -6,6 +6,8 @@ import 'features/auth/presentation/home_screen.dart';
 import 'features/auth/presentation/recover_password.dart';
 import 'features/auth/presentation/verify_recover_password.dart';
 import 'features/auth/presentation/reset_password_screen.dart';
+import 'features/camera/presentation/camera_screen.dart';
+import 'features/camera/presentation/gallery_screen.dart';
 import 'features/auth/presentation/pending_approval_screen.dart';
 import 'features/auth/presentation/account_menu.dart';
 import 'features/auth/presentation/admin_requests_screen.dart';
@@ -88,6 +90,17 @@ final GoRouter router = GoRouter(
         final phoneNumber = state.extra as String;
         return ResetPasswordScreen(phoneNumber: phoneNumber);
       },
+    ),      // RUTA: Cámara
+    GoRoute(
+      path: '/camera',
+      name: 'camera',
+      builder: (context, state) => const CameraScreen(),
+    ),
+      // RUTA: Galería de fotos
+    GoRoute(
+      path: '/photo-gallery',
+      name: 'photo-gallery',
+      builder: (context, state) => const GalleryScreen(),
     ),    // RUTA: Pantalla de aprobación pendiente
     GoRoute(
       path: '/pending-approval',
