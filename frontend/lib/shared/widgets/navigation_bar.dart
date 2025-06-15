@@ -16,19 +16,19 @@ class InfraNavigationBar extends StatelessWidget {
     Key? key,
     required this.currentIndex,
     required this.onTap,
-  }) : super(key: key);
-
-  @override
+  }) : super(key: key);  @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 393, minHeight: 96),
-      child: Container(
-        width: double.infinity,
-        height: 96,
-        padding: const EdgeInsets.only(bottom: 8),
-        decoration: const BoxDecoration(
-          color: Color(0xFFFCFDFA),
-        ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 96),
+          child: Container(
+            width: double.infinity,
+            height: 96,
+            padding: const EdgeInsets.only(bottom: 4),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFCFDFA),
+            ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -61,8 +61,7 @@ class InfraNavigationBar extends StatelessWidget {
             // Botón Cuenta
             Expanded(
               child: _NavigationItem(
-                index: 2,
-                currentIndex: currentIndex,
+                index: 2,                currentIndex: currentIndex,
                 onTap: onTap,
                 icon: Icons.person_outline,
                 selectedIcon: Icons.person,
@@ -72,7 +71,9 @@ class InfraNavigationBar extends StatelessWidget {
             ),
           ],
         ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -151,8 +152,8 @@ class _NavigationItem extends StatelessWidget {
                   child: GestureDetector(
                     onTap: () => onTap(index),
                     child: Container(
-                      width: 85,
-                      height: 85,
+                      width: 84,
+                      height: 84,
                       padding: const EdgeInsets.all(12.0),
                       clipBehavior: Clip.antiAlias,
                       decoration: ShapeDecoration(
@@ -172,7 +173,7 @@ class _NavigationItem extends StatelessWidget {
                       ),
                       child: Icon(
                         selectedIcon,
-                        size: 40.0,
+                        size: 38.0,
                         color: const Color(0xFF104641),
                       ),
                     ),
@@ -185,35 +186,35 @@ class _NavigationItem extends StatelessWidget {
       );    } else {
       // Botones laterales con diseño estándar
       return GestureDetector(
-        onTap: () => onTap(index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        onTap: () => onTap(index),        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Círculo de fondo cuando está seleccionado
-                  if (isSelected)
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFBCE3E0),
-                        shape: BoxShape.circle,
-                      ),
+            children: [              // Contenedor con tamaño fijo para evitar inconsistencias
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Círculo de fondo cuando está seleccionado
+                    if (isSelected)                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFBCE3E0),
+                          shape: BoxShape.circle,
+                        ),
+                      ),                    
+                    // Icono del botón
+                    Icon(
+                      isSelected ? selectedIcon : icon,
+                      size: 24,
+                      color: const Color(0xFF104641),
                     ),
-                  
-                  // Icono del botón
-                  Icon(
-                    isSelected ? selectedIcon : icon,
-                    size: 26.67,
-                    color: const Color(0xFF104641),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
+                  ],
+                ),),
+              const SizedBox(height: 2),
               
               // Etiqueta del botón
               Text(
