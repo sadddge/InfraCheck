@@ -112,13 +112,14 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
       });
     }
   }
-
   /// Inicia el seguimiento continuo de la ubicación del usuario
   void _startLocationTracking() {
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
-      distanceFilter: 5, // Actualizar cada 5 metros
-    );    _positionStream = Geolocator.getPositionStream(
+      distanceFilter: 10, // Actualizar cada 10 metros (menos frecuente)
+    );
+
+    _positionStream = Geolocator.getPositionStream(
       locationSettings: locationSettings,
     ).listen(
       (Position position) {
@@ -234,16 +235,16 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
         duration: const Duration(seconds: 3),
       ),    );
   }
-  
   /// Callback ejecutado cuando el mapa se ha creado y está listo para usar
   /// 
   /// [controller] El controlador del mapa de Google Maps
-  /// Aplica estilos personalizados para ocultar POIs innecesarios
+  /// Simplificado para evitar errores de buffer
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
     
     // Aplicar estilo personalizado para ocultar POIs
-    _mapController!.setMapStyle(_mapStyleNoPOI);  }
+    _mapController!.setMapStyle(_mapStyleNoPOI);
+  }
 
   /// Maneja el evento de presionar el botón "Mi ubicación"
   /// 
@@ -253,11 +254,38 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
     if (_isLoadingLocation) return;
     _getCurrentLocation();
   }
-
   @override
   Widget build(BuildContext context) {
     return Stack(
-      children: [        // Mapa de Google
+      children: [
+        // Contenedor de respaldo mientras se carga el mapa
+        Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.grey[100],
+          child: _currentLocation == null && _isLoadingLocation
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Cargando mapa...',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : null,
+        ),
+
+        // Mapa de Google - Configuración simplificada para evitar errores de buffer
         GoogleMap(
           onMapCreated: _onMapCreated,
           initialCameraPosition: CameraPosition(
@@ -266,17 +294,18 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
           ),
           markers: _markers,
           onTap: widget.onMapTap,
-          myLocationEnabled: true, // Habilitar el indicador nativo de Google
-          myLocationButtonEnabled: false, // Usamos nuestro botón personalizado
-          zoomControlsEnabled: false, // Ocultamos controles por defecto
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
           mapToolbarEnabled: false,
-          // Tipo de mapa
           mapType: MapType.normal,
-          // Configuraciones adicionales
+          // Configuración mínima para reducir problemas de memoria
           rotateGesturesEnabled: true,
           scrollGesturesEnabled: true,
-          tiltGesturesEnabled: true,
+          tiltGesturesEnabled: false,
           zoomGesturesEnabled: true,
+          buildingsEnabled: false,
+          trafficEnabled: false,
         ),
 
         // Botón de ubicación personalizado
@@ -298,34 +327,12 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
                           AppColors.primary,
                         ),
                       ),
-                    )
-                  : Icon(
+                    )                  
+                    : Icon(
                       Icons.my_location,
                       color: AppColors.primary,
                       size: 20,
                     ),
-            ),
-          ),        // Indicador de carga del mapa
-        if (_currentLocation == null && _isLoadingLocation)
-          Container(
-            color: Colors.grey.shade200,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Obteniendo ubicación actual...',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
       ],
