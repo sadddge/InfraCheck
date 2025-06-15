@@ -32,4 +32,3 @@ class UserService {/// Obtiene un usuario específico por su ID único.
     return User.fromJson(response);
   }
 }
-}
