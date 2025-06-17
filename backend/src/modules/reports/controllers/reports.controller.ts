@@ -33,6 +33,11 @@ export class ReportsController {
         private readonly reportsService: IReportsService,
     ) {}
 
+    @Get('categories')
+    getReportCategories(): string[] {
+        return Object.values(ReportCategory);
+    }
+
     @Get()
     async getAllReports(): Promise<ReportDto[]> {
         return await this.reportsService.findAll();
@@ -77,10 +82,5 @@ export class ReportsController {
         @Body('state') state: ReportState,
     ): Promise<ReportDto> {
         return await this.reportsService.updateState(+id, state);
-    }
-
-    @Get('categories')
-    getReportCategories(): string[] {
-        return Object.values(ReportCategory);
     }
 }
