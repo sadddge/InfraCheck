@@ -6,7 +6,6 @@ import { DatabaseModule } from './database/config/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
-import { CommentsModule } from './modules/reports/comments/comments.module';
 import { ReportModule } from './modules/reports/reports.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -46,7 +45,6 @@ import { UsersModule } from './modules/users/users.module';
         UsersModule,
         AuthModule,
         ReportModule,
-        CommentsModule,
     ],
     providers: [
         {
