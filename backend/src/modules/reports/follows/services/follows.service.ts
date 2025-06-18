@@ -2,6 +2,7 @@ import {
     BadRequestException,
     ConflictException,
     Injectable,
+    Logger,
     NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -33,6 +34,7 @@ import { IFollowsService } from '../interfaces/follows-service.interface';
  */
 @Injectable()
 export class FollowsService implements IFollowsService {
+    private readonly logger = new Logger(FollowsService.name);
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
@@ -159,7 +161,7 @@ export class FollowsService implements IFollowsService {
                 .getOne();
 
             return {
-                followers: report?.followers.map(follower => follower.name) || [],
+                followers: report?.followers.map(follower => follower.name) ?? [],
             };
         } catch (error) {
             this.handleError(error, 'Failed to get report followers');
@@ -210,7 +212,7 @@ export class FollowsService implements IFollowsService {
                 .getOne();
 
             return {
-                followers: report?.followers.map(follower => follower.id) || [],
+                followers: report?.followers.map(follower => follower.id) ?? [],
             };
         } catch (error) {
             this.handleError(error, 'Failed to get followers IDs');
@@ -293,8 +295,13 @@ export class FollowsService implements IFollowsService {
             error instanceof ConflictException ||
             error instanceof BadRequestException
         ) {
+            this.logger.error(`Handled error: ${error.message}`, error.stack);
             throw error;
         }
+        this.logger.error(
+            `Unhandled error: ${defaultMessage}`,
+            error instanceof Error ? error.stack : undefined,
+        );
         throw new BadRequestException(defaultMessage);
     }
 }
