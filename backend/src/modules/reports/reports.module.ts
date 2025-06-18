@@ -4,11 +4,12 @@ import { Report } from 'src/database/entities/report.entity';
 import { UploadModule } from '../upload/upload.module';
 import { CommentsModule } from './comments/comments.module';
 import { ReportsController } from './controllers/reports.controller';
+import { FollowsModule } from './follows/follows.module';
 import { REPORTS_SERVICE } from './interfaces/reports-service.interface';
 import { ReportsService } from './services/reports.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Report]), UploadModule, CommentsModule],
+    imports: [TypeOrmModule.forFeature([Report]), UploadModule, CommentsModule, FollowsModule],
     controllers: [ReportsController],
     providers: [
         {
