@@ -18,6 +18,8 @@ jest.mock('class-validator', () => ({
     IsString: () => () => {},
     IsNumber: () => () => {},
     IsEnum: () => () => {},
+    MinLength: () => () => {},
+    MaxLength: () => () => {},
     IsArray: () => () => {},
     ValidateNested: () => () => {},
 }));
