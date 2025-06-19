@@ -6,54 +6,142 @@ import {
     UserFollowedReportsResponseDto,
 } from '../dto';
 
+/**
+ * Service token for dependency injection of follows service.
+ * Used with NestJS @Inject decorator to provide IFollowsService implementation.
+ */
 export const FOLLOWS_SERVICE = 'FOLLOWS_SERVICE';
 
 /**
- * Interface for managing follow relationships between users and reports.
+ * Interface defining the contract for follow service implementations.
+ * Provides comprehensive follow management functionality for user-report relationships.
+ *
+ * Follow service interface providing:
+ * - Follow/unfollow actions between users and reports
+ * - Follow status checking and relationship queries
+ * - Follower listing and notification management
+ * - Bulk operations for follow relationship management
+ *
+ * @example
+ * ```typescript
+ * @Injectable()
+ * export class FollowsService implements IFollowsService {
+ *   async followReport(userId: number, reportId: number): Promise<FollowActionResponseDto> {
+ *     // Implementation
+ *   }
+ * }
+ * ```
  */
 export interface IFollowsService {
     /**
-     * Allows a user to follow a specific report.
-     * @param userId - The ID of the user who wants to follow the report.
-     * @param reportId - The ID of the report to be followed.
-     * @returns A promise that resolves to the result of the follow action.
+     * Creates a follow relationship between a user and a report.
+     * Allows users to subscribe to report updates and notifications.
+     * Prevents duplicate follows and validates both user and report existence.
+     *
+     * @param userId The unique identifier of the user creating the follow
+     * @param reportId The unique identifier of the report to follow
+     * @returns Follow action result with success status and relationship info
+     * @throws {NotFoundException} When user or report does not exist
+     * @throws {ConflictException} When user is already following the report
+     *
+     * @example
+     * ```typescript
+     * const result = await followsService.followReport(123, 456);
+     * console.log(`Follow successful: ${result.success}`);
+     * ```
      */
     followReport(userId: number, reportId: number): Promise<FollowActionResponseDto>;
 
     /**
-     * Allows a user to unfollow a specific report.
-     * @param userId - The ID of the user who wants to unfollow the report.
-     * @param reportId - The ID of the report to be unfollowed.
-     * @returns A promise that resolves to the result of the unfollow action.
+     * Removes a follow relationship between a user and a report.
+     * Unsubscribes user from report notifications and updates.
+     * Gracefully handles cases where follow relationship doesn't exist.
+     *
+     * @param userId The unique identifier of the user removing the follow
+     * @param reportId The unique identifier of the report to unfollow
+     * @returns Unfollow action result with success status
+     * @throws {NotFoundException} When user or report does not exist
+     *
+     * @example
+     * ```typescript
+     * const result = await followsService.unfollowReport(123, 456);
+     * console.log(`Unfollow successful: ${result.success}`);
+     * ```
      */
     unfollowReport(userId: number, reportId: number): Promise<FollowActionResponseDto>;
 
     /**
-     * Checks if a user is currently following a specific report.
-     * @param userId - The ID of the user.
-     * @param reportId - The ID of the report.
-     * @returns A promise that resolves to the follow status.
+     * Checks the follow relationship status between a user and a report.
+     * Returns whether the user is currently following the specified report.
+     * Used for UI state management and permission checking.
+     *
+     * @param userId The unique identifier of the user to check
+     * @param reportId The unique identifier of the report to check
+     * @returns Follow status with boolean indicator and relationship metadata
+     * @throws {NotFoundException} When user or report does not exist
+     *
+     * @example
+     * ```typescript
+     * const status = await followsService.isFollowingReport(123, 456);
+     * if (status.isFollowing) {
+     *   console.log('User is following this report');
+     * }
+     * ```
      */
     isFollowingReport(userId: number, reportId: number): Promise<FollowStatusResponseDto>;
 
     /**
-     * Retrieves the list of followers for a specific report.
-     * @param reportId - The ID of the report.
-     * @returns A promise that resolves to the list of report followers.
+     * Retrieves all users following a specific report with detailed information.
+     * Returns follower list with user profiles for display and notification purposes.
+     * Includes pagination support for reports with many followers.
+     *
+     * @param reportId The unique identifier of the report
+     * @returns Complete follower information including user profiles and follow dates
+     * @throws {NotFoundException} When report does not exist
+     *
+     * @example
+     * ```typescript
+     * const followers = await followsService.getReportFollowers(456);
+     * console.log(`Report has ${followers.count} followers`);
+     * followers.users.forEach(user => console.log(user.name));
+     * ```
      */
     getReportFollowers(reportId: number): Promise<ReportFollowersResponseDto>;
 
     /**
-     * Retrieves the list of reports followed by a specific user.
-     * @param userId - The ID of the user.
-     * @returns A promise that resolves to the list of reports followed by the user.
+     * Retrieves all reports followed by a specific user with report details.
+     * Returns user's followed reports for dashboard and notification management.
+     * Includes report status and recent activity information.
+     *
+     * @param userId The unique identifier of the user
+     * @returns Complete followed reports information with report details and follow dates
+     * @throws {NotFoundException} When user does not exist
+     *
+     * @example
+     * ```typescript
+     * const followedReports = await followsService.getUserFollowedReports(123);
+     * console.log(`User follows ${followedReports.count} reports`);
+     * followedReports.reports.forEach(report => console.log(report.title));
+     * ```
      */
     getUserFollowedReports(userId: number): Promise<UserFollowedReportsResponseDto>;
 
     /**
-     * Retrieves the IDs of all users following a specific report.
-     * @param reportId - The ID of the report.
-     * @returns A promise that resolves to the list of follower IDs.
+     * Retrieves only the user IDs of all followers for a specific report.
+     * Optimized query for bulk operations and notification systems.
+     * Used for efficient notification dispatching and analytics.
+     *
+     * @param reportId The unique identifier of the report
+     * @returns Array of follower user IDs for efficient processing
+     * @throws {NotFoundException} When report does not exist
+     *
+     * @example
+     * ```typescript
+     * const followerIds = await followsService.getFollowersIds(456);
+     * console.log(`Sending notifications to ${followerIds.userIds.length} users`);
+     * // Use IDs for bulk notification sending
+     * notificationService.sendBulkNotifications(followerIds.userIds, message);
+     * ```
      */
     getFollowersIds(reportId: number): Promise<ReportFollowersIdsResponseDto>;
 }

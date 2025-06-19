@@ -87,7 +87,22 @@
         "transform": {
             "^.+\\.(t|j)s$": "ts-jest"
         },
+        "testPathIgnorePatterns": [
+            "<rootDir>/node_modules/",
+            "<rootDir>/dist/",
+            "<rootDir>/test/e2e/"
+        ],
         "collectCoverageFrom": ["**/*.(t|j)s"],
+        "coveragePathIgnorePatterns": [
+            "/node_modules/",
+            "/dist/",
+            "/main\\.ts$",
+            "/.*\\.module\\.ts$",
+            "/.*\\.dto\\.ts$",
+            "/.*\\.entity\\.ts$",
+            "/.*\\.interface\\.ts$",
+            "/.*\\.d\\.ts$"
+        ],
         "coverageDirectory": "../coverage",
         "testEnvironment": "node",
         "moduleNameMapper": {

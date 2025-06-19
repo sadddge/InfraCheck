@@ -9,24 +9,27 @@ import {
 import { FOLLOWS_SERVICE, IFollowsService } from '../interfaces/follows-service.interface';
 
 /**
- * Controller for managing report follow actions.
+ * Follow management controller providing RESTful endpoints for user-report follow operations.
+ * Handles follow/unfollow actions, status checking, and follower management for infrastructure reports.
  *
- * Provides endpoints to follow/unfollow reports, retrieve followers, and check follow status.
+ * Exposes follow management endpoints including:
+ * - Follow/unfollow actions for authenticated users
+ * - Follow status checking for UI state management
+ * - Follower listing for community engagement features
+ * - Optimized follower ID retrieval for notification systems
  *
- * @module FollowsController
- * @tag Report Follows
+ * All endpoints require authentication and operate on the authenticated user's context.
+ * Report-specific operations validate report existence and user permissions.
  *
- * Endpoints:
- * - POST /reports/:reportId/follow: Follow a report.
- * - DELETE /reports/:reportId/unfollow: Unfollow a report.
- * - GET /reports/:reportId/followers: Get names of report followers.
- * - GET /reports/:reportId/followers-ids: Get IDs of report followers.
- * - GET /reports/:reportId/follow-status: Check if the current user is following the report.
- *
- * @param {number} reportId - ID of the report to perform actions on.
- * @param {Request} req - Express request object, containing authenticated user info.
- *
- * @injects IFollowsService - Service for handling follow logic.
+ * @example
+ * ```typescript
+ * // All endpoints are prefixed with /api/v1/reports/:reportId
+ * POST /api/v1/reports/123/follow              // Follow report 123
+ * DELETE /api/v1/reports/123/unfollow          // Unfollow report 123
+ * GET /api/v1/reports/123/follow-status        // Check follow status
+ * GET /api/v1/reports/123/followers            // Get follower names
+ * GET /api/v1/reports/123/followers-ids        // Get follower IDs
+ * ```
  */
 @ApiTags('Report Follows')
 @Controller({
@@ -34,11 +37,35 @@ import { FOLLOWS_SERVICE, IFollowsService } from '../interfaces/follows-service.
     version: '1',
 })
 export class FollowsController {
+    /**
+     * Creates a new FollowsController instance.
+     *
+     * @param followsService Follow service for handling business logic
+     */
     constructor(
         @Inject(FOLLOWS_SERVICE)
         private readonly followsService: IFollowsService,
     ) {}
 
+    /**
+     * Creates a follow relationship between the authenticated user and a report.
+     * Allows users to subscribe to report updates and notifications.
+     *
+     * @param reportId Unique identifier of the report to follow
+     * @param req Express request object containing authenticated user information
+     * @returns Follow action result with success message
+     *
+     * @example
+     * ```typescript
+     * // Follow a report
+     * POST /api/v1/reports/123/follow
+     * Authorization: Bearer <token>
+     *
+     * // Response
+     * {
+     *   "message": "Report followed successfully"     * }
+     * ```
+     */
     @Post('follow')
     @ApiOperation({ summary: 'Follow a report' })
     @ApiParam({ name: 'reportId', description: 'ID of the report to follow', type: 'number' })
@@ -58,6 +85,26 @@ export class FollowsController {
         return await this.followsService.followReport(userId, reportId);
     }
 
+    /**
+     * Removes a follow relationship between the authenticated user and a report.
+     * Unsubscribes user from report notifications and updates.
+     *
+     * @param reportId Unique identifier of the report to unfollow
+     * @param req Express request object containing authenticated user information
+     * @returns Unfollow action result with success message
+     *
+     * @example
+     * ```typescript
+     * // Unfollow a report
+     * DELETE /api/v1/reports/123/unfollow
+     * Authorization: Bearer <token>
+     *
+     * // Response
+     * {
+     *   "message": "Report unfollowed successfully"
+     * }
+     * ```
+     */
     @Delete('unfollow')
     @ApiOperation({ summary: 'Unfollow a report' })
     @ApiParam({ name: 'reportId', description: 'ID of the report to unfollow', type: 'number' })
@@ -77,6 +124,25 @@ export class FollowsController {
         return await this.followsService.unfollowReport(userId, reportId);
     }
 
+    /**
+     * Retrieves all users following a specific report with their names.
+     * Returns follower information for community engagement and display purposes.
+     *
+     * @param reportId Unique identifier of the report
+     * @returns List of follower names for the report
+     *
+     * @example
+     * ```typescript
+     * // Get report followers
+     * GET /api/v1/reports/123/followers
+     * Authorization: Bearer <token>
+     *
+     * // Response
+     * {
+     *   "followers": ["John Doe", "Jane Smith", "Carlos González"]
+     * }
+     * ```
+     */
     @Get('followers')
     @ApiOperation({ summary: 'Get report followers names' })
     @ApiParam({ name: 'reportId', description: 'ID of the report', type: 'number' })
@@ -93,6 +159,26 @@ export class FollowsController {
         return await this.followsService.getReportFollowers(reportId);
     }
 
+    /**
+     * Retrieves only the user IDs of all followers for a specific report.
+     * Optimized endpoint for bulk operations and notification systems.
+     * Returns minimal data for efficient processing.
+     *
+     * @param reportId Unique identifier of the report
+     * @returns Array of follower user IDs
+     *
+     * @example
+     * ```typescript
+     * // Get report follower IDs
+     * GET /api/v1/reports/123/followers-ids
+     * Authorization: Bearer <token>
+     *
+     * // Response
+     * {
+     *   "userIds": [123, 456, 789]
+     * }
+     * ```
+     */
     @Get('followers-ids')
     @ApiOperation({ summary: 'Get report followers IDs' })
     @ApiParam({ name: 'reportId', description: 'ID of the report', type: 'number' })
@@ -109,6 +195,27 @@ export class FollowsController {
         return await this.followsService.getFollowersIds(reportId);
     }
 
+    /**
+     * Checks the follow relationship status between the authenticated user and a report.
+     * Returns whether the user is currently following the specified report.
+     * Used for UI state management and conditional rendering.
+     *
+     * @param reportId Unique identifier of the report to check
+     * @param req Express request object containing authenticated user information
+     * @returns Follow status with boolean indicator
+     *
+     * @example
+     * ```typescript
+     * // Check follow status
+     * GET /api/v1/reports/123/follow-status
+     * Authorization: Bearer <token>
+     *
+     * // Response
+     * {
+     *   "isFollowing": true
+     * }
+     * ```
+     */
     @Get('follow-status')
     @ApiOperation({ summary: 'Check if user is following the report' })
     @ApiParam({ name: 'reportId', description: 'ID of the report', type: 'number' })

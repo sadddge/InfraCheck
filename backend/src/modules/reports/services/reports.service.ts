@@ -12,8 +12,31 @@ import { ReportChangeDto } from '../dto/report-change.dto';
 import { ReportDto } from '../dto/report.dto';
 import { IReportsService } from '../interfaces/reports-service.interface';
 
+/**
+ * Reports service providing CRUD operations and business logic for infrastructure reports.
+ * Handles report creation with image uploads, state management, and data retrieval.
+ *
+ * Core functionality:
+ * - Report creation with geolocation and image processing
+ * - Report retrieval with filtering and relationships
+ * - Administrative state management workflow
+ * - Change history tracking and audit trail
+ *
+ * @example
+ * ```typescript
+ * const reportsService = new ReportsService(reportRepository, uploadService);
+ * const reports = await reportsService.findAll();
+ * const report = await reportsService.createReport(dto, files, userId);
+ * ```
+ */
 @Injectable()
 export class ReportsService implements IReportsService {
+    /**
+     * Creates a new ReportsService instance.
+     *
+     * @param reportRepository TypeORM repository for Report entity operations
+     * @param uploadService Service for handling image uploads and processing
+     */
     constructor(
         @InjectRepository(Report)
         private readonly reportRepository: Repository<Report>,
@@ -21,6 +44,18 @@ export class ReportsService implements IReportsService {
         private readonly uploadService: IUploadService,
     ) {}
 
+    /**
+     * Retrieves all reports with creator and image information.
+     * Returns public reports for general listing and map visualization.
+     *
+     * @returns Array of report DTOs with complete information
+     *
+     * @example
+     * ```typescript
+     * const reports = await reportsService.findAll();
+     * console.log(`Found ${reports.length} reports`);
+     * ```
+     */
     async findAll(): Promise<ReportDto[]> {
         const reports = await this.reportRepository.find({
             relations: ['creator', 'images'],
