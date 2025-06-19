@@ -244,12 +244,14 @@ describe('UsersService', () => {
             const updatedUserDto = { ...mockUserDto, name: 'Only Name Updated' };
 
             userRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+            jest.spyOn(service, 'findById').mockResolvedValue(updatedUserDto);
 
             // Act
             const result = await service.update(1, partialUpdate);
 
             // Assert
             expect(userRepository.update).toHaveBeenCalledWith(1, partialUpdate);
+            expect(service.findById).toHaveBeenCalledWith(1);
             expect(result).toEqual(updatedUserDto);
         });
     });
@@ -553,12 +555,14 @@ describe('UsersService', () => {
             // Arrange
             const emptyUpdate = {};
             userRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+            jest.spyOn(service, 'findById').mockResolvedValue(mockUserDto);
 
             // Act
             const result = await service.update(1, emptyUpdate);
 
             // Assert
             expect(userRepository.update).toHaveBeenCalledWith(1, emptyUpdate);
+            expect(service.findById).toHaveBeenCalledWith(1);
             expect(result).toEqual(mockUserDto);
         });
 
@@ -566,6 +570,7 @@ describe('UsersService', () => {
             // Arrange
             userRepository.findOne.mockResolvedValue(mockUser);
             userRepository.save.mockResolvedValue(mockUser);
+            jest.spyOn(service, 'findById').mockResolvedValue(mockUserDto);
 
             // Act
             const result = await service.updateStatus(1, UserStatus.ACTIVE); // Same status
