@@ -180,7 +180,7 @@ describe('FollowsController', () => {
         it('should call followsService.getFollowersIds with correct reportId and return follower IDs', async () => {
             const reportId = 123;
             const expectedResponse = {
-                followers: [1, 2, 3],
+                userIds: [1, 2, 3],
             };
 
             mockFollowsService.getFollowersIds.mockResolvedValue(expectedResponse);
@@ -206,7 +206,7 @@ describe('FollowsController', () => {
         it('should return empty IDs list when report has no followers', async () => {
             const reportId = 123;
             const expectedResponse = {
-                followers: [],
+                userIds: [],
             };
 
             mockFollowsService.getFollowersIds.mockResolvedValue(expectedResponse);
@@ -215,7 +215,7 @@ describe('FollowsController', () => {
 
             expect(followsService.getFollowersIds).toHaveBeenCalledWith(reportId);
             expect(result).toEqual(expectedResponse);
-            expect(result.followers).toEqual([]);
+            expect(result.userIds).toEqual([]);
         });
     });
 

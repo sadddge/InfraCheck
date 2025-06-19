@@ -301,7 +301,7 @@ describe('FollowsService', () => {
 
             const result = await service.getFollowersIds(1);
 
-            expect(result).toEqual({ followers: [1, 2] });
+            expect(result).toEqual({ userIds: [1, 2] });
             expect(reportRepository.createQueryBuilder).toHaveBeenCalledWith('report');
             expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
                 'report.followers',
@@ -319,7 +319,7 @@ describe('FollowsService', () => {
 
             const result = await service.getFollowersIds(1);
 
-            expect(result).toEqual({ followers: [] });
+            expect(result).toEqual({ userIds: [] });
         });
 
         it('should return empty array when report is null', async () => {
@@ -328,7 +328,7 @@ describe('FollowsService', () => {
 
             const result = await service.getFollowersIds(1);
 
-            expect(result).toEqual({ followers: [] });
+            expect(result).toEqual({ userIds: [] });
         });
 
         it('should throw NotFoundException when report does not exist', async () => {
