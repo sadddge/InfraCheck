@@ -7,15 +7,33 @@ import { FOLLOWS_SERVICE } from './interfaces/follows-service.interface';
 import { FollowsService } from './services/follows.service';
 
 /**
- * The FollowsModule is a NestJS module responsible for managing the follows feature.
+ * Follow management module providing user-report relationship functionality.
+ * Handles follow/unfollow operations, status checking, and follower management for infrastructure reports.
  *
- * @module FollowsModule
+ * @class FollowsModule
+ * @description Follow management module that provides:
+ * - Follow/unfollow operations between users and reports
+ * - Follow status checking and relationship queries
+ * - Follower listing for community engagement
+ * - Optimized queries for notification systems
+ * - RESTful API endpoints for follow operations
+ * - Integration with user and report management systems
  *
- * @description
- * - Imports the TypeOrmModule with the User and Report entities for database interaction.
- * - Registers the FollowsController to handle HTTP requests related to follows.
- * - Provides the FollowsService using the FOLLOWS_SERVICE token for dependency injection.
- * - Exports the FOLLOWS_SERVICE token for use in other modules.
+ * @example
+ * ```typescript
+ * // Module is automatically imported in ReportsModule
+ * // Provides follow management endpoints at /api/v1/reports/:reportId/*
+ * // Exports FOLLOWS_SERVICE for dependency injection
+ *
+ * // Available endpoints:
+ * // POST /api/v1/reports/:reportId/follow
+ * // DELETE /api/v1/reports/:reportId/unfollow
+ * // GET /api/v1/reports/:reportId/follow-status
+ * // GET /api/v1/reports/:reportId/followers
+ * // GET /api/v1/reports/:reportId/followers-ids
+ * ```
+ *
+ * @since 1.0.0
  */
 @Module({
     imports: [TypeOrmModule.forFeature([User, Report])],
