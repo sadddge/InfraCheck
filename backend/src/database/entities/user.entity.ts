@@ -125,7 +125,9 @@ export class User {
         () => RefreshToken,
         refreshToken => refreshToken.user,
     )
-    refreshTokens: RefreshToken[]; /**
+    refreshTokens: RefreshToken[];
+
+    /**
      * Reports this user is following for notifications and updates.
      * Many-to-many relationship allowing users to track multiple reports
      * and receive notifications when reports change status or receive comments.
