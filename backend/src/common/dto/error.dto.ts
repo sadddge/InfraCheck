@@ -1,5 +1,7 @@
+import { ErrorDetail } from '../exceptions/error-details';
+
 export class ErrorDto {
     code: string;
     message: string;
-    details: Record<string, unknown> | null;
+    details: ErrorDetail | null;
 }
