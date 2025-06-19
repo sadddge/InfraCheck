@@ -10,8 +10,30 @@ import {
 import { IUploadService } from '../interfaces/upload-service.interface';
 import { IStorageService, STORAGE_SERVICE } from '../storage/interfaces/storage-service.interface';
 
+/**
+ * Upload service orchestrating image processing, validation, and storage.
+ * Provides complete file upload workflow for report images with quality control.
+ *
+ * Upload pipeline:
+ * 1. Image processing (resize, optimize, format conversion)
+ * 2. Content validation (AI-based inappropriate content detection)
+ * 3. Storage upload (local or cloud storage)
+ *
+ * @example
+ * ```typescript
+ * const uploadService = new UploadService(processor, validator, storage);
+ * const imageUrl = await uploadService.uploadFile(multerFile);
+ * ```
+ */
 @Injectable()
 export class UploadService implements IUploadService {
+    /**
+     * Creates a new UploadService instance.
+     *
+     * @param processor Image processing service for optimization and resizing
+     * @param validator Image validation service for content screening
+     * @param storageService Storage service for file persistence
+     */
     constructor(
         @Inject(IMAGE_PROCESSOR)
         private readonly processor: IImageProcessor,
@@ -21,6 +43,20 @@ export class UploadService implements IUploadService {
         private readonly storageService: IStorageService,
     ) {}
 
+    /**
+     * Uploads a file through the complete processing pipeline.
+     * Processes, validates, and stores the uploaded image file.
+     *
+     * @param file Multer file object from request upload
+     * @returns Public URL of the uploaded and processed image
+     * @throws {BadRequestException} When image processing or validation fails
+     *
+     * @example
+     * ```typescript
+     * const imageUrl = await uploadService.uploadFile(req.file);
+     * console.log(`Image uploaded: ${imageUrl}`);
+     * ```
+     */
     async uploadFile(file: Express.Multer.File): Promise<string> {
         const processedFile = await this.processor.processImage(file.buffer);
         await this.validator.validate(processedFile);
