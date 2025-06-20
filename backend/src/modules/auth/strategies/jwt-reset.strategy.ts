@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserStatus } from 'src/common/enums/user-status.enums';
+import { invalidResetToken, userNotFound } from 'src/common/helpers/exception.helper';
 import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
 import { JwtResetPayload } from '../../../common/interfaces/jwt-payload.interface';
 import { jwtConfig } from '../config/jwt.config';
@@ -100,7 +101,7 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
      */
     async validate(payload: JwtResetPayload) {
         if (payload.scope !== 'reset_password') {
-            throw new UnauthorizedException('Invalid token scope');
+            invalidResetToken();
         }
         const id = Number(payload.sub);
         const user = await this.usersService.findById(id);
@@ -108,17 +109,15 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
             !user ||
             (user.status !== UserStatus.ACTIVE && user.status !== UserStatus.PENDING_APPROVAL)
         ) {
-            throw new UnauthorizedException('User not found or inactive');
+            userNotFound();
         }
 
         const pwdChangedAt = user.passwordUpdatedAt?.getTime() ?? 0;
         if (pwdChangedAt >= payload.iat * 1000) {
-            throw new UnauthorizedException('Password has already been changed');
+            invalidResetToken();
         }
 
-        this.logger.log(
-            `JWT Reset Strategy: User ${user.id} validated for password reset`,
-        );
+        this.logger.log(`JWT Reset Strategy: User ${user.id} validated for password reset`);
 
         return {
             id: user.id,

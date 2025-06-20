@@ -2,11 +2,11 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
 import { UserStatus } from 'src/common/enums/user-status.enums';
+import { invalidVerificationCode } from 'src/common/helpers/exception.helper';
 import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
 import { IVerificationService } from 'src/modules/verification/interfaces/verification-service.interface';
 import { RegisterResponseDto } from '../dto/register-response.dto';
 import { RegisterDto } from '../dto/register.dto';
-import { InvalidVerificationCodeException } from '../exceptions/auth.exceptions';
 import { IUserRegistrationService } from '../interfaces/user-registration-service.interface';
 
 /**
@@ -137,7 +137,7 @@ export class UserRegistrationService implements IUserRegistrationService {
             await this.usersService.update(user.id, user);
         } catch (error) {
             this.logger.error(`Invalid verification code for ${phoneNumber}: ${error.message}`);
-            throw new InvalidVerificationCodeException();
+            invalidVerificationCode();
         }
     }
 }

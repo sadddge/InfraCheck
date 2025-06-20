@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
+import { invalidVerificationCode } from 'src/common/helpers/exception.helper';
 import { User } from 'src/database/entities/user.entity';
 import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
 import { IVerificationService } from 'src/modules/verification/interfaces/verification-service.interface';
-import { InvalidPasswordResetCodeException } from '../exceptions/auth.exceptions';
 import { IPasswordRecoveryService } from '../interfaces/password-recovery-service.interface';
 import { TokenFactoryService } from './token-factory.service';
 
@@ -99,7 +99,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
      * @param phoneNumber User's phone number in E.164 format
      * @param code SMS verification code received by user
      * @returns Object containing reset token and success message
-     * @throws {InvalidPasswordResetCodeException} When verification code is invalid or expired
+     * @throws {AppException} When verification code is invalid or expired
      *
      * @example
      * ```typescript
@@ -124,7 +124,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             await this.verificationService.verifyCode(phoneNumber, code);
         } catch {
             this.logger.warn(`Invalid verification code for ${phoneNumber}`);
-            throw new InvalidPasswordResetCodeException();
+            invalidVerificationCode();
         }
 
         try {
@@ -139,7 +139,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             this.logger.error(
                 `Error generating reset password token for ${phoneNumber}: ${error.message}`,
             );
-            throw new InvalidPasswordResetCodeException();
+            invalidVerificationCode();
         }
     }
 

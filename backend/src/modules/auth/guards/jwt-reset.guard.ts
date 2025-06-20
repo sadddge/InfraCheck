@@ -1,6 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { InvalidResetTokenException } from '../exceptions/auth.exceptions';
+import { invalidResetToken } from 'src/common/helpers/exception.helper';
 
 /**
  * @class JwtResetGuard
@@ -57,7 +57,7 @@ export class JwtResetGuard extends AuthGuard('jwt-reset') {
         if (err || !user) {
             const errorMessage = err instanceof Error ? err.message : 'User not found';
             this.logger.warn(`Reset token validation failed: ${errorMessage}`);
-            throw err ?? new InvalidResetTokenException();
+            throw err ?? invalidResetToken();
         }
         return user as TUser;
     }

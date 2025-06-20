@@ -2,7 +2,7 @@ import { type ExecutionContext, Injectable, Logger, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import type { Observable } from 'rxjs';
-import { InvalidAccessTokenException } from '../exceptions/auth.exceptions';
+import { invalidAccessToken } from 'src/common/helpers/exception.helper';
 
 /**
  * JWT authentication guard that validates access tokens and handles public endpoints.
@@ -98,7 +98,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             this.logger.warn(
                 `Authentication failed: ${err instanceof Error ? err.message : 'User not found'}`,
             );
-            throw err ?? new InvalidAccessTokenException();
+            throw err ?? invalidAccessToken();
         }
         return user as TUser;
     }

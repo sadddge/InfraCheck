@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { invalidRefreshToken } from 'src/common/helpers/exception.helper';
 import { jwtConfig } from '../config/jwt.config';
 import { AUTH_SERVICE, type IAuthService } from '../interfaces/auth-service.interface';
 
@@ -99,7 +100,9 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
         const refreshToken: string = req.body.refreshToken;
         const userId: number = payload.sub;
         const user = await this.authService.getUserIfRefreshTokenMatches(refreshToken, userId);
-        if (!user) throw new UnauthorizedException();
+        if (!user) {
+            invalidRefreshToken();
+        }
         return user;
     }
 }
