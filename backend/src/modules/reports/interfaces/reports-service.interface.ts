@@ -84,7 +84,7 @@ export interface IReportsService {
      * @param files Array of uploaded image files
      * @param creatorId ID of the user creating the report
      * @returns Created report DTO
-     * @throws {BadRequestException} When validation fails or images are invalid
+     * @throws {AppException} UPL001-UPL007 - When validation fails or images are invalid
      *
      * @example
      * ```typescript
