@@ -1,4 +1,4 @@
-import { type ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { type ExecutionContext, Injectable, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import type { Observable } from 'rxjs';

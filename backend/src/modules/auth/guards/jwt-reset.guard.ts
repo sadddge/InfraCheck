@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { invalidResetToken } from 'src/common/helpers/exception.helper';
 
