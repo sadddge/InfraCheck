@@ -50,7 +50,7 @@ export interface IReportsService {
      *
      * @param id Unique report identifier
      * @returns Report DTO with complete information
-     * @throws {NotFoundException} When report with specified ID does not exist
+     * @throws {AppException} REP001 - When report with specified ID does not exist
      *
      * @example
      * ```typescript
@@ -66,6 +66,7 @@ export interface IReportsService {
      *
      * @param reportId Unique identifier of the report
      * @returns Array of report change DTOs ordered by creation date
+     * @throws {AppException} REP001 - When report with specified ID does not exist
      *
      * @example
      * ```typescript
@@ -94,6 +95,7 @@ export interface IReportsService {
      * );
      * ```
      */
+
     createReport(
         dto: CreateReportDto,
         files: Express.Multer.File[],
@@ -107,8 +109,8 @@ export interface IReportsService {
      * @param id Report identifier to update
      * @param state New state to apply
      * @returns Updated report DTO
-     * @throws {NotFoundException} When report does not exist
-     * @throws {BadRequestException} When state transition is invalid
+     * @throws {AppException} REP001 - When report does not exist
+     * @throws {AppException} GEN002 - When state transition is invalid
      *
      * @example
      * ```typescript
