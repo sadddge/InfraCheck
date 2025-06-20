@@ -56,7 +56,7 @@ export interface IUserService {
      *
      * @param id Unique user identifier
      * @returns User data transfer object
-     * @throws {NotFoundException} When user with specified ID does not exist
+     * @throws {AppException} USR001 - When user with specified ID does not exist
      *
      * @example
      * ```typescript
@@ -72,7 +72,7 @@ export interface IUserService {
      *
      * @param phoneNumber Phone number in E.164 format
      * @returns User data transfer object
-     * @throws {NotFoundException} When user with phone number does not exist
+     * @throws {AppException} USR001 - When user with phone number does not exist
      *
      * @example
      * ```typescript
@@ -89,8 +89,8 @@ export interface IUserService {
      * @param id User identifier to update
      * @param updateUserDto Data transfer object containing updated user information
      * @returns Updated user data transfer object
-     * @throws {NotFoundException} When user with specified ID does not exist
-     * @throws {ConflictException} When updated data conflicts with existing records
+     * @throws {AppException} USR001 - When user with specified ID does not exist
+     * @throws {AppException} USR002 - When updated data conflicts with existing records
      *
      * @example
      * ```typescript
@@ -100,8 +100,10 @@ export interface IUserService {
      * });
      * ```
      */
-    update(id: number, updateUserDto: UpdateUserDto): Promise<UserDto>;
-
+    update(
+        id: number,
+        updateUserDto: UpdateUserDto,
+    ): Promise<UserDto>;
     /**
      * Updates user status for administrative approval workflows.
      * Used by administrators to approve, reject, or modify user access.
@@ -109,8 +111,8 @@ export interface IUserService {
      * @param id User identifier to update
      * @param status New user status to apply
      * @returns Updated user data transfer object
-     * @throws {NotFoundException} When user with specified ID does not exist
-     * @throws {ForbiddenException} When status transition is not allowed
+     * @throws {AppException} USR001 - When user with specified ID does not exist
+     * @throws {AppException} GEN002 - When status transition is not allowed
      *
      * @example
      * ```typescript
@@ -121,7 +123,10 @@ export interface IUserService {
      * const bannedUser = await userService.updateStatus(456, UserStatus.BANNED);
      * ```
      */
-    updateStatus(id: number, status: UserStatus): Promise<UserDto>;
+    updateStatus(
+        id: number,
+        status: UserStatus,
+    ): Promise<UserDto>;
 
     /**
      * Registers a new neighbor user in the system.
@@ -129,8 +134,8 @@ export interface IUserService {
      *
      * @param user Registration data including personal information and credentials
      * @returns Created user data transfer object
-     * @throws {ConflictException} When phone number or email already exists
-     * @throws {BadRequestException} When registration data is invalid
+     * @throws {AppException} USR002 - When phone number or email already exists
+     * @throws {AppException} GEN002 - When registration data is invalid
      *
      * @example
      * ```typescript
@@ -151,8 +156,8 @@ export interface IUserService {
      *
      * @param user Registration data including administrative credentials
      * @returns Created admin user data transfer object
-     * @throws {ConflictException} When phone number or email already exists
-     * @throws {ForbiddenException} When current user lacks admin creation permissions
+     * @throws {AppException} USR002 - When phone number or email already exists
+     * @throws {AppException} GEN002 - When current user lacks admin creation permissions
      *
      * @example
      * ```typescript
@@ -173,8 +178,8 @@ export interface IUserService {
      *
      * @param id User identifier to remove
      * @returns Resolves when user is successfully deleted
-     * @throws {NotFoundException} When user with specified ID does not exist
-     * @throws {ForbiddenException} When user deletion is not allowed
+     * @throws {AppException} USR001 - When user with specified ID does not exist
+     * @throws {AppException} GEN002 - When user deletion is not allowed
      *
      * @example
      * ```typescript
@@ -190,7 +195,7 @@ export interface IUserService {
      *
      * @param id User identifier to retrieve
      * @returns Complete user entity including password hash
-     * @throws {NotFoundException} When user with specified ID does not exist
+     * @throws {AppException} USR001 - When user with specified ID does not exist
      *
      * @example
      * ```typescript
@@ -206,7 +211,7 @@ export interface IUserService {
      *
      * @param phoneNumber Phone number in E.164 format
      * @returns Complete user entity including password hash
-     * @throws {NotFoundException} When user with phone number does not exist
+     * @throws {AppException} USR001 - When user with phone number does not exist
      *
      * @example
      * ```typescript
