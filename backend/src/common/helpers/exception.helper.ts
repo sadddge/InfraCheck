@@ -108,8 +108,15 @@ export function reportNotFound(details?: ReportErrorDetail): never {
     });
 }
 
-export function duplicateReport(details?: ReportErrorDetail): never {
-    throw new AppException(ERROR_CODES.REPORTS.DUPLICATE_REPORT, undefined, {
+export function reportAlreadyFollowed(details?: ReportErrorDetail): never {
+    throw new AppException(ERROR_CODES.REPORTS.ALREADY_FOLLOWING, undefined, {
+        type: 'report',
+        ...details,
+    });
+}
+
+export function reportNotFollowed(details?: ReportErrorDetail): never {
+    throw new AppException(ERROR_CODES.REPORTS.NOT_FOLLOWING, undefined, {
         type: 'report',
         ...details,
     });
@@ -155,6 +162,14 @@ export function databaseError(details: ServerErrorDetail, message?: string): nev
 export function externalServiceError(details: ServerErrorDetail, message?: string): never {
     throw new AppException(ERROR_CODES.SERVER.EXTERNAL_SERVICE_ERROR, message, {
         type: 'server',
+        ...details,
+    });
+}
+
+// General exceptions
+export function invalidRequest(details?: GeneralErrorDetail): never {
+    throw new AppException(ERROR_CODES.GENERAL.INVALID_REQUEST, undefined, {
+        type: 'general',
         ...details,
     });
 }

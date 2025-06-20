@@ -29,6 +29,8 @@ export const ERROR_CODES = {
         REPORT_NOT_FOUND: 'REP001',
         INVALID_REPORT_DATA: 'REP002',
         DUPLICATE_REPORT: 'REP003',
+        ALREADY_FOLLOWING: 'REP004',
+        NOT_FOLLOWING: 'REP005',
     },
 
     // Server errors (SRV001-SRV999)
@@ -104,6 +106,8 @@ export const ERROR_MESSAGES: ErrorMessagesMap = {
     REP001: 'Report not found',
     REP002: 'Invalid report data',
     REP003: 'Duplicate report',
+    REP004: 'User is already following this report',
+    REP005: 'User is not following this report',
 
     SRV001: 'Internal server error',
     SRV002: 'Database error',
@@ -141,6 +145,8 @@ export const ERROR_HTTP_STATUS: ErrorHttpStatusMap = {
     REP001: 404,
     REP002: 400,
     REP003: 409,
+    REP004: 409,
+    REP005: 409,
 
     SRV001: 500,
     SRV002: 500,
