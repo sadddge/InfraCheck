@@ -64,7 +64,7 @@ export interface JwtRefreshPayload {
  * // Used in reset validation
  * async validate(payload: JwtResetPayload) {
  *   if (payload.scope !== 'reset_password') {
- *     throw new UnauthorizedException('Invalid token scope');
+ *     accessDenied({ requiredPermission: 'reset_password', attemptedAction: 'validate_token' });
  *   }
  *   // Additional validation...
  * }

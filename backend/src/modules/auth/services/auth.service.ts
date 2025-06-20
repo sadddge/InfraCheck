@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserStatus } from 'src/common/enums/user-status.enums';
@@ -95,7 +95,7 @@ export class AuthService implements IAuthService {
         try {
             user = await this.usersService.findByPhoneNumberWithPassword(dto.phoneNumber);
         } catch (error) {
-            if (error instanceof NotFoundException) {
+            if (error.code === 'USR001') {
                 invalidCredentials();
             }
             throw error;
