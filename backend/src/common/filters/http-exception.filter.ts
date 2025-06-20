@@ -56,19 +56,25 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
         let status: number;
         let payload: ErrorDto;
-
         if (exception instanceof AppException) {
             status = exception.getStatus();
             const res = exception.getResponse() as {
                 code: string;
                 message: string;
                 details?: ErrorDetail | null;
-            };
+            }; // Extract 'type' field from details for internal use, but don't send it in response
+            let cleanDetails: Record<string, unknown> | null = null;
+            if (res.details) {
+                const { type, ...detailsWithoutType } = res.details;
+                // Only include details if there are remaining properties after removing 'type'
+                cleanDetails =
+                    Object.keys(detailsWithoutType).length > 0 ? detailsWithoutType : null;
+            }
 
             payload = {
                 code: res.code,
                 message: res.message,
-                details: res.details ?? null,
+                details: cleanDetails,
             };
         } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
