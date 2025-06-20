@@ -1,7 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
+import { userAlreadyExists, userNotFound } from 'src/common/helpers/exception.helper';
 import { User } from 'src/database/entities/user.entity';
 import { Equal, type Repository } from 'typeorm';
 import type { RegisterDto } from '../../auth/dto/register.dto';
@@ -96,7 +97,7 @@ export class UsersService implements IUserService {
             },
         });
         if (!user) {
-            throw new NotFoundException(`User with ID ${id} not found`);
+            userNotFound();
         }
         return user;
     }
@@ -137,7 +138,7 @@ export class UsersService implements IUserService {
             },
         });
         if (!user) {
-            throw new NotFoundException(`User with phone number ${phoneNumber} not found`);
+            userNotFound();
         }
         return user;
     }
@@ -190,7 +191,7 @@ export class UsersService implements IUserService {
             where: { id: Equal(id) },
         });
         if (!user) {
-            throw new NotFoundException(`User with ID ${id} not found`);
+            userNotFound();
         }
         user.status = status;
         await this.userRepository.save(user);
@@ -224,9 +225,7 @@ export class UsersService implements IUserService {
             },
         });
         if (existingUser) {
-            throw new ConflictException(
-                `User with phone number ${user.phoneNumber} already exists`,
-            );
+            userAlreadyExists();
         }
         const newUser = this.userRepository.create(user);
         await this.userRepository.save(newUser);
@@ -260,9 +259,7 @@ export class UsersService implements IUserService {
             },
         });
         if (existingUser) {
-            throw new ConflictException(
-                `User with phone number ${user.phoneNumber} already exists`,
-            );
+            userAlreadyExists();
         }
         const newUser = this.userRepository.create(user);
         newUser.role = Role.ADMIN;
@@ -292,7 +289,7 @@ export class UsersService implements IUserService {
     async remove(id: number): Promise<void> {
         const result = await this.userRepository.delete(id);
         if (result.affected === 0) {
-            throw new NotFoundException(`User with ID ${id} not found`);
+            userNotFound();
         }
     }
 
@@ -328,7 +325,7 @@ export class UsersService implements IUserService {
             },
         });
         if (!user) {
-            throw new NotFoundException(`User with ID ${id} not found`);
+            userNotFound();
         }
         return user;
     }
@@ -365,7 +362,7 @@ export class UsersService implements IUserService {
             },
         });
         if (!user) {
-            throw new NotFoundException(`User with phone number ${phoneNumber} not found`);
+            userNotFound();
         }
         return user;
     }
