@@ -57,6 +57,22 @@ export interface UserErrorDetail {
 }
 
 /**
+ * Detail for upload-related errors (UPL001–UPL999)
+ */
+export interface UploadErrorDetail {
+    /** File name that failed */
+    fileName?: string;
+    /** File size in bytes */
+    fileSize?: number;
+    /** MIME type of the file */
+    mimeType?: string;
+    /** Specific validation failure reason */
+    validationReason?: string;
+    /** Storage location where error occurred */
+    storageLocation?: string;
+}
+
+/**
  * Detail for general or unhandled errors (GEN000–GEN999)
  */
 export interface GeneralErrorDetail {
@@ -73,4 +89,5 @@ export type ErrorDetail =
     | ({ type: 'report' } & ReportErrorDetail)
     | ({ type: 'server' } & ServerErrorDetail)
     | ({ type: 'user' } & UserErrorDetail)
+    | ({ type: 'upload' } & UploadErrorDetail)
     | ({ type: 'general' } & GeneralErrorDetail);

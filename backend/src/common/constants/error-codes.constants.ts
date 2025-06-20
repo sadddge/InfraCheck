@@ -47,6 +47,24 @@ export const ERROR_CODES = {
         USER_INACTIVE: 'USR003',
     },
 
+    // Verification errors (VER001-VER999)
+    VERIFICATION: {
+        FAILED_TO_SEND_CODE: 'VER001',
+        INVALID_VERIFICATION_CODE: 'VER002',
+        PHONE_NUMBER_INVALID: 'VER003',
+    },
+
+    // Upload errors (UPL001-UPL999)
+    UPLOAD: {
+        FILE_PROCESSING_FAILED: 'UPL001',
+        INVALID_FILE_TYPE: 'UPL002',
+        FILE_TOO_LARGE: 'UPL003',
+        STORAGE_ERROR: 'UPL004',
+        IMAGE_VALIDATION_FAILED: 'UPL005',
+        INAPPROPRIATE_CONTENT: 'UPL006',
+        VALIDATION_SERVICE_ERROR: 'UPL007',
+    },
+
     // General errors (GEN001-GEN999)
     GENERAL: {
         UNKNOWN_ERROR: 'GEN000',
@@ -117,6 +135,18 @@ export const ERROR_MESSAGES: ErrorMessagesMap = {
     USR002: 'User already exists',
     USR003: 'User inactive',
 
+    VER001: 'Failed to send verification code',
+    VER002: 'Invalid verification code',
+    VER003: 'Invalid phone number format',
+
+    UPL001: 'File processing failed',
+    UPL002: 'Invalid file type',
+    UPL003: 'File too large',
+    UPL004: 'Storage error',
+    UPL005: 'Image validation failed',
+    UPL006: 'Inappropriate content detected',
+    UPL007: 'Validation service error',
+
     GEN000: 'Unknown error',
     GEN001: 'Unhandled exception',
     GEN002: 'Invalid request',
@@ -155,6 +185,18 @@ export const ERROR_HTTP_STATUS: ErrorHttpStatusMap = {
     USR001: 404,
     USR002: 409,
     USR003: 403,
+
+    VER001: 400,
+    VER002: 400,
+    VER003: 400,
+
+    UPL001: 500,
+    UPL002: 400,
+    UPL003: 413,
+    UPL004: 500,
+    UPL005: 400,
+    UPL006: 406,
+    UPL007: 500,
 
     GEN000: 500,
     GEN001: 500,

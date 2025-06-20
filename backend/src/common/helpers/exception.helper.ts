@@ -5,6 +5,7 @@ import type {
     GeneralErrorDetail,
     ReportErrorDetail,
     ServerErrorDetail,
+    UploadErrorDetail,
     UserErrorDetail,
     ValidationErrorDetail,
 } from '../exceptions/error-details';
@@ -162,6 +163,71 @@ export function databaseError(details: ServerErrorDetail, message?: string): nev
 export function externalServiceError(details: ServerErrorDetail, message?: string): never {
     throw new AppException(ERROR_CODES.SERVER.EXTERNAL_SERVICE_ERROR, message, {
         type: 'server',
+        ...details,
+    });
+}
+
+// Verification exceptions
+export function verificationCodeSendFailed(details?: GeneralErrorDetail): never {
+    throw new AppException(ERROR_CODES.VERIFICATION.FAILED_TO_SEND_CODE, undefined, {
+        type: 'general',
+        ...details,
+    });
+}
+
+export function invalidPhoneNumber(details?: GeneralErrorDetail): never {
+    throw new AppException(ERROR_CODES.VERIFICATION.PHONE_NUMBER_INVALID, undefined, {
+        type: 'general',
+        ...details,
+    });
+}
+
+// Upload exceptions
+export function fileProcessingFailed(details?: UploadErrorDetail): never {
+    throw new AppException(ERROR_CODES.UPLOAD.FILE_PROCESSING_FAILED, undefined, {
+        type: 'upload',
+        ...details,
+    });
+}
+
+export function invalidFileType(details?: UploadErrorDetail): never {
+    throw new AppException(ERROR_CODES.UPLOAD.INVALID_FILE_TYPE, undefined, {
+        type: 'upload',
+        ...details,
+    });
+}
+
+export function fileTooLarge(details?: UploadErrorDetail): never {
+    throw new AppException(ERROR_CODES.UPLOAD.FILE_TOO_LARGE, undefined, {
+        type: 'upload',
+        ...details,
+    });
+}
+
+export function storageError(details?: UploadErrorDetail): never {
+    throw new AppException(ERROR_CODES.UPLOAD.STORAGE_ERROR, undefined, {
+        type: 'upload',
+        ...details,
+    });
+}
+
+export function imageValidationFailed(details?: UploadErrorDetail): never {
+    throw new AppException(ERROR_CODES.UPLOAD.IMAGE_VALIDATION_FAILED, undefined, {
+        type: 'upload',
+        ...details,
+    });
+}
+
+export function inappropriateContent(details?: UploadErrorDetail): never {
+    throw new AppException(ERROR_CODES.UPLOAD.INAPPROPRIATE_CONTENT, undefined, {
+        type: 'upload',
+        ...details,
+    });
+}
+
+export function validationServiceError(details?: UploadErrorDetail): never {
+    throw new AppException(ERROR_CODES.UPLOAD.VALIDATION_SERVICE_ERROR, undefined, {
+        type: 'upload',
         ...details,
     });
 }
