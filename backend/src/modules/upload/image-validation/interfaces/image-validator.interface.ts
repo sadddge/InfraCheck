@@ -39,8 +39,8 @@ export interface IImageValidator {
      *
      * @param buffer Image data as Buffer to validate for content safety
      * @returns Promise that resolves if image passes all validation checks
-     * @throws {NotAcceptableException} When image contains inappropriate content
-     * @throws {Error} When validation service fails or returns invalid results
+     * @throws {AppException} UPL006 - When image contains inappropriate content
+     * @throws {AppException} UPL007 - When validation service fails or returns invalid results
      *
      * @example
      * ```typescript
@@ -66,7 +66,7 @@ export interface IImageValidator {
      *   console.error('Image validation failed:', error.message);
      *
      *   // Handle inappropriate content
-     *   if (error instanceof NotAcceptableException) {
+     *   if (error.code === 'UPL006') {
      *     return res.status(406).json({
      *       error: 'Image content not appropriate',
      *       message: 'Please upload images suitable for infrastructure reporting'
@@ -74,7 +74,7 @@ export interface IImageValidator {
      *   }
      *
      *   // Handle service errors
-     *   throw new InternalServerErrorException('Image validation service unavailable');
+     *   validationServiceError();
      * }
      * ```
      */

@@ -1,10 +1,9 @@
 import vision from '@google-cloud/vision';
+import { Injectable, Logger } from '@nestjs/common';
 import {
-    Injectable,
-    InternalServerErrorException,
-    Logger,
-    NotAcceptableException,
-} from '@nestjs/common';
+    inappropriateContent,
+    validationServiceError,
+} from '../../../../common/helpers/exception.helper';
 import { IImageValidator } from '../interfaces/image-validator.interface';
 
 /**
@@ -65,8 +64,8 @@ export class AIImageValidatorStrategy implements IImageValidator {
      *
      * @param buffer Image data as Buffer to analyze for content safety
      * @returns Promise that resolves if image passes validation
-     * @throws {NotAcceptableException} When inappropriate content is detected
-     * @throws {InternalServerErrorException} When API call fails or returns invalid data
+     * @throws {AppException} UPL006 - When inappropriate content is detected
+     * @throws {AppException} UPL007 - When API call fails or returns invalid data
      *
      * @example
      * ```typescript
@@ -82,7 +81,7 @@ export class AIImageValidatorStrategy implements IImageValidator {
      *   const savedUrl = await storageService.upload(processedImage, fileName);
      *
      * } catch (error) {
-     *   if (error instanceof NotAcceptableException) {
+     *   if (error.code === 'UPL006') {
      *     console.log('✗ Image rejected: inappropriate content detected');
      *     // Return error to user with guidance
      *     res.status(406).json({
@@ -99,9 +98,10 @@ export class AIImageValidatorStrategy implements IImageValidator {
     async validate(buffer: Buffer): Promise<void> {
         const [result] = await this.client.safeSearchDetection({ image: { content: buffer } });
         const safeSearch = result.safeSearchAnnotation;
-
         if (!safeSearch) {
-            throw new InternalServerErrorException('No SafeSearch annotation found');
+            validationServiceError({
+                validationReason: 'No SafeSearch annotation found in API response',
+            });
         }
 
         const flags = {
@@ -117,9 +117,9 @@ export class AIImageValidatorStrategy implements IImageValidator {
             this.logger.debug(`SafeSearch flag for ${key}: ${flags[key]}`);
             if (dangerLevels.includes(flags[key])) {
                 this.logger.warn(`Image validation failed: ${key} content detected`);
-                throw new NotAcceptableException(
-                    `Image validation failed: ${key} content detected`,
-                );
+                inappropriateContent({
+                    validationReason: `${key} content detected`,
+                });
             }
         }
     }
