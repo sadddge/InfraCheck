@@ -40,6 +40,7 @@ export class AuthService implements IAuthService {
         private readonly tokenFactory: TokenFactoryService,
     ) {}
 
+    /** @inheritDoc */
     async login(dto: LoginDto): Promise<LoginResponseDto> {
         const user = await this.validateUserCredentials(dto);
         const tokens = await this.tokenFactory.generateTokenPair(user);
@@ -50,6 +51,8 @@ export class AuthService implements IAuthService {
             user: this.mapUserToResponse(user),
         };
     }
+
+    /** @inheritDoc */
     async refreshToken(refreshToken: string, userId: number): Promise<LoginResponseDto> {
         // Validate refresh token and get user
         const user = await this.getUserIfRefreshTokenMatches(refreshToken, userId);
@@ -77,6 +80,7 @@ export class AuthService implements IAuthService {
         };
     }
 
+    /** @inheritDoc */
     async getUserIfRefreshTokenMatches(refreshToken: string, userId: number): Promise<User | null> {
         const token = await this.refreshTokenRepository.findOne({
             where: { token: Equal(refreshToken), user: { id: Equal(userId) } },

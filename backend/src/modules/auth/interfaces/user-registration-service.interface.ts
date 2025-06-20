@@ -55,7 +55,8 @@ export interface IUserRegistrationService {
      * // User receives SMS: "Your InfraCheck verification code is: 123456"
      * // Account status: PENDING_VERIFICATION
      * ```
-     */ register(dto: RegisterDto): Promise<RegisterResponseDto>;
+     */
+    register(dto: RegisterDto): Promise<RegisterResponseDto>;
 
     /**
      * Verifies SMS registration code and activates user account for approval.
