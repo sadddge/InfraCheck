@@ -58,29 +58,7 @@ export class FollowsService implements IFollowsService {
         private readonly reportRepository: Repository<Report>,
     ) {}
 
-    /**
-     * Creates a follow relationship between a user and a report.
-     * Validates entity existence, prevents duplicate follows, and manages the many-to-many relationship.
-     *
-     * @param userId Unique identifier of the user creating the follow
-     * @param reportId Unique identifier of the report to follow
-     * @returns Follow action result with success status and metadata
-     * @throws {AppException} USR001 - When user does not exist
-     * @throws {AppException} REP001 - When report does not exist
-     * @throws {AppException} REP004 - When user is already following the report
-     *
-     * @example
-     * ```typescript
-     * try {
-     *   const result = await followsService.followReport(123, 456);
-     *   console.log(`Follow created: ${result.message}`);
-     * } catch (error) {
-     *   if (error.code === 'REP004') {
-     *     console.log('User already follows this report');
-     *   }
-     * }
-     * ```
-     */
+    /** @inheritDoc */
     async followReport(userId: number, reportId: number): Promise<FollowActionResponseDto> {
         await this.validateUserAndReport(userId, reportId);
         const isAlreadyFollowing = await this.isFollowingReport(userId, reportId);
@@ -97,30 +75,7 @@ export class FollowsService implements IFollowsService {
         return { message: 'Report followed successfully' };
     }
 
-    /**
-     * Removes a follow relationship between a user and a report.
-     * Validates entity existence, checks current follow status, and manages the relationship removal.
-     * Gracefully handles cases where follow relationship doesn't exist.
-     *
-     * @param userId Unique identifier of the user removing the follow
-     * @param reportId Unique identifier of the report to unfollow
-     * @returns Unfollow action result with success status
-     * @throws {AppException} USR001 - When user does not exist
-     * @throws {AppException} REP001 - When report does not exist
-     * @throws {AppException} REP005 - When user is not following the report
-     *
-     * @example
-     * ```typescript
-     * try {
-     *   const result = await followsService.unfollowReport(123, 456);
-     *   console.log(`Unfollow successful: ${result.message}`);
-     * } catch (error) {
-     *   if (error.code === 'REP005') {
-     *     console.log('User was not following this report');
-     *   }
-     * }
-     * ```
-     */
+    /** @inheritDoc */
     async unfollowReport(userId: number, reportId: number): Promise<FollowActionResponseDto> {
         await this.validateUserAndReport(userId, reportId);
         const isFollowing = await this.isFollowingReport(userId, reportId);
@@ -137,28 +92,7 @@ export class FollowsService implements IFollowsService {
         return { message: 'Report unfollowed successfully' };
     }
 
-    /**
-     * Checks the follow relationship status between a user and a report.
-     * Returns whether the user is currently following the specified report.
-     * Used for UI state management and permission checking.
-     *
-     * @param userId Unique identifier of the user to check
-     * @param reportId Unique identifier of the report to check
-     * @returns Follow status with boolean indicator and relationship metadata
-     * @throws {AppException} GEN002 - When user ID or report ID is missing or invalid
-     *
-     * @example
-     * ```typescript
-     * const status = await followsService.isFollowingReport(123, 456);
-     * if (status.isFollowing) {
-     *   console.log('User is following this report');
-     *   // Show unfollow button in UI
-     * } else {
-     *   console.log('User is not following this report');
-     *   // Show follow button in UI
-     * }
-     * ```
-     */
+    /** @inheritDoc */
     async isFollowingReport(userId: number, reportId: number): Promise<FollowStatusResponseDto> {
         if (!userId || !reportId) {
             invalidRequest();
@@ -173,27 +107,7 @@ export class FollowsService implements IFollowsService {
         return { isFollowing: count > 0 };
     }
 
-    /**
-     * Retrieves all users following a specific report with detailed information.
-     * Returns follower list with user profiles for display and notification purposes.
-     * Includes complete user information for UI display.
-     *
-     * @param reportId Unique identifier of the report
-     * @returns Complete follower information including user names
-     * @throws {AppException} REP001 - When report does not exist
-     *
-     * @example
-     * ```typescript
-     * const followers = await followsService.getReportFollowers(456);
-     * console.log(`Report has ${followers.followers.length} followers`);
-     * followers.followers.forEach(name => console.log(`Follower: ${name}`));
-     *
-     * // Use for notifications
-     * if (followers.followers.length > 0) {
-     *   notificationService.notifyFollowers(reportId, 'Report updated');
-     * }
-     * ```
-     */
+    /** @inheritDoc */
     async getReportFollowers(reportId: number): Promise<ReportFollowersResponseDto> {
         await this.validateReport(reportId);
 
@@ -208,31 +122,7 @@ export class FollowsService implements IFollowsService {
         };
     }
 
-    /**
-     * Retrieves all reports followed by a specific user with report identifiers.
-     * Returns user's followed reports for dashboard and notification management.
-     * Optimized to return only report IDs and total count for efficient processing.
-     *
-     * @param userId Unique identifier of the user
-     * @returns User's followed reports with IDs and total count
-     * @throws {AppException} USR001 - When user does not exist
-     *
-     * @example
-     * ```typescript
-     * const followedReports = await followsService.getUserFollowedReports(123);
-     * console.log(`User follows ${followedReports.total} reports`);
-     *
-     * // Use for dashboard display
-     * const reportDetails = await Promise.all(
-     *   followedReports.reports.map(id => reportsService.findById(id))
-     * );
-     *
-     * // Use for notifications
-     * followedReports.reports.forEach(reportId => {
-     *   subscribeToReportUpdates(userId, reportId);
-     * });
-     * ```
-     */
+    /** @inheritDoc */
     async getUserFollowedReports(userId: number): Promise<UserFollowedReportsResponseDto> {
         await this.validateUser(userId);
 
@@ -248,31 +138,7 @@ export class FollowsService implements IFollowsService {
         };
     }
 
-    /**
-     * Retrieves only the user IDs of all followers for a specific report.
-     * Optimized query for bulk operations and notification systems.
-     * Used for efficient notification dispatching and analytics.
-     *
-     * @param reportId Unique identifier of the report
-     * @returns Array of follower user IDs for efficient processing
-     * @throws {AppException} REP001 - When report does not exist
-     *
-     * @example
-     * ```typescript
-     * const followerIds = await followsService.getFollowersIds(456);
-     * console.log(`Sending notifications to ${followerIds.userIds.length} users`);
-     *
-     * // Bulk notification sending
-     * await notificationService.sendBulkNotifications(
-     *   followerIds.userIds,
-     *   'Report status updated',
-     *   { reportId: 456, newStatus: 'IN_PROGRESS' }
-     * );
-     *
-     * // Analytics tracking
-     * analyticsService.trackReportEngagement(456, followerIds.userIds.length);
-     * ```
-     */
+    /** @inheritDoc */
     async getFollowersIds(reportId: number): Promise<ReportFollowersIdsResponseDto> {
         await this.validateReport(reportId);
 
@@ -334,15 +200,15 @@ export class FollowsService implements IFollowsService {
         }
 
         return report;
-    }
-
-    /**
+    } /**
      * Validates the existence of a user and a report by their respective IDs.
      *
-     * @param userId - The unique identifier of the user to validate.
-     * @param reportId - The unique identifier of the report to validate.
-     * @returns A promise that resolves to an object containing the validated user and report.
-     * @throws Will throw an error if either the user or the report does not exist or fails validation.
+     * @param userId The unique identifier of the user to validate
+     * @param reportId The unique identifier of the report to validate
+     * @returns A promise that resolves to an object containing the validated user and report
+     * @throws {AppException} GEN002 - If the userId or reportId is not provided
+     * @throws {AppException} USR001 - If no user is found with the given ID
+     * @throws {AppException} REP001 - If no report is found with the given ID
      */
     private async validateUserAndReport(
         userId: number,
