@@ -257,7 +257,7 @@ export class ReportsController {
             validationError(
                 errors.map(error => ({
                     property: error.property,
-                    constraints: error.constraints || {},
+                    constraints: error.constraints ?? {},
                 })),
                 'Invalid metadata',
             );

@@ -43,7 +43,7 @@ async function bootstrap() {
                         type: 'validation',
                         items: errors.map(error => ({
                             property: error.property,
-                            constraints: error.constraints || {},
+                            constraints: error.constraints ?? {},
                         })),
                     },
                 );
