@@ -1,25 +1,22 @@
+// sharp-image-processor.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { SharpImageProcessor } from './sharp-image-processor.service';
 
-// Mock sharp instance
+// Mock sharp instance methods
 const mockSharpInstance = {
     resize: jest.fn(),
     jpeg: jest.fn(),
     toBuffer: jest.fn(),
 };
 
-// Mock sharp module - handle both default and named exports
+// Mock the entire 'sharp' module using * import
 jest.mock('sharp', () => {
-    const mockSharp = jest.fn(() => mockSharpInstance);
-    return {
-        __esModule: true,
-        default: mockSharp,
-    };
+    return jest.fn(() => mockSharpInstance);
 });
 
-// Import the mocked sharp for testing
-import sharp from 'sharp';
-const mockSharp = sharp as jest.MockedFunction<typeof sharp>;
+// Import after mocking
+import * as sharp from 'sharp';
+const mockSharp = sharp as unknown as jest.Mock;
 
 describe('SharpImageProcessor', () => {
     let service: SharpImageProcessor;
@@ -31,8 +28,9 @@ describe('SharpImageProcessor', () => {
 
         service = module.get<SharpImageProcessor>(SharpImageProcessor);
 
-        // Reset mocks and setup return values
+        // Reset mocks
         jest.clearAllMocks();
+
         mockSharpInstance.resize.mockReturnValue(mockSharpInstance);
         mockSharpInstance.jpeg.mockReturnValue(mockSharpInstance);
         mockSharpInstance.toBuffer.mockResolvedValue(Buffer.from('processed image data'));
@@ -44,17 +42,12 @@ describe('SharpImageProcessor', () => {
 
     describe('processImage', () => {
         it('should process image successfully', async () => {
-            // Arrange
             const inputBuffer = Buffer.from('input image data');
             const outputBuffer = Buffer.from('processed image data');
-            mockSharpInstance.toBuffer.mockResolvedValue(outputBuffer);
 
-            // Act
             const result = await service.processImage(inputBuffer);
 
-            // Assert
             expect(mockSharp).toHaveBeenCalledWith(inputBuffer);
-            expect(result).toBe(outputBuffer);
             expect(mockSharpInstance.resize).toHaveBeenCalledWith({
                 width: 800,
                 height: 600,
@@ -64,15 +57,14 @@ describe('SharpImageProcessor', () => {
                 quality: 80,
             });
             expect(mockSharpInstance.toBuffer).toHaveBeenCalled();
+            expect(result).toStrictEqual(outputBuffer);
         });
 
         it('should handle processing errors', async () => {
-            // Arrange
             const inputBuffer = Buffer.from('input image data');
             const error = new Error('Processing failed');
             mockSharpInstance.toBuffer.mockRejectedValue(error);
 
-            // Act & Assert
             await expect(service.processImage(inputBuffer)).rejects.toThrow('Processing failed');
         });
     });
