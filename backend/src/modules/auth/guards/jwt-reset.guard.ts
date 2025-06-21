@@ -51,7 +51,7 @@ export class JwtResetGuard extends AuthGuard('jwt-reset') {
      * @param err - Authentication error, if any
      * @param user - Authenticated user object from reset token
      * @returns {unknown} Validated user object
-     * @throws {UnauthorizedException} When reset token validation fails
+     * @throws {AppException} When reset token validation fails (AUTH008)
      */
     handleRequest<TUser = unknown>(err: unknown, user: unknown): TUser {
         if (err || !user) {

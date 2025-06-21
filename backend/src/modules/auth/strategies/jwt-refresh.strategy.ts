@@ -79,7 +79,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
      * @param {Object} payload - Decoded JWT payload containing user information
      * @param {number} payload.sub - User ID from JWT subject claim
      * @returns {Promise<User>} The authenticated user object
-     * @throws {UnauthorizedException} When refresh token is invalid, expired, or user not found
+     * @throws {AppException} When refresh token is invalid, expired, or user not found (AUTH007)
      *
      * @example
      * ```typescript

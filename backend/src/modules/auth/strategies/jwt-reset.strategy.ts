@@ -82,7 +82,7 @@ export class JwtResetStrategy extends PassportStrategy(Strategy, 'jwt-reset') {
      * @param {string} payload.sub - User ID as string
      * @param {number} payload.iat - Token issued at timestamp
      * @returns {Promise<{user: {id: number}}>} User information for password reset
-     * @throws {UnauthorizedException} When token is invalid, user ineligible, or token expired
+     * @throws {AppException} When token is invalid, user ineligible, or token expired (AUTH008, USR001)
      *
      * @example
      * ```typescript

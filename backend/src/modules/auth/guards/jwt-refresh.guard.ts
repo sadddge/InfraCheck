@@ -46,7 +46,7 @@ export class JwtRefreshGuard extends AuthGuard('jwt-refresh') {
      * @param err - Authentication error, if any
      * @param user - Authenticated user object from refresh token
      * @returns {unknown} Validated user object
-     * @throws {UnauthorizedException} When refresh token validation fails
+     * @throws {AppException} When refresh token validation fails (AUTH007)
      */
     handleRequest<TUser = unknown>(err: unknown, user: unknown): TUser {
         if (err || !user) {

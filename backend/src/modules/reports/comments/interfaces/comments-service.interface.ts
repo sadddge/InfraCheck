@@ -35,7 +35,7 @@ export interface ICommentsService {
      *
      * @param reportId Unique identifier of the report to retrieve comments for
      * @returns Array of comment DTOs with creator and report information
-     * @throws {NotFoundException} When report with given ID does not exist
+     * @throws {AppException} When report with given ID does not exist (REP001)
      *
      * @example
      * ```typescript
@@ -57,8 +57,8 @@ export interface ICommentsService {
      * @param userId Unique identifier of the user creating the comment
      * @param dto Comment creation data containing content and metadata
      * @returns Created comment DTO with creator and report information
-     * @throws {NotFoundException} When report or user with given IDs do not exist
-     * @throws {BadRequestException} When comment content is invalid
+     * @throws {AppException} When report or user with given IDs do not exist (REP001, USR001)
+     * @throws {AppException} When comment content is invalid (VAL001-VAL003)
      *
      * @example
      * ```typescript
@@ -79,7 +79,7 @@ export interface ICommentsService {
      *
      * @param commentId Unique identifier of the comment to delete
      * @returns Promise that resolves when deletion is complete
-     * @throws {NotFoundException} When comment with given ID does not exist
+     * @throws {AppException} When comment with given ID does not exist (REP001)
      *
      * @example
      * ```typescript
