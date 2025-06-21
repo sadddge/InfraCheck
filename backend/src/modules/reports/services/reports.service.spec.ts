@@ -1,5 +1,4 @@
 ﻿import { AppException } from '../../../common/exceptions/app.exception';
-import { ERROR_CODES } from '../../../common/constants/error-codes.constants';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

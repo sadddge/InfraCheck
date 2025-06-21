@@ -1,5 +1,4 @@
 ﻿import { AppException } from '../../../common/exceptions/app.exception';
-import { ERROR_CODES } from '../../../common/constants/error-codes.constants';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReportCategory } from 'src/common/enums/report-category.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
