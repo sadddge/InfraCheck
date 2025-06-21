@@ -16,7 +16,7 @@ FROM node:${NODE_VERSION}-alpine AS base
 WORKDIR /usr/src/app
 
 # Install pnpm globally
-RUN npm install -g pnpm
+RUN npm install -g --ignore-scripts pnpm
 
 
 ################################################################################
@@ -30,7 +30,7 @@ FROM base AS deps
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm \
-    pnpm install --prod --frozen-lockfile
+    pnpm install --prod --frozen-lockfile --ignore-scripts
 
 ################################################################################
 # Create a stage for building the application.
@@ -41,7 +41,7 @@ FROM deps AS build
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
     --mount=type=cache,target=/root/.local/share/pnpm \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy the rest of the source files into the image.
 COPY . .
