@@ -56,6 +56,8 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /config
-/uploads
 /docs
 .copilot-commit-message-instructions.md
+
+# Local storage for report's images
+/uploads
