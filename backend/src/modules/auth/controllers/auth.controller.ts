@@ -166,7 +166,8 @@ export class AuthController {
      *
      * @param {RegisterDto} dto - Registration data containing user information
      * @param {string} dto.phoneNumber - User's phone number for verification
-     * @param {string} dto.password - User's chosen password     * @param {string} dto.username - User's chosen username
+     * @param {string} dto.password - User's chosen password
+     * @param {string} dto.username - User's chosen username
      * @returns {Promise<RegisterResponseDto>} Registration response with verification instructions
      * @throws {AppException} When phone number is already registered or validation fails (USR002, VAL001-VAL003)
      *
