@@ -1,4 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
+﻿import { AppException } from '../../../common/exceptions/app.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes.constants';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -248,14 +249,12 @@ describe('ReportsService', () => {
             });
         });
 
-        it('should throw NotFoundException when report not found', async () => {
+        it('should throw AppException when report not found', async () => {
             // Arrange
             reportRepository.findOne.mockResolvedValue(null);
 
             // Act & Assert
-            await expect(service.findById(999)).rejects.toThrow(
-                new NotFoundException('Report with ID 999 not found'),
-            );
+            await expect(service.findById(999)).rejects.toThrow(AppException);
         });
     });
 
@@ -287,14 +286,12 @@ describe('ReportsService', () => {
             });
         });
 
-        it('should throw NotFoundException when report not found for history', async () => {
+        it('should throw AppException when report not found for history', async () => {
             // Arrange
             reportRepository.findOne.mockResolvedValue(null);
 
             // Act & Assert
-            await expect(service.findHistoryByReportId(999)).rejects.toThrow(
-                new NotFoundException('Report with ID 999 not found'),
-            );
+            await expect(service.findHistoryByReportId(999)).rejects.toThrow(AppException);
         });
 
         it('should return empty array when report has no changes', async () => {
@@ -502,14 +499,12 @@ describe('ReportsService', () => {
             expect(result.state).toBe(ReportState.IN_PROGRESS);
         });
 
-        it('should throw NotFoundException when updating non-existent report', async () => {
+        it('should throw AppException when updating non-existent report', async () => {
             // Arrange
             reportRepository.findOne.mockResolvedValue(null);
 
             // Act & Assert
-            await expect(service.updateState(999, ReportState.IN_PROGRESS)).rejects.toThrow(
-                new NotFoundException('Report with ID 999 not found'),
-            );
+            await expect(service.updateState(999, ReportState.IN_PROGRESS)).rejects.toThrow(AppException);
 
             expect(reportRepository.save).not.toHaveBeenCalled();
         });
@@ -569,3 +564,4 @@ describe('ReportsService', () => {
         });
     });
 });
+

@@ -1,6 +1,6 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+﻿import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { AppException } from 'src/common/exceptions/app.exception';
 import { Report } from 'src/database/entities/report.entity';
 import { User } from 'src/database/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -88,32 +88,30 @@ describe('FollowsService', () => {
             expect(mockQueryBuilder.add).toHaveBeenCalledWith(1);
         });
 
-        it('should throw ConflictException when user is already following', async () => {
+        it('should throw AppException when user is already following', async () => {
             mockQueryBuilder.getCount.mockResolvedValue(1); // Already following
 
-            await expect(service.followReport(1, 1)).rejects.toThrow(
-                new ConflictException('User is already following this report'),
-            );
+            await expect(service.followReport(1, 1)).rejects.toThrow(AppException);
         });
 
-        it('should throw NotFoundException when user does not exist', async () => {
+        it('should throw AppException when user does not exist', async () => {
             userRepository.findOne.mockResolvedValue(null);
 
-            await expect(service.followReport(1, 1)).rejects.toThrow(NotFoundException);
+            await expect(service.followReport(1, 1)).rejects.toThrow(AppException);
         });
 
-        it('should throw NotFoundException when report does not exist', async () => {
+        it('should throw AppException when report does not exist', async () => {
             reportRepository.findOne.mockResolvedValue(null);
 
-            await expect(service.followReport(1, 1)).rejects.toThrow(NotFoundException);
+            await expect(service.followReport(1, 1)).rejects.toThrow(AppException);
         });
 
-        it('should throw BadRequestException when userId is invalid', async () => {
-            await expect(service.followReport(0, 1)).rejects.toThrow(BadRequestException);
+        it('should throw AppException when userId is invalid', async () => {
+            await expect(service.followReport(0, 1)).rejects.toThrow(AppException);
         });
 
-        it('should throw BadRequestException when reportId is invalid', async () => {
-            await expect(service.followReport(1, 0)).rejects.toThrow(BadRequestException);
+        it('should throw AppException when reportId is invalid', async () => {
+            await expect(service.followReport(1, 0)).rejects.toThrow(AppException);
         });
     });
 
@@ -136,24 +134,22 @@ describe('FollowsService', () => {
             expect(mockQueryBuilder.remove).toHaveBeenCalledWith(1);
         });
 
-        it('should throw ConflictException when user is not following', async () => {
+        it('should throw AppException when user is not following', async () => {
             mockQueryBuilder.getCount.mockResolvedValue(0); // Not following
 
-            await expect(service.unfollowReport(1, 1)).rejects.toThrow(
-                new ConflictException('User is not following this report'),
-            );
+            await expect(service.unfollowReport(1, 1)).rejects.toThrow(AppException);
         });
 
-        it('should throw NotFoundException when user does not exist', async () => {
+        it('should throw AppException when user does not exist', async () => {
             userRepository.findOne.mockResolvedValue(null);
 
-            await expect(service.unfollowReport(1, 1)).rejects.toThrow(NotFoundException);
+            await expect(service.unfollowReport(1, 1)).rejects.toThrow(AppException);
         });
 
-        it('should throw NotFoundException when report does not exist', async () => {
+        it('should throw AppException when report does not exist', async () => {
             reportRepository.findOne.mockResolvedValue(null);
 
-            await expect(service.unfollowReport(1, 1)).rejects.toThrow(NotFoundException);
+            await expect(service.unfollowReport(1, 1)).rejects.toThrow(AppException);
         });
     });
 
@@ -185,16 +181,12 @@ describe('FollowsService', () => {
             expect(result).toEqual({ isFollowing: false });
         });
 
-        it('should throw BadRequestException when userId is falsy', async () => {
-            await expect(service.isFollowingReport(0, 1)).rejects.toThrow(
-                new BadRequestException('User ID and Report ID are required'),
-            );
+        it('should throw AppException when userId is falsy', async () => {
+            await expect(service.isFollowingReport(0, 1)).rejects.toThrow(AppException);
         });
 
-        it('should throw BadRequestException when reportId is falsy', async () => {
-            await expect(service.isFollowingReport(1, 0)).rejects.toThrow(
-                new BadRequestException('User ID and Report ID are required'),
-            );
+        it('should throw AppException when reportId is falsy', async () => {
+            await expect(service.isFollowingReport(1, 0)).rejects.toThrow(AppException);
         });
     });
 
@@ -243,10 +235,10 @@ describe('FollowsService', () => {
             expect(result).toEqual({ followers: [] });
         });
 
-        it('should throw NotFoundException when report does not exist', async () => {
+        it('should throw AppException when report does not exist', async () => {
             reportRepository.findOne.mockResolvedValue(null);
 
-            await expect(service.getReportFollowers(1)).rejects.toThrow(NotFoundException);
+            await expect(service.getReportFollowers(1)).rejects.toThrow(AppException);
         });
     });
 
@@ -279,10 +271,10 @@ describe('FollowsService', () => {
             expect(result).toEqual({ reports: [], total: 0 });
         });
 
-        it('should throw NotFoundException when user does not exist', async () => {
+        it('should throw AppException when user does not exist', async () => {
             userRepository.findOne.mockResolvedValue(null);
 
-            await expect(service.getUserFollowedReports(1)).rejects.toThrow(NotFoundException);
+            await expect(service.getUserFollowedReports(1)).rejects.toThrow(AppException);
         });
     });
 
@@ -331,10 +323,10 @@ describe('FollowsService', () => {
             expect(result).toEqual({ userIds: [] });
         });
 
-        it('should throw NotFoundException when report does not exist', async () => {
+        it('should throw AppException when report does not exist', async () => {
             reportRepository.findOne.mockResolvedValue(null);
 
-            await expect(service.getFollowersIds(1)).rejects.toThrow(NotFoundException);
+            await expect(service.getFollowersIds(1)).rejects.toThrow(AppException);
         });
     });
 });

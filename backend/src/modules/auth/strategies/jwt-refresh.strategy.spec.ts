@@ -1,10 +1,10 @@
-import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import type { Request } from 'express';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
+import { expectAuthErrorAsync } from '../../../common/test-helpers/exception-test.helper';
 import { AUTH_SERVICE, IAuthService } from '../interfaces/auth-service.interface';
 import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 
@@ -105,8 +105,7 @@ describe('JwtRefreshStrategy', () => {
                 1,
             );
         });
-
-        it('should throw UnauthorizedException when refresh token does not match', async () => {
+        it('should throw AppException with INVALID_REFRESH_TOKEN when refresh token does not match', async () => {
             // Arrange
             const payload = { sub: 1 };
             authService.getUserIfRefreshTokenMatches.mockResolvedValue(null);
@@ -114,7 +113,7 @@ describe('JwtRefreshStrategy', () => {
             // Act & Assert
             await expect(
                 strategy.validate(mockRequest as unknown as Request, payload),
-            ).rejects.toThrow(UnauthorizedException);
+            ).rejects.toThrow(expectAuthErrorAsync.invalidRefreshToken());
             expect(authService.getUserIfRefreshTokenMatches).toHaveBeenCalledWith(
                 'mock-refresh-token',
                 1,
@@ -153,7 +152,6 @@ describe('JwtRefreshStrategy', () => {
                 1,
             );
         });
-
         it('should handle missing refresh token in request body', async () => {
             // Arrange
             const payload = { sub: 1 };
@@ -163,7 +161,7 @@ describe('JwtRefreshStrategy', () => {
             // Act & Assert
             await expect(
                 strategy.validate(mockRequest as unknown as Request, payload),
-            ).rejects.toThrow(UnauthorizedException);
+            ).rejects.toThrow(expectAuthErrorAsync.invalidRefreshToken());
             expect(authService.getUserIfRefreshTokenMatches).toHaveBeenCalledWith(undefined, 1);
         });
 

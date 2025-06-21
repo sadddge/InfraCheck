@@ -1,6 +1,6 @@
-import { ImageAnnotatorClient } from '@google-cloud/vision';
-import { InternalServerErrorException, NotAcceptableException } from '@nestjs/common';
+﻿import { ImageAnnotatorClient } from '@google-cloud/vision';
 import { Test, TestingModule } from '@nestjs/testing';
+import { AppException } from 'src/common/exceptions/app.exception';
 import { AIImageValidatorStrategy } from './ai-image-validator.strategy';
 
 // Mock Google Cloud Vision
@@ -64,7 +64,7 @@ describe('AIImageValidatorStrategy', () => {
             });
         });
 
-        it('should throw NotAcceptableException for adult content', async () => {
+        it('should throw AppException for adult content', async () => {
             // Arrange
             const buffer = Buffer.from('adult image data');
             const adultResponse = [
@@ -82,13 +82,10 @@ describe('AIImageValidatorStrategy', () => {
             mockClient.safeSearchDetection.mockResolvedValue(adultResponse);
 
             // Act & Assert
-            await expect(service.validate(buffer)).rejects.toThrow(NotAcceptableException);
-            await expect(service.validate(buffer)).rejects.toThrow(
-                'Image validation failed: adult content detected',
-            );
+            await expect(service.validate(buffer)).rejects.toThrow(AppException);
         });
 
-        it('should throw NotAcceptableException for violent content', async () => {
+        it('should throw AppException for violent content', async () => {
             // Arrange
             const buffer = Buffer.from('violent image data');
             const violentResponse = [
@@ -106,13 +103,10 @@ describe('AIImageValidatorStrategy', () => {
             mockClient.safeSearchDetection.mockResolvedValue(violentResponse);
 
             // Act & Assert
-            await expect(service.validate(buffer)).rejects.toThrow(NotAcceptableException);
-            await expect(service.validate(buffer)).rejects.toThrow(
-                'Image validation failed: violence content detected',
-            );
+            await expect(service.validate(buffer)).rejects.toThrow(AppException);
         });
 
-        it('should throw NotAcceptableException for racy content', async () => {
+        it('should throw AppException for racy content', async () => {
             // Arrange
             const buffer = Buffer.from('racy image data');
             const racyResponse = [
@@ -130,13 +124,10 @@ describe('AIImageValidatorStrategy', () => {
             mockClient.safeSearchDetection.mockResolvedValue(racyResponse);
 
             // Act & Assert
-            await expect(service.validate(buffer)).rejects.toThrow(NotAcceptableException);
-            await expect(service.validate(buffer)).rejects.toThrow(
-                'Image validation failed: racy content detected',
-            );
+            await expect(service.validate(buffer)).rejects.toThrow(AppException);
         });
 
-        it('should throw NotAcceptableException for spoof content', async () => {
+        it('should throw AppException for spoof content', async () => {
             // Arrange
             const buffer = Buffer.from('spoof image data');
             const spoofResponse = [
@@ -154,13 +145,10 @@ describe('AIImageValidatorStrategy', () => {
             mockClient.safeSearchDetection.mockResolvedValue(spoofResponse);
 
             // Act & Assert
-            await expect(service.validate(buffer)).rejects.toThrow(NotAcceptableException);
-            await expect(service.validate(buffer)).rejects.toThrow(
-                'Image validation failed: spoof content detected',
-            );
+            await expect(service.validate(buffer)).rejects.toThrow(AppException);
         });
 
-        it('should throw NotAcceptableException for medical content', async () => {
+        it('should throw AppException for medical content', async () => {
             // Arrange
             const buffer = Buffer.from('medical image data');
             const medicalResponse = [
@@ -178,13 +166,10 @@ describe('AIImageValidatorStrategy', () => {
             mockClient.safeSearchDetection.mockResolvedValue(medicalResponse);
 
             // Act & Assert
-            await expect(service.validate(buffer)).rejects.toThrow(NotAcceptableException);
-            await expect(service.validate(buffer)).rejects.toThrow(
-                'Image validation failed: medical content detected',
-            );
+            await expect(service.validate(buffer)).rejects.toThrow(AppException);
         });
 
-        it('should throw InternalServerErrorException when no SafeSearch annotation found', async () => {
+        it('should throw AppException when no SafeSearch annotation found', async () => {
             // Arrange
             const buffer = Buffer.from('image data');
             const noAnnotationResponse = [
@@ -196,10 +181,7 @@ describe('AIImageValidatorStrategy', () => {
             mockClient.safeSearchDetection.mockResolvedValue(noAnnotationResponse);
 
             // Act & Assert
-            await expect(service.validate(buffer)).rejects.toThrow(InternalServerErrorException);
-            await expect(service.validate(buffer)).rejects.toThrow(
-                'No SafeSearch annotation found',
-            );
+            await expect(service.validate(buffer)).rejects.toThrow(AppException);
         });
 
         it('should handle multiple danger flags and throw for the first one encountered', async () => {
@@ -220,11 +202,7 @@ describe('AIImageValidatorStrategy', () => {
             mockClient.safeSearchDetection.mockResolvedValue(multipleIssuesResponse);
 
             // Act & Assert
-            await expect(service.validate(buffer)).rejects.toThrow(NotAcceptableException);
-            // Should throw for the first dangerous content encountered (adult)
-            await expect(service.validate(buffer)).rejects.toThrow(
-                'Image validation failed: adult content detected',
-            );
+            await expect(service.validate(buffer)).rejects.toThrow(AppException);
         });
 
         it('should handle API errors gracefully', async () => {

@@ -1,4 +1,3 @@
-import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
@@ -8,9 +7,11 @@ import { User } from 'src/database/entities/user.entity';
 import { UserDto } from 'src/modules/users/dto/user.dto';
 import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
 import { IVerificationService } from 'src/modules/verification/interfaces/verification-service.interface';
+import { ERROR_CODES } from '../../../common/constants/error-codes.constants';
+import { AppException } from '../../../common/exceptions/app.exception';
 import { RegisterResponseDto } from '../dto/register-response.dto';
 import { RegisterDto } from '../dto/register.dto';
-import { InvalidVerificationCodeException } from '../exceptions/auth.exceptions';
+
 import { UserRegistrationService } from './user-registration.service';
 
 // Mock bcrypt
@@ -128,16 +129,16 @@ describe('UserRegistrationService', () => {
             // Assert
             expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
         });
-
-        it('should throw ConflictException when user already exists', async () => {
+        it('should throw AppException when user already exists', async () => {
             // Arrange
-            const conflictError = new ConflictException(
+            const conflictError = new AppException(
+                ERROR_CODES.USERS.USER_ALREADY_EXISTS,
                 'User with phone number +56912345678 already exists',
             );
             userService.registerNeighbor.mockRejectedValue(conflictError);
 
             // Act & Assert
-            await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
+            await expect(service.register(registerDto)).rejects.toThrow(AppException);
             expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
             expect(userService.registerNeighbor).toHaveBeenCalledWith({
                 ...registerDto,
@@ -268,14 +269,14 @@ describe('UserRegistrationService', () => {
             expect(updatedUserData.status).toBe(UserStatus.PENDING_APPROVAL);
         });
 
-        it('should throw InvalidVerificationCodeException when verification code is invalid', async () => {
+        it('should throw AppException when verification code is invalid', async () => {
             // Arrange
             const verificationError = new Error('Invalid verification code');
             verificationService.verifyCode.mockRejectedValue(verificationError);
 
             // Act & Assert
             await expect(service.verifyRegisterCode(phoneNumber, verificationCode)).rejects.toThrow(
-                InvalidVerificationCodeException,
+                AppException,
             );
             expect(verificationService.verifyCode).toHaveBeenCalledWith(
                 phoneNumber,
@@ -285,7 +286,7 @@ describe('UserRegistrationService', () => {
             expect(userService.update).not.toHaveBeenCalled();
         });
 
-        it('should throw InvalidVerificationCodeException when user is not found', async () => {
+        it('should throw AppException when user is not found', async () => {
             // Arrange
             verificationService.verifyCode.mockResolvedValue();
             const userNotFoundError = new Error('User not found');
@@ -293,7 +294,7 @@ describe('UserRegistrationService', () => {
 
             // Act & Assert
             await expect(service.verifyRegisterCode(phoneNumber, verificationCode)).rejects.toThrow(
-                InvalidVerificationCodeException,
+                AppException,
             );
             expect(verificationService.verifyCode).toHaveBeenCalledWith(
                 phoneNumber,
@@ -303,7 +304,7 @@ describe('UserRegistrationService', () => {
             expect(userService.update).not.toHaveBeenCalled();
         });
 
-        it('should throw InvalidVerificationCodeException when user update fails', async () => {
+        it('should throw AppException when user update fails', async () => {
             // Arrange
             verificationService.verifyCode.mockResolvedValue();
             userService.findByPhoneNumber.mockResolvedValue(mockUser);
@@ -312,7 +313,7 @@ describe('UserRegistrationService', () => {
 
             // Act & Assert
             await expect(service.verifyRegisterCode(phoneNumber, verificationCode)).rejects.toThrow(
-                InvalidVerificationCodeException,
+                AppException,
             );
             expect(verificationService.verifyCode).toHaveBeenCalledWith(
                 phoneNumber,
@@ -333,7 +334,7 @@ describe('UserRegistrationService', () => {
 
             // Act & Assert
             await expect(service.verifyRegisterCode(phoneNumber, verificationCode)).rejects.toThrow(
-                InvalidVerificationCodeException,
+                AppException,
             );
         });
 
@@ -344,7 +345,7 @@ describe('UserRegistrationService', () => {
 
             // Act & Assert
             await expect(service.verifyRegisterCode(phoneNumber, verificationCode)).rejects.toThrow(
-                InvalidVerificationCodeException,
+                AppException,
             );
         });
     });

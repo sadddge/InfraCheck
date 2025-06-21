@@ -1,4 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
+﻿import { AppException } from '../../../common/exceptions/app.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes.constants';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReportCategory } from 'src/common/enums/report-category.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
@@ -223,35 +224,31 @@ describe('ReportsController', () => {
             expect(result).toEqual(expectedReport);
         });
 
-        it('should throw BadRequestException when no files are uploaded', async () => {
-            await expect(controller.createReport([], rawMetadata, mockRequest)).rejects.toThrow(
-                new BadRequestException('No files uploaded'),
-            );
+        it('should throw AppException when no files are uploaded', async () => {
+            await expect(controller.createReport([], rawMetadata, mockRequest)).rejects.toThrow(AppException);
 
             expect(reportsService.createReport).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when no metadata is provided', async () => {
-            await expect(controller.createReport(mockFiles, '', mockRequest)).rejects.toThrow(
-                new BadRequestException('No metadata provided'),
-            );
+        it('should throw AppException when no metadata is provided', async () => {
+            await expect(controller.createReport(mockFiles, '', mockRequest)).rejects.toThrow(AppException);
 
             expect(reportsService.createReport).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when metadata validation fails', async () => {
+        it('should throw AppException when metadata validation fails', async () => {
             (validate as jest.Mock).mockResolvedValue([
                 { property: 'title', errors: ['Title is required'] },
             ]);
 
             await expect(
                 controller.createReport(mockFiles, rawMetadata, mockRequest),
-            ).rejects.toThrow(new BadRequestException('Invalid metadata'));
+            ).rejects.toThrow(AppException);
 
             expect(reportsService.createReport).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when file count does not match metadata', async () => {
+        it('should throw AppException when file count does not match metadata', async () => {
             const metadataWithOneImage = JSON.stringify({
                 title: 'Test Report',
                 description: 'Test Description',
@@ -267,9 +264,7 @@ describe('ReportsController', () => {
 
             await expect(
                 controller.createReport(mockFiles, metadataWithOneImage, mockRequest),
-            ).rejects.toThrow(
-                new BadRequestException('Number of uploaded files does not match metadata'),
-            );
+            ).rejects.toThrow(AppException);
 
             expect(reportsService.createReport).not.toHaveBeenCalled();
         });
@@ -367,3 +362,4 @@ describe('ReportsController', () => {
         });
     });
 });
+

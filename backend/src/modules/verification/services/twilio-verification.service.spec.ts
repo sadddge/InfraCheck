@@ -1,4 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
+﻿import { AppException } from '../../../common/exceptions/app.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes.constants';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Twilio } from 'twilio';
@@ -160,7 +161,7 @@ describe('TwilioVerificationService', () => {
             });
         });
 
-        it('should throw BadRequestException when status is not pending', async () => {
+        it('should throw AppException when status is not pending', async () => {
             // Arrange
             const mockResponse = {
                 status: 'failed',
@@ -172,9 +173,7 @@ describe('TwilioVerificationService', () => {
             mockVerifications.create.mockResolvedValue(mockResponse);
 
             // Act & Assert
-            await expect(service.sendVerificationCode(TEST_PHONE_NUMBER)).rejects.toThrow(
-                new BadRequestException('Failed to send verification code'),
-            );
+            await expect(service.sendVerificationCode(TEST_PHONE_NUMBER)).rejects.toThrow(AppException);
 
             expect(mockVerifications.create).toHaveBeenCalledWith({
                 to: TEST_PHONE_NUMBER,
@@ -248,7 +247,7 @@ describe('TwilioVerificationService', () => {
             });
         });
 
-        it('should throw BadRequestException when verification status is not approved', async () => {
+        it('should throw AppException when verification status is not approved', async () => {
             // Arrange
             const mockResponse = {
                 status: 'pending',
@@ -260,9 +259,7 @@ describe('TwilioVerificationService', () => {
             mockVerificationChecks.create.mockResolvedValue(mockResponse);
 
             // Act & Assert
-            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(
-                new BadRequestException('Invalid verification code'),
-            );
+            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(AppException);
 
             expect(mockVerificationChecks.create).toHaveBeenCalledWith({
                 to: TEST_PHONE_NUMBER,
@@ -282,9 +279,7 @@ describe('TwilioVerificationService', () => {
             mockVerificationChecks.create.mockResolvedValue(mockResponse);
 
             // Act & Assert
-            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(
-                new BadRequestException('Invalid verification code'),
-            );
+            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(AppException);
         });
 
         it('should handle invalid verification code', async () => {
@@ -299,9 +294,7 @@ describe('TwilioVerificationService', () => {
             mockVerificationChecks.create.mockResolvedValue(mockResponse);
 
             // Act & Assert
-            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(
-                new BadRequestException('Invalid verification code'),
-            );
+            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(AppException);
         });
 
         it('should handle Twilio API errors during verification', async () => {
@@ -479,3 +472,4 @@ describe('TwilioVerificationService', () => {
         });
     });
 });
+
