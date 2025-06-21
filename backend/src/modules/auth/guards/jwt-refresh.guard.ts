@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { InvalidRefreshTokenException } from '../exceptions/auth.exceptions';
+import { invalidRefreshToken } from 'src/common/helpers/exception.helper';
 
 /**
  * @class JwtRefreshGuard
@@ -46,13 +46,13 @@ export class JwtRefreshGuard extends AuthGuard('jwt-refresh') {
      * @param err - Authentication error, if any
      * @param user - Authenticated user object from refresh token
      * @returns {unknown} Validated user object
-     * @throws {UnauthorizedException} When refresh token validation fails
+     * @throws {AppException} When refresh token validation fails (AUTH007)
      */
     handleRequest<TUser = unknown>(err: unknown, user: unknown): TUser {
         if (err || !user) {
             const errorMessage = err instanceof Error ? err.message : 'User not found';
             this.logger.warn(`Refresh token validation failed: ${errorMessage}`);
-            throw err ?? new InvalidRefreshTokenException();
+            throw err ?? invalidRefreshToken();
         }
         return user as TUser;
     }

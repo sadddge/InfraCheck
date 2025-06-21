@@ -32,7 +32,7 @@ export interface IPasswordRecoveryService {
      *
      * @param phoneNumber Phone number in E.164 format associated with user account
      * @returns Promise that resolves when operation completes
-     * @throws Does not throw to prevent user enumeration (logs internally)
+     * @throws Does not throw to prevent user enumeration (logs internally with VER001, USR001)
      *
      * @example
      * ```typescript
@@ -53,7 +53,7 @@ export interface IPasswordRecoveryService {
      * @param phoneNumber Phone number that received the recovery code
      * @param code 6-digit SMS verification code received by user
      * @returns Object containing JWT reset token and success message
-     * @throws {InvalidPasswordResetCodeException} When code is invalid, expired, or user not found
+     * @throws {AppException} When code is invalid, expired, or user not found (AUTH009)
      *     * @example
      * ```typescript
      * // Step 1: User enters phone and receives SMS code
@@ -81,8 +81,8 @@ export interface IPasswordRecoveryService {
      * @param id User ID extracted from validated reset token payload
      * @param newPassword New plain text password to hash and store securely
      * @returns Success message confirming password reset completion
-     * @throws {NotFoundException} When user with specified ID does not exist
-     * @throws {Error} When password update operation fails
+     * @throws {AppException} When user with specified ID does not exist (USR001)
+     * @throws {AppException} When password update operation fails (SRV002)
      *
      * @example
      * ```typescript

@@ -35,9 +35,9 @@ export interface IUserRegistrationService {
      *
      * @param dto Registration data including personal information and credentials
      * @returns Registration response with user data (excludes password and sensitive fields)
-     * @throws {ConflictException} When phone number or email already exists
-     * @throws {BadRequestException} When registration data validation fails
-     * @throws {InternalServerErrorException} When SMS sending or user creation fails
+     * @throws {AppException} When phone number or email already exists (USR002)
+     * @throws {AppException} When registration data validation fails (VAL001-VAL003)
+     * @throws {AppException} When SMS sending or user creation fails (VER001, SRV001)
      *
      * @example
      * ```typescript
@@ -55,7 +55,8 @@ export interface IUserRegistrationService {
      * // User receives SMS: "Your InfraCheck verification code is: 123456"
      * // Account status: PENDING_VERIFICATION
      * ```
-     */ register(dto: RegisterDto): Promise<RegisterResponseDto>;
+     */
+    register(dto: RegisterDto): Promise<RegisterResponseDto>;
 
     /**
      * Verifies SMS registration code and activates user account for approval.
@@ -65,7 +66,7 @@ export interface IUserRegistrationService {
      * @param phoneNumber Phone number that received the verification code
      * @param code 6-digit SMS verification code received by user
      * @returns Promise that resolves when verification is successful and status is updated
-     * @throws {InvalidVerificationCodeException} When code is invalid, expired, or user not found
+     * @throws {AppException} When code is invalid, expired, or user not found (VER002)
      *
      * @example
      * ```typescript

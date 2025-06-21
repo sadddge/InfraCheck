@@ -1,7 +1,7 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
-import { InvalidAccessTokenException } from '../exceptions/auth.exceptions';
+import { expectAuthError } from '../../../common/test-helpers/exception-test.helper';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 describe('JwtAuthGuard', () => {
@@ -108,15 +108,14 @@ describe('JwtAuthGuard', () => {
             // Assert
             expect(result).toEqual(mockUser);
         });
-
-        it('should throw InvalidAccessTokenException when user is not found', () => {
+        it('should throw AppException with INVALID_ACCESS_TOKEN when user is not found', () => {
             // Act & Assert
-            expect(() => guard.handleRequest(null, null)).toThrow(InvalidAccessTokenException);
+            expectAuthError.invalidAccessToken(() => guard.handleRequest(null, null));
         });
 
-        it('should throw InvalidAccessTokenException when user is undefined', () => {
+        it('should throw AppException with INVALID_ACCESS_TOKEN when user is undefined', () => {
             // Act & Assert
-            expect(() => guard.handleRequest(null, undefined)).toThrow(InvalidAccessTokenException);
+            expectAuthError.invalidAccessToken(() => guard.handleRequest(null, undefined));
         });
 
         it('should throw the original error when error is provided', () => {

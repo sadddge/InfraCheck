@@ -31,7 +31,7 @@ export interface IUploadService {
      *
      * @param file Multer file object from multipart request
      * @returns Public URL of the uploaded and processed file
-     * @throws {BadRequestException} When file processing or validation fails
+     * @throws {AppException} UPL001-UPL007 - When file processing or validation fails
      *
      * @example
      * ```typescript

@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, writeFile } from 'node:fs';
 import { join } from 'node:path';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { storageError } from '../../../../common/helpers/exception.helper';
 import { IStorageService } from '../interfaces/storage-service.interface';
 
 /**
@@ -56,7 +57,7 @@ export class LocalStorageService implements IStorageService {
      * @param buffer File content as Buffer (from multer or processed image)
      * @param fileName Sanitized file name including extension
      * @returns URL path to access the uploaded file
-     * @throws {InternalServerErrorException} When file write operation fails
+     * @throws {AppException} UPL004 - When file write operation fails
      *
      * @example
      * ```typescript
@@ -82,7 +83,10 @@ export class LocalStorageService implements IStorageService {
         const filePath = join(this.storagePath, fileName);
         writeFile(filePath, buffer, err => {
             if (err) {
-                throw new InternalServerErrorException(`Failed to write file: ${err.message}`);
+                storageError({
+                    storageLocation: filePath,
+                    fileName,
+                });
             }
         });
         return `/uploads/${fileName}`;

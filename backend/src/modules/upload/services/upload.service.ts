@@ -44,18 +44,7 @@ export class UploadService implements IUploadService {
     ) {}
 
     /**
-     * Uploads a file through the complete processing pipeline.
-     * Processes, validates, and stores the uploaded image file.
-     *
-     * @param file Multer file object from request upload
-     * @returns Public URL of the uploaded and processed image
-     * @throws {BadRequestException} When image processing or validation fails
-     *
-     * @example
-     * ```typescript
-     * const imageUrl = await uploadService.uploadFile(req.file);
-     * console.log(`Image uploaded: ${imageUrl}`);
-     * ```
+     * @inheritDoc
      */
     async uploadFile(file: Express.Multer.File): Promise<string> {
         const processedFile = await this.processor.processImage(file.buffer);

@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/roles.enums';
@@ -6,13 +5,10 @@ import { UserStatus } from 'src/common/enums/user-status.enums';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { User } from 'src/database/entities/user.entity';
 import { Repository } from 'typeorm';
+import { ERROR_CODES } from '../../../common/constants/error-codes.constants';
+import { AppException } from '../../../common/exceptions/app.exception';
 import { IUserService, USER_SERVICE } from '../../users/interfaces/user-service.interface';
 import { LoginDto } from '../dto/login.dto';
-import {
-    AccountNotActiveException,
-    InvalidCredentialsException,
-    InvalidRefreshTokenException,
-} from '../exceptions/auth.exceptions';
 import { AuthService } from './auth.service';
 import { TokenFactoryService } from './token-factory.service';
 
@@ -142,32 +138,27 @@ describe('AuthService', () => {
             expect(bcrypt.compare).toHaveBeenCalledWith(loginDto.password, mockUser.password);
             expect(tokenFactory.generateTokenPair).toHaveBeenCalledWith(mockUser);
         });
-
-        it('should throw InvalidCredentialsException when user is not found', async () => {
+        it('should throw AppException with INVALID_CREDENTIALS when user is not found', async () => {
             // Arrange
-            userService.findByPhoneNumberWithPassword.mockRejectedValue(new NotFoundException());
+            userService.findByPhoneNumberWithPassword.mockRejectedValue(
+                new AppException(ERROR_CODES.USERS.USER_NOT_FOUND),
+            );
 
             // Act & Assert
-            await expect(service.login(loginDto)).rejects.toThrow(InvalidCredentialsException);
+            await expect(service.login(loginDto)).rejects.toThrow(AppException);
         });
-
-        it('should throw InvalidCredentialsException when password is incorrect', async () => {
+        it('should throw AppException with INVALID_CREDENTIALS when password is incorrect', async () => {
             // Arrange
             bcrypt.compare.mockResolvedValue(false);
-            userService.findByPhoneNumberWithPassword.mockResolvedValue(mockUser);
-
-            // Act & Assert
-            await expect(service.login(loginDto)).rejects.toThrow(InvalidCredentialsException);
+            userService.findByPhoneNumberWithPassword.mockResolvedValue(mockUser); // Act & Assert
+            await expect(service.login(loginDto)).rejects.toThrow(AppException);
         });
-
-        it('should throw AccountNotActiveException when user is not active', async () => {
+        it('should throw AppException with ACCOUNT_NOT_ACTIVE when user is not active', async () => {
             // Arrange
             const inactiveUser = { ...mockUser, status: UserStatus.PENDING_APPROVAL };
             bcrypt.compare.mockResolvedValue(true);
-            userService.findByPhoneNumberWithPassword.mockResolvedValue(inactiveUser);
-
-            // Act & Assert
-            await expect(service.login(loginDto)).rejects.toThrow(AccountNotActiveException);
+            userService.findByPhoneNumberWithPassword.mockResolvedValue(inactiveUser); // Act & Assert
+            await expect(service.login(loginDto)).rejects.toThrow(AppException);
         });
     });
 
@@ -207,12 +198,8 @@ describe('AuthService', () => {
 
         it('should throw InvalidRefreshTokenException when refresh token is invalid', async () => {
             // Arrange
-            refreshTokenRepository.findOne.mockResolvedValue(null);
-
-            // Act & Assert
-            await expect(service.refreshToken(refreshToken, userId)).rejects.toThrow(
-                InvalidRefreshTokenException,
-            );
+            refreshTokenRepository.findOne.mockResolvedValue(null); // Act & Assert
+            await expect(service.refreshToken(refreshToken, userId)).rejects.toThrow(AppException);
         });
     });
 

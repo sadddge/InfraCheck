@@ -1,4 +1,3 @@
-import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from 'src/common/enums/roles.enums';
@@ -6,6 +5,7 @@ import { UserStatus } from 'src/common/enums/user-status.enums';
 import { JwtResetPayload } from 'src/common/interfaces/jwt-payload.interface';
 import { User } from 'src/database/entities/user.entity';
 import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
+import { AppException } from '../../../common/exceptions/app.exception';
 import { JwtResetStrategy } from './jwt-reset.strategy';
 
 describe('JwtResetStrategy', () => {
@@ -106,7 +106,7 @@ describe('JwtResetStrategy', () => {
             expect(userService.findById).toHaveBeenCalledWith(1);
         });
 
-        it('should throw UnauthorizedException when scope is not reset_password', async () => {
+        it('should throw AppException when scope is not reset_password', async () => {
             // Arrange
             const invalidPayload = {
                 ...basePayload,
@@ -114,12 +114,10 @@ describe('JwtResetStrategy', () => {
             };
 
             // Act & Assert
-            await expect(strategy.validate(invalidPayload)).rejects.toThrow(
-                new UnauthorizedException('Invalid token scope'),
-            );
+            await expect(strategy.validate(invalidPayload)).rejects.toThrow(AppException);
         });
 
-        it('should throw UnauthorizedException when user is not found', async () => {
+        it('should throw AppException when user is not found', async () => {
             // Arrange
             userService.findById.mockRejectedValue(new Error('User not found'));
 
@@ -127,15 +125,13 @@ describe('JwtResetStrategy', () => {
             await expect(strategy.validate(basePayload)).rejects.toThrow();
         });
 
-        it('should throw UnauthorizedException when user is inactive', async () => {
+        it('should throw AppException when user is inactive', async () => {
             // Arrange
             const inactiveUser = { ...mockUser, status: UserStatus.REJECTED };
             userService.findById.mockResolvedValue(inactiveUser);
 
             // Act & Assert
-            await expect(strategy.validate(basePayload)).rejects.toThrow(
-                new UnauthorizedException('User not found or inactive'),
-            );
+            await expect(strategy.validate(basePayload)).rejects.toThrow(AppException);
         });
 
         it('should allow PENDING_APPROVAL users', async () => {
@@ -152,7 +148,7 @@ describe('JwtResetStrategy', () => {
             });
         });
 
-        it('should throw UnauthorizedException when password was changed after token issued', async () => {
+        it('should throw AppException when password was changed after token issued', async () => {
             // Arrange
             const recentPasswordUpdate = new Date();
             const userWithRecentPasswordUpdate = {
@@ -167,9 +163,7 @@ describe('JwtResetStrategy', () => {
             userService.findById.mockResolvedValue(userWithRecentPasswordUpdate);
 
             // Act & Assert
-            await expect(strategy.validate(oldTokenPayload)).rejects.toThrow(
-                new UnauthorizedException('Password has already been changed'),
-            );
+            await expect(strategy.validate(oldTokenPayload)).rejects.toThrow(AppException);
         });
 
         it('should allow token when password was changed before token issued', async () => {

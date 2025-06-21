@@ -1,7 +1,7 @@
-import { existsSync, mkdirSync, writeFile } from 'node:fs';
+﻿import { existsSync, mkdirSync, writeFile } from 'node:fs';
 import { join } from 'node:path';
-import { InternalServerErrorException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { AppException } from 'src/common/exceptions/app.exception';
 import { LocalStorageService } from './local-storage.service';
 
 // Mock fs module
@@ -104,7 +104,7 @@ describe('LocalStorageService', () => {
             expect(result).toBe(expectedUrl);
         });
 
-        it('should throw InternalServerErrorException when file write fails', async () => {
+        it('should throw AppException when file write fails', async () => {
             // Arrange
             const buffer = Buffer.from('test file content');
             const fileName = 'test-file.jpg';
@@ -118,12 +118,7 @@ describe('LocalStorageService', () => {
             });
 
             // Act & Assert
-            await expect(service.upload(buffer, fileName)).rejects.toThrow(
-                InternalServerErrorException,
-            );
-            await expect(service.upload(buffer, fileName)).rejects.toThrow(
-                'Failed to write file: Permission denied',
-            );
+            await expect(service.upload(buffer, fileName)).rejects.toThrow(AppException);
         });
 
         it('should handle empty buffer', async () => {

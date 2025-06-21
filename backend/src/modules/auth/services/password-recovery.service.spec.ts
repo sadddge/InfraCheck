@@ -1,4 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
+import { AppException } from '../../../common/exceptions/app.exception';
+import { ERROR_CODES } from '../../../common/constants/error-codes.constants';
 import { Test, TestingModule } from '@nestjs/testing';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
 import { Role } from 'src/common/enums/roles.enums';
@@ -7,7 +8,7 @@ import { User } from 'src/database/entities/user.entity';
 import { UserDto } from '../../users/dto/user.dto';
 import { IUserService, USER_SERVICE } from '../../users/interfaces/user-service.interface';
 import { IVerificationService } from '../../verification/interfaces/verification-service.interface';
-import { InvalidPasswordResetCodeException } from '../exceptions/auth.exceptions';
+
 import { PasswordRecoveryService } from './password-recovery.service';
 import { TokenFactoryService } from './token-factory.service';
 
@@ -116,7 +117,7 @@ describe('PasswordRecoveryService', () => {
         it('should handle case when user does not exist', async () => {
             // Arrange
             userService.findByPhoneNumber.mockRejectedValue(
-                new NotFoundException('User not found'),
+                new AppException(ERROR_CODES.USERS.USER_NOT_FOUND),
             );
 
             // Act
@@ -161,34 +162,34 @@ describe('PasswordRecoveryService', () => {
             expect(tokenFactory.generateResetPasswordToken).toHaveBeenCalledWith(mockUser);
         });
 
-        it('should throw InvalidPasswordResetCodeException when verification code is invalid', async () => {
+        it('should throw AppException when verification code is invalid', async () => {
             // Arrange
             verificationService.verifyCode.mockRejectedValue(new Error('Invalid code'));
 
             // Act & Assert
             await expect(service.generateResetPasswordToken(phoneNumber, code)).rejects.toThrow(
-                InvalidPasswordResetCodeException,
+                AppException,
             );
             expect(verificationService.verifyCode).toHaveBeenCalledWith(phoneNumber, code);
             expect(userService.findByPhoneNumber).not.toHaveBeenCalled();
             expect(tokenFactory.generateResetPasswordToken).not.toHaveBeenCalled();
         });
 
-        it('should throw InvalidPasswordResetCodeException when user is not found', async () => {
+        it('should throw AppException when user is not found', async () => {
             // Arrange
             verificationService.verifyCode.mockResolvedValue(undefined);
-            userService.findByPhoneNumber.mockRejectedValue(new NotFoundException());
+            userService.findByPhoneNumber.mockRejectedValue(new AppException(ERROR_CODES.USERS.USER_NOT_FOUND));
 
             // Act & Assert
             await expect(service.generateResetPasswordToken(phoneNumber, code)).rejects.toThrow(
-                InvalidPasswordResetCodeException,
+                AppException,
             );
             expect(verificationService.verifyCode).toHaveBeenCalledWith(phoneNumber, code);
             expect(userService.findByPhoneNumber).toHaveBeenCalledWith(phoneNumber);
             expect(tokenFactory.generateResetPasswordToken).not.toHaveBeenCalled();
         });
 
-        it('should throw InvalidPasswordResetCodeException when token generation fails', async () => {
+        it('should throw AppException when token generation fails', async () => {
             // Arrange
             verificationService.verifyCode.mockResolvedValue(undefined);
             userService.findByPhoneNumber.mockResolvedValue(mockUser);
@@ -198,7 +199,7 @@ describe('PasswordRecoveryService', () => {
 
             // Act & Assert
             await expect(service.generateResetPasswordToken(phoneNumber, code)).rejects.toThrow(
-                InvalidPasswordResetCodeException,
+                AppException,
             );
             expect(verificationService.verifyCode).toHaveBeenCalledWith(phoneNumber, code);
             expect(userService.findByPhoneNumber).toHaveBeenCalledWith(phoneNumber);
@@ -248,12 +249,12 @@ describe('PasswordRecoveryService', () => {
         it('should throw error when user is not found', async () => {
             // Arrange
             userService.findByIdWithPassword.mockRejectedValue(
-                new NotFoundException('User not found'),
+                new AppException(ERROR_CODES.USERS.USER_NOT_FOUND),
             );
 
             // Act & Assert
             await expect(service.resetPassword(userId, newPassword)).rejects.toThrow(
-                NotFoundException,
+                AppException,
             );
             expect(userService.findByIdWithPassword).toHaveBeenCalledWith(userId);
             expect(bcrypt.hash).not.toHaveBeenCalled();
@@ -331,3 +332,6 @@ describe('PasswordRecoveryService', () => {
         });
     });
 });
+
+
+

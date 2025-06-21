@@ -1,4 +1,3 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
@@ -6,6 +5,7 @@ import { DeleteResult, Repository } from 'typeorm';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
+import { expectUserErrorAsync } from '../../../common/test-helpers/exception-test.helper';
 import { RegisterDto } from '../../auth/dto/register.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UsersService } from './users.service';
@@ -172,15 +172,12 @@ describe('UsersService', () => {
             });
             expect(result).toEqual(mockUserDto);
         });
-
-        it('should throw NotFoundException when user not found', async () => {
+        it('should throw AppException with USER_NOT_FOUND when user not found', async () => {
             // Arrange
             userRepository.findOne.mockResolvedValue(null);
 
             // Act & Assert
-            await expect(service.findById(999)).rejects.toThrow(
-                new NotFoundException('User with ID 999 not found'),
-            );
+            await expect(service.findById(999)).rejects.toThrow(expectUserErrorAsync.notFound());
         });
     });
 
@@ -208,14 +205,13 @@ describe('UsersService', () => {
             });
             expect(result).toEqual(mockUserDto);
         });
-
-        it('should throw NotFoundException when user not found by phone', async () => {
+        it('should throw AppException with USER_NOT_FOUND when user not found by phone', async () => {
             // Arrange
             userRepository.findOne.mockResolvedValue(null);
 
             // Act & Assert
             await expect(service.findByPhoneNumber('+9999999999')).rejects.toThrow(
-                new NotFoundException('User with phone number +9999999999 not found'),
+                expectUserErrorAsync.notFound(),
             );
         });
     });
@@ -281,13 +277,11 @@ describe('UsersService', () => {
             expect(result).toEqual(updatedUserDto);
         });
 
-        it('should throw NotFoundException when user not found for status update', async () => {
+        it('should throw AppException with USER_NOT_FOUND when user not found for status update', async () => {
             // Arrange
-            userRepository.findOne.mockResolvedValue(null);
-
-            // Act & Assert
+            userRepository.findOne.mockResolvedValue(null); // Act & Assert
             await expect(service.updateStatus(999, UserStatus.ACTIVE)).rejects.toThrow(
-                new NotFoundException('User with ID 999 not found'),
+                expectUserErrorAsync.notFound(),
             );
 
             expect(userRepository.save).not.toHaveBeenCalled();
@@ -334,16 +328,11 @@ describe('UsersService', () => {
             expect(result).toEqual(newUserDto);
         });
 
-        it('should throw ConflictException when phone number already exists', async () => {
+        it('should throw AppException with USER_ALREADY_EXISTS when phone number already exists', async () => {
             // Arrange
             userRepository.findOne.mockResolvedValue(mockUser); // Existing user
 
-            // Act & Assert
-            await expect(service.registerNeighbor(mockRegisterDto)).rejects.toThrow(
-                new ConflictException(
-                    `User with phone number ${mockRegisterDto.phoneNumber} already exists`,
-                ),
-            );
+            // Act & Assert            await expect(service.registerNeighbor(mockRegisterDto)).rejects.toThrow(expectUserErrorAsync.alreadyExists());
 
             expect(userRepository.create).not.toHaveBeenCalled();
             expect(userRepository.save).not.toHaveBeenCalled();
@@ -393,15 +382,11 @@ describe('UsersService', () => {
             expect(result).toEqual(newAdminDto);
         });
 
-        it('should throw ConflictException when phone number already exists for admin creation', async () => {
+        it('should throw AppException with USER_ALREADY_EXISTS when phone number already exists for admin creation', async () => {
             // Arrange
-            userRepository.findOne.mockResolvedValue(mockUser); // Existing user
-
-            // Act & Assert
+            userRepository.findOne.mockResolvedValue(mockUser); // Existing user            // Act & Assert
             await expect(service.createAdmin(mockRegisterDto)).rejects.toThrow(
-                new ConflictException(
-                    `User with phone number ${mockRegisterDto.phoneNumber} already exists`,
-                ),
+                expectUserErrorAsync.alreadyExists(),
             );
 
             expect(userRepository.create).not.toHaveBeenCalled();
@@ -422,15 +407,11 @@ describe('UsersService', () => {
             expect(userRepository.delete).toHaveBeenCalledWith(1);
         });
 
-        it('should throw NotFoundException when user not found for deletion', async () => {
+        it('should throw AppException with USER_NOT_FOUND when user not found for deletion', async () => {
             // Arrange
             const deleteResult: DeleteResult = { affected: 0, raw: {} };
-            userRepository.delete.mockResolvedValue(deleteResult);
-
-            // Act & Assert
-            await expect(service.remove(999)).rejects.toThrow(
-                new NotFoundException('User with ID 999 not found'),
-            );
+            userRepository.delete.mockResolvedValue(deleteResult); // Act & Assert
+            await expect(service.remove(999)).rejects.toThrow(expectUserErrorAsync.notFound());
         });
     });
 
@@ -461,13 +442,13 @@ describe('UsersService', () => {
             expect(result.password).toBeDefined();
         });
 
-        it('should throw NotFoundException when user not found with password', async () => {
+        it('should throw AppException with USER_NOT_FOUND when user not found with password', async () => {
             // Arrange
             userRepository.findOne.mockResolvedValue(null);
 
             // Act & Assert
             await expect(service.findByIdWithPassword(999)).rejects.toThrow(
-                new NotFoundException('User with ID 999 not found'),
+                expectUserErrorAsync.notFound(),
             );
         });
     });
@@ -499,13 +480,13 @@ describe('UsersService', () => {
             expect(result.password).toBeDefined();
         });
 
-        it('should throw NotFoundException when user not found by phone with password', async () => {
+        it('should throw AppException with USER_NOT_FOUND when user not found by phone with password', async () => {
             // Arrange
             userRepository.findOne.mockResolvedValue(null);
 
             // Act & Assert
             await expect(service.findByPhoneNumberWithPassword('+9999999999')).rejects.toThrow(
-                new NotFoundException('User with phone number +9999999999 not found'),
+                expectUserErrorAsync.notFound(),
             );
         });
     });

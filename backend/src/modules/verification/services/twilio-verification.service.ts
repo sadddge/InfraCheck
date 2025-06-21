@@ -1,5 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
+import {
+    invalidVerificationCode,
+    verificationCodeSendFailed,
+} from 'src/common/helpers/exception.helper';
 import { Twilio } from 'twilio';
 import type { IVerificationService } from '../interfaces/verification-service.interface';
 
@@ -53,24 +57,7 @@ export class TwilioVerificationService implements IVerificationService {
         this.serviceSid = injectedServiceSid;
     }
 
-    /**
-     * Sends a verification code to the specified phone number via SMS.
-     *
-     * @async
-     * @param {string} phoneNumber - Phone number in international format (e.g., +1234567890)
-     * @returns {Promise<void>} Promise that resolves when SMS is sent successfully
-     * @throws {BadRequestException} When SMS sending fails
-     *
-     * @example
-     * ```typescript
-     * try {
-     *   await verificationService.sendVerificationCode('+1234567890');
-     *   console.log('Verification code sent successfully');
-     * } catch (error) {
-     *   console.error('Failed to send verification code');
-     * }
-     * ```
-     */
+    /** @inheritDoc */
     async sendVerificationCode(phoneNumber: string): Promise<void> {
         const response = await this.twilioClient.verify.v2
             .services(this.serviceSid)
@@ -79,29 +66,13 @@ export class TwilioVerificationService implements IVerificationService {
                 channel: 'sms',
             });
         if (response.status !== 'pending') {
-            throw new BadRequestException('Failed to send verification code');
+            verificationCodeSendFailed({
+                info: `Failed to send verification code to ${phoneNumber}. Twilio status: ${response.status}`,
+            });
         }
     }
 
-    /**
-     * Verifies a code sent to the specified phone number.
-     *
-     * @async
-     * @param {string} phoneNumber - Phone number that received the verification code
-     * @param {string} code - Verification code provided by the user (usually 6 digits)
-     * @returns {Promise<void>} Promise that resolves when code is valid
-     * @throws {BadRequestException} When verification code is invalid or expired
-     *
-     * @example
-     * ```typescript
-     * try {
-     *   await verificationService.verifyCode('+1234567890', '123456');
-     *   console.log('Phone number verified successfully');
-     * } catch (error) {
-     *   console.error('Invalid verification code');
-     * }
-     * ```
-     */
+    /** @inheritDoc */
     async verifyCode(phoneNumber: string, code: string): Promise<void> {
         const verificationCheck = await this.twilioClient.verify.v2
             .services(this.serviceSid)
@@ -110,7 +81,7 @@ export class TwilioVerificationService implements IVerificationService {
                 code: code,
             });
         if (verificationCheck.status !== 'approved') {
-            throw new BadRequestException('Invalid verification code');
+            invalidVerificationCode();
         }
     }
 }

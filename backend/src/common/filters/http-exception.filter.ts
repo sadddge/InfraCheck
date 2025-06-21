@@ -1,8 +1,10 @@
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
-import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Catch, HttpStatus, Logger } from '@nestjs/common';
 import type { Response } from 'express';
+import { ERROR_CODES } from '../constants/error-codes.constants';
 import type { ErrorDto } from '../dto/error.dto';
-import type { ResponseDto } from '../dto/response.dto';
+import { AppException } from '../exceptions/app.exception';
+import { ErrorDetail } from '../exceptions/error-details';
 
 /**
  * Global exception filter that catches and standardizes all application exceptions.
@@ -50,54 +52,48 @@ export class AllExceptionsFilter implements ExceptionFilter {
      */
     catch(exception: unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
-        const request = ctx.getRequest<Request>();
         const response = ctx.getResponse<Response>();
 
         let status: number;
-        const errorRes: ErrorDto = {
-            code: 'GEN000',
-            message: 'An unexpected error occurred',
-            details: {
-                path: request.url,
-                method: request.method,
-                timestamp: new Date().toISOString(),
-            },
-        };
+        let payload: ErrorDto;
+        if (exception instanceof AppException) {
+            status = exception.getStatus();
+            const res = exception.getResponse() as {
+                code: string;
+                message: string;
+                details?: ErrorDetail | null;
+            }; // Extract 'type' field from details for internal use, but don't send it in response
+            let cleanDetails: Record<string, unknown> | null = null;
+            if (res.details) {
+                const { type, ...detailsWithoutType } = res.details;
+                // Only include details if there are remaining properties after removing 'type'
+                cleanDetails =
+                    Object.keys(detailsWithoutType).length > 0 ? detailsWithoutType : null;
+            }
 
-        const responseDto: ResponseDto<null> = {
+            payload = {
+                code: res.code,
+                message: res.message,
+                details: cleanDetails,
+            };
+        } else {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            payload = {
+                code: ERROR_CODES.GENERAL.UNKNOWN_ERROR,
+                message: 'An unexpected error occurred',
+                details: null,
+            };
+            // Logging will be handled after sending the response to avoid duplicate logs
+        }
+
+        response.status(status).json({
             success: false,
             data: null,
-            error: null,
-        };
-
-        if (!(exception instanceof HttpException)) {
-            const exceptionMessage: string =
-                exception instanceof Error ? exception.message : String(exception);
-            this.logger.error(
-                `Unhandled exception: ${exceptionMessage}`,
-                exception instanceof Error ? exception.stack : undefined,
-            );
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-            errorRes.code = 'GEN001';
-            response.status(status).json(responseDto);
-            return;
-        }
-
-        status = exception.getStatus();
-        const responseBody = exception.getResponse();
-        if (typeof responseBody === 'string') {
-            errorRes.code = 'GEN002';
-            errorRes.message = responseBody;
-        } else {
-            const body = responseBody as Partial<ErrorDto>;
-            errorRes.code = body.code ?? 'GEN003';
-            errorRes.message = body.message ?? 'An error occurred';
-        }
-
-        responseDto.error = errorRes;
-        response.status(status).json(responseDto);
+            error: payload,
+        });
         this.logger.error(
-            `HTTP Exception: ${errorRes.message} | Status: ${status} | Code: ${errorRes.code}`,
+            `Exception caught: ${payload.code} - ${payload.message}`,
+            exception instanceof Error ? exception.stack : JSON.stringify(exception),
         );
     }
 }

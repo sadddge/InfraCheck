@@ -1,18 +1,18 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserStatus } from 'src/common/enums/user-status.enums';
+import {
+    accountNotActive,
+    invalidCredentials,
+    invalidRefreshToken,
+} from 'src/common/helpers/exception.helper';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import type { User } from 'src/database/entities/user.entity';
 import { Equal, type Repository } from 'typeorm';
 import { type IUserService, USER_SERVICE } from '../../users/interfaces/user-service.interface';
 import type { LoginResponseDto } from '../dto/login-response.dto';
 import type { LoginDto } from '../dto/login.dto';
-import {
-    AccountNotActiveException,
-    InvalidCredentialsException,
-    InvalidRefreshTokenException,
-} from '../exceptions/auth.exceptions';
 import type { IAuthService } from '../interfaces/auth-service.interface';
 import { TokenFactoryService } from './token-factory.service';
 
@@ -40,6 +40,7 @@ export class AuthService implements IAuthService {
         private readonly tokenFactory: TokenFactoryService,
     ) {}
 
+    /** @inheritDoc */
     async login(dto: LoginDto): Promise<LoginResponseDto> {
         const user = await this.validateUserCredentials(dto);
         const tokens = await this.tokenFactory.generateTokenPair(user);
@@ -50,16 +51,18 @@ export class AuthService implements IAuthService {
             user: this.mapUserToResponse(user),
         };
     }
+
+    /** @inheritDoc */
     async refreshToken(refreshToken: string, userId: number): Promise<LoginResponseDto> {
         // Validate refresh token and get user
         const user = await this.getUserIfRefreshTokenMatches(refreshToken, userId);
         if (!user) {
-            throw new InvalidRefreshTokenException();
+            invalidRefreshToken();
         }
 
         // Find the token entity to invalidate it
         const tokenEntity = await this.refreshTokenRepository.findOne({
-            where: { token: Equal(refreshToken) , user: { id: Equal(userId) } },
+            where: { token: Equal(refreshToken), user: { id: Equal(userId) } },
         });
 
         if (tokenEntity) {
@@ -77,6 +80,7 @@ export class AuthService implements IAuthService {
         };
     }
 
+    /** @inheritDoc */
     async getUserIfRefreshTokenMatches(refreshToken: string, userId: number): Promise<User | null> {
         const token = await this.refreshTokenRepository.findOne({
             where: { token: Equal(refreshToken), user: { id: Equal(userId) } },
@@ -91,18 +95,18 @@ export class AuthService implements IAuthService {
         try {
             user = await this.usersService.findByPhoneNumberWithPassword(dto.phoneNumber);
         } catch (error) {
-            if (error instanceof NotFoundException) {
-                throw new InvalidCredentialsException();
+            if (error.code === 'USR001') {
+                invalidCredentials();
             }
             throw error;
         }
 
         if (!(await bcrypt.compare(dto.password, user.password))) {
-            throw new InvalidCredentialsException();
+            invalidCredentials();
         }
 
         if (user.status !== UserStatus.ACTIVE) {
-            throw new AccountNotActiveException();
+            accountNotActive();
         }
 
         return user;

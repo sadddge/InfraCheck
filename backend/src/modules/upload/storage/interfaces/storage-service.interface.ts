@@ -40,7 +40,7 @@ export interface IStorageService {
      * @param buffer File content as Buffer (from multer or image processing)
      * @param fileName Sanitized file name with extension (should be unique)
      * @returns Promise resolving to URL path or full URL for accessing the file
-     * @throws {Error} When upload fails due to storage issues, permissions, or invalid parameters
+     * @throws {AppException} UPL004 - When upload fails due to storage issues, permissions, or invalid parameters
      *
      * @example
      * ```typescript

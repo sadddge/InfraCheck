@@ -1,10 +1,12 @@
-import { BadRequestException, ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as compression from 'compression';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { ERROR_CODES } from './common/constants/error-codes.constants';
+import { AppException } from './common/exceptions/app.exception';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
@@ -34,11 +36,17 @@ async function bootstrap() {
     app.useGlobalPipes(
         new ValidationPipe({
             exceptionFactory: errors => {
-                return new BadRequestException({
-                    code: 'VAL001',
-                    message: 'Validation failed',
-                    details: errors,
-                });
+                return new AppException(
+                    ERROR_CODES.VALIDATION.VALIDATION_ERROR,
+                    'Validation failed',
+                    {
+                        type: 'validation',
+                        items: errors.map(error => ({
+                            property: error.property,
+                            constraints: error.constraints ?? {},
+                        })),
+                    },
+                );
             },
         }),
     );

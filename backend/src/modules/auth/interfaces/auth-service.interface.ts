@@ -37,8 +37,8 @@ export interface IAuthService {
      *
      * @param dto Login credentials containing phone number and password
      * @returns Authentication response with access token, refresh token, and user data
-     * @throws {UnauthorizedException} When phone number or password is invalid
-     * @throws {NotFoundException} When user with phone number does not exist
+     * @throws {AppException} When phone number or password is invalid (AUTH001)
+     * @throws {AppException} When user with phone number does not exist (USR001)
      *
      * @example
      * ```typescript
@@ -59,7 +59,7 @@ export interface IAuthService {
      * @param refreshToken JWT refresh token to validate and exchange for new tokens
      * @param userId User ID to validate against the refresh token
      * @returns New authentication response with fresh access and refresh tokens
-     * @throws {UnauthorizedException} When refresh token is invalid, expired, or revoked
+     * @throws {AppException} When refresh token is invalid, expired, or revoked (AUTH007)
      *
      * @example
      * ```typescript

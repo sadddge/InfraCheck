@@ -1,6 +1,7 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ReportState } from 'src/common/enums/report-state.enums';
+import { reportNotFound } from 'src/common/helpers/exception.helper';
 import { Report } from 'src/database/entities/report.entity';
 import {
     IUploadService,
@@ -44,18 +45,7 @@ export class ReportsService implements IReportsService {
         private readonly uploadService: IUploadService,
     ) {}
 
-    /**
-     * Retrieves all reports with creator and image information.
-     * Returns public reports for general listing and map visualization.
-     *
-     * @returns Array of report DTOs with complete information
-     *
-     * @example
-     * ```typescript
-     * const reports = await reportsService.findAll();
-     * console.log(`Found ${reports.length} reports`);
-     * ```
-     */
+    /** @inheritDoc */
     async findAll(): Promise<ReportDto[]> {
         const reports = await this.reportRepository.find({
             relations: ['creator', 'images'],
@@ -81,6 +71,7 @@ export class ReportsService implements IReportsService {
         }));
     }
 
+    /** @inheritDoc */
     async findById(id: number): Promise<ReportDto> {
         const report = await this.reportRepository.findOne({
             where: { id: Equal(id) },
@@ -88,7 +79,7 @@ export class ReportsService implements IReportsService {
         });
 
         if (!report) {
-            throw new NotFoundException(`Report with ID ${id} not found`);
+            reportNotFound();
         }
 
         return {
@@ -111,13 +102,14 @@ export class ReportsService implements IReportsService {
         };
     }
 
+    /** @inheritDoc */
     async findHistoryByReportId(reportId: number): Promise<ReportChangeDto[]> {
         const report = await this.reportRepository.findOne({
             where: { id: Equal(reportId) },
             relations: ['changes', 'changes.creator'],
         });
         if (!report) {
-            throw new NotFoundException(`Report with ID ${reportId} not found`);
+            reportNotFound();
         }
         return report.changes.map(change => ({
             creatorId: change.creator.id,
@@ -128,6 +120,7 @@ export class ReportsService implements IReportsService {
         }));
     }
 
+    /** @inheritDoc */
     async createReport(
         dto: CreateReportDto,
         files: Express.Multer.File[],
@@ -154,8 +147,8 @@ export class ReportsService implements IReportsService {
             });
         }
 
-        const lat = this.getAvarage(imageRecords.map(img => img.latitude));
-        const lon = this.getAvarage(imageRecords.map(img => img.longitude));
+        const lat = this.getAverage(imageRecords.map(img => img.latitude));
+        const lon = this.getAverage(imageRecords.map(img => img.longitude));
 
         const report: Report = this.reportRepository.create({
             title: dto.title,
@@ -189,6 +182,7 @@ export class ReportsService implements IReportsService {
         return reportDto;
     }
 
+    /** @inheritDoc */
     async updateState(id: number, state: ReportState): Promise<ReportDto> {
         const report = await this.reportRepository.findOne({
             where: { id: Equal(id) },
@@ -196,7 +190,7 @@ export class ReportsService implements IReportsService {
         });
 
         if (!report) {
-            throw new NotFoundException(`Report with ID ${id} not found`);
+            reportNotFound();
         }
 
         report.state = state;
@@ -205,7 +199,7 @@ export class ReportsService implements IReportsService {
         return this.findById(updatedReport.id);
     }
 
-    private getAvarage(values: number[]): number {
+    private getAverage(values: number[]): number {
         return values.reduce((acc, val) => acc + val, 0) / values.length;
     }
 }

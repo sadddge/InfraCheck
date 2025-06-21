@@ -41,8 +41,9 @@ export interface IFollowsService {
      * @param userId The unique identifier of the user creating the follow
      * @param reportId The unique identifier of the report to follow
      * @returns Follow action result with success status and relationship info
-     * @throws {NotFoundException} When user or report does not exist
-     * @throws {ConflictException} When user is already following the report
+     * @throws {AppException} USR001 - When user does not exist
+     * @throws {AppException} REP001 - When report does not exist
+     * @throws {AppException} REP004 - When user is already following the report
      *
      * @example
      * ```typescript
@@ -60,7 +61,9 @@ export interface IFollowsService {
      * @param userId The unique identifier of the user removing the follow
      * @param reportId The unique identifier of the report to unfollow
      * @returns Unfollow action result with success status
-     * @throws {NotFoundException} When user or report does not exist
+     * @throws {AppException} USR001 - When user does not exist
+     * @throws {AppException} REP001 - When report does not exist
+     * @throws {AppException} REP005 - When user is not following the report
      *
      * @example
      * ```typescript
@@ -68,7 +71,10 @@ export interface IFollowsService {
      * console.log(`Unfollow successful: ${result.success}`);
      * ```
      */
-    unfollowReport(userId: number, reportId: number): Promise<FollowActionResponseDto>;
+    unfollowReport(
+        userId: number,
+        reportId: number,
+    ): Promise<FollowActionResponseDto>;
 
     /**
      * Checks the follow relationship status between a user and a report.
@@ -78,7 +84,7 @@ export interface IFollowsService {
      * @param userId The unique identifier of the user to check
      * @param reportId The unique identifier of the report to check
      * @returns Follow status with boolean indicator and relationship metadata
-     * @throws {NotFoundException} When user or report does not exist
+     * @throws {AppException} GEN002 - When user ID or report ID is missing or invalid
      *
      * @example
      * ```typescript
@@ -88,7 +94,10 @@ export interface IFollowsService {
      * }
      * ```
      */
-    isFollowingReport(userId: number, reportId: number): Promise<FollowStatusResponseDto>;
+    isFollowingReport(
+        userId: number,
+        reportId: number,
+    ): Promise<FollowStatusResponseDto>;
 
     /**
      * Retrieves all users following a specific report with detailed information.
@@ -97,7 +106,7 @@ export interface IFollowsService {
      *
      * @param reportId The unique identifier of the report
      * @returns Complete follower information including user profiles and follow dates
-     * @throws {NotFoundException} When report does not exist
+     * @throws {AppException} REP001 - When report does not exist
      *
      * @example
      * ```typescript
@@ -115,7 +124,7 @@ export interface IFollowsService {
      *
      * @param userId The unique identifier of the user
      * @returns Complete followed reports information with report details and follow dates
-     * @throws {NotFoundException} When user does not exist
+     * @throws {AppException} USR001 - When user does not exist
      *
      * @example
      * ```typescript
@@ -133,7 +142,7 @@ export interface IFollowsService {
      *
      * @param reportId The unique identifier of the report
      * @returns Array of follower user IDs for efficient processing
-     * @throws {NotFoundException} When report does not exist
+     * @throws {AppException} REP001 - When report does not exist
      *
      * @example
      * ```typescript
