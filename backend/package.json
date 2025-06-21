@@ -47,7 +47,7 @@
         "pg": "^8.16.0",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.1",
-        "sharp": "^0.32.1",
+        "sharp": "^0.34.2",
         "twilio": "^5.6.1",
         "typeorm": "^0.3.24"
     },
@@ -81,7 +81,11 @@
         "typescript-eslint": "^8.20.0"
     },
     "jest": {
-        "moduleFileExtensions": ["js", "json", "ts"],
+        "moduleFileExtensions": [
+            "js",
+            "json",
+            "ts"
+        ],
         "rootDir": "src",
         "testRegex": ".*\\.spec\\.ts$",
         "transform": {
@@ -92,7 +96,9 @@
             "<rootDir>/dist/",
             "<rootDir>/test/e2e/"
         ],
-        "collectCoverageFrom": ["**/*.(t|j)s"],
+        "collectCoverageFrom": [
+            "**/*.(t|j)s"
+        ],
         "coveragePathIgnorePatterns": [
             "/node_modules/",
             "/dist/",
