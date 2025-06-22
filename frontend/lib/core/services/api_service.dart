@@ -255,6 +255,34 @@ class ApiService {  /// Instancia de almacenamiento seguro para tokens y credenc
       throw ApiException('Error de conexión: ${e.toString()}');
     }  }
 
+  /// Realiza una petición HTTP PATCH.
+  /// 
+  /// [endpoint] es la ruta del endpoint a consultar (sin la URL base).
+  /// [data] son los datos a enviar en el cuerpo de la petición (opcional).
+  /// [includeAuth] determina si incluir el token de autorización (por defecto true).
+  /// 
+  /// Retorna los datos de la respuesta o lanza [ApiException] en caso de error.
+  static Future<dynamic> patch(String endpoint, {
+    Map<String, dynamic>? data,
+    bool includeAuth = true,
+  }) async {
+    final headers = await _getHeaders(includeAuth: includeAuth);
+    final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+    
+    try {
+      final response = await http.patch(
+        uri,
+        headers: headers,
+        body: data != null ? json.encode(data) : null,
+      ).timeout(ApiConfig.receiveTimeout);
+      
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error de conexión: ${e.toString()}');
+    }
+  }
+
   /// Realiza una petición HTTP DELETE.
   /// 
   /// [endpoint] es la ruta del endpoint a consultar (sin la URL base).

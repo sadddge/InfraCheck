@@ -78,9 +78,7 @@ class UserService {
   /// Requiere autenticación: Sí (solo administradores)
   static Future<List<User>> getPendingUsers() async {
     return getUsers(status: UserStatus.pendingApproval.value);
-  }
-
-  /// Cambia el estado de un usuario específico.
+  }  /// Cambia el estado de un usuario específico.
   /// 
   /// [userId] ID del usuario a actualizar
   /// [newStatus] Nuevo estado a asignar al usuario
@@ -91,11 +89,12 @@ class UserService {
   /// Requiere autenticación: Sí (solo administradores)
   static Future<bool> updateUserStatus(String userId, UserStatus newStatus) async {
     final endpoint = ApiConfig.updateUserStatusByIdEndpoint.replaceAll(':id', userId);
-      final requestBody = {
+    
+    final requestBody = {
       'status': newStatus.value,
     };
     
-    await ApiService.put(
+    await ApiService.patch(
       endpoint,
       data: requestBody,
       includeAuth: true,
