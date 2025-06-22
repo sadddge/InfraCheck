@@ -6,6 +6,7 @@ import {
     Param,
     Patch,
     Post,
+    Query,
     Req,
     UploadedFiles,
     UseInterceptors,
@@ -16,12 +17,15 @@ import {
     ApiConsumes,
     ApiOperation,
     ApiParam,
+    ApiQuery,
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { Pagination } from 'nestjs-typeorm-paginate';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { ReportCategory } from 'src/common/enums/report-category.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { Role } from 'src/common/enums/roles.enums';
@@ -105,40 +109,41 @@ export class ReportsController {
 
     /**
      * Retrieves all infrastructure reports in the system.
-     * Returns reports with creator information and image attachments.
-     * Includes geolocation data for map visualization.
+     * Returns reports with creator information, image attachments, and geolocation data.
+     * Supports pagination via page and limit query parameters.
      *
-     * @returns Array of report DTOs with complete information
+     * @param page Page number for pagination (default: 1)
+     * @param limit Number of items per page (default: 10)
+     * @returns Paginated report DTOs with metadata
      *
      * @example
      * ```typescript
-     * // Get all reports
-     * GET /api/v1/reports
+     * // Get paginated reports
+     * GET /api/v1/reports?page=1&limit=10
      * Authorization: Bearer <token>
      *
-     * // Response includes array of reports with:
-     * // - Report details (title, description, category, state)
-     * // - Creator information
-     * // - Image attachments with metadata
-     * // - Geolocation coordinates
+     * // Response includes pagination metadata and report items
      * ```
      */
     @Get()
     @ApiOperation({
-        summary: 'Get all reports',
-        description: 'Retrieves all infrastructure reports with creator and image information',
+        summary: 'Get paginated reports',
+        description:
+            'Retrieves paginated infrastructure reports with creator and image information',
     })
+    @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+    @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     @ApiResponse({
         status: 200,
-        description: 'List of all reports',
+        description: 'Paginated list of reports',
         type: [ReportDto],
     })
     @ApiResponse({
         status: 401,
         description: 'Unauthorized - Authentication required',
     })
-    async getAllReports(): Promise<ReportDto[]> {
-        return await this.reportsService.findAll();
+    async getAllReports(@Query() { page, limit }: PaginationDto): Promise<Pagination<ReportDto>> {
+        return await this.reportsService.findAll({ page, limit });
     }
 
     /**

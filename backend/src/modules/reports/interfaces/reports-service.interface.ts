@@ -1,3 +1,5 @@
+import { IPaginationOptions } from 'nestjs-typeorm-paginate';
+import { Pagination } from 'nestjs-typeorm-paginate/dist/pagination';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportChangeDto } from '../dto/report-change.dto';
@@ -42,7 +44,7 @@ export interface IReportsService {
      * reports.forEach(report => console.log(report.title));
      * ```
      */
-    findAll(): Promise<ReportDto[]>;
+    findAll(options: IPaginationOptions): Promise<Pagination<ReportDto>>;
 
     /**
      * Finds a specific report by its unique identifier.

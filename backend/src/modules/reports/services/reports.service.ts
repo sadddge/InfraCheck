@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { reportNotFound } from 'src/common/helpers/exception.helper';
 import { Report } from 'src/database/entities/report.entity';
@@ -46,12 +47,13 @@ export class ReportsService implements IReportsService {
     ) {}
 
     /** @inheritDoc */
-    async findAll(): Promise<ReportDto[]> {
-        const reports = await this.reportRepository.find({
+    async findAll(options: IPaginationOptions): Promise<Pagination<ReportDto>> {
+        const paginated = await paginate(this.reportRepository, options, {
             relations: ['creator', 'images'],
+            order: { createdAt: 'DESC' },
         });
 
-        return reports.map(report => ({
+        const items: ReportDto[] = paginated.items.map(report => ({
             id: report.id,
             title: report.title,
             description: report.description,
@@ -69,6 +71,11 @@ export class ReportsService implements IReportsService {
                 url: img.imageUrl,
             })),
         }));
+
+        return {
+            items,
+            meta: paginated.meta,
+        };
     }
 
     /** @inheritDoc */
