@@ -130,4 +130,25 @@ class UserService {
   static Future<bool> rejectUser(String userId) async {
     return updateUserStatus(userId, UserStatus.rejected);
   }
+
+  /// Elimina un usuario del sistema de forma permanente.
+  /// 
+  /// [userId] ID del usuario a eliminar
+  /// 
+  /// Retorna [bool] true si la eliminación fue exitosa.
+  /// Lanza [ApiException] si hay errores de conectividad, autenticación o autorización.
+  /// 
+  /// ADVERTENCIA: Esta acción es irreversible.
+  /// 
+  /// Requiere autenticación: Sí (solo administradores)
+  static Future<bool> deleteUser(String userId) async {
+    final endpoint = ApiConfig.deleteUserByIdEndpoint.replaceAll(':id', userId);
+    
+    await ApiService.delete(
+      endpoint,
+      includeAuth: true,
+    );
+    
+    return true;
+  }
 }
