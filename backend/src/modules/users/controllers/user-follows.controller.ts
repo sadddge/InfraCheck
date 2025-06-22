@@ -1,13 +1,16 @@
-import { Controller, Get, Inject, Param, ParseIntPipe, Req } from '@nestjs/common';
+import { Controller, Get, Inject, Param, ParseIntPipe, Query, Req } from '@nestjs/common';
 import {
     ApiBearerAuth,
     ApiNotFoundResponse,
     ApiOperation,
     ApiParam,
+    ApiQuery,
     ApiResponse,
     ApiTags,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Pagination } from 'nestjs-typeorm-paginate';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { UserFollowedReportsResponseDto } from '../../reports/follows/dto';
 import {
     FOLLOWS_SERVICE,
@@ -87,9 +90,14 @@ export class UserFollowsController {
     @ApiNotFoundResponse({
         description: 'User not found',
     })
-    async getCurrentUserFollowedReports(@Req() req): Promise<UserFollowedReportsResponseDto> {
+    @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+    @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+    async getCurrentUserFollowedReports(
+        @Req() req,
+        @Query() { page, limit }: PaginationDto,
+    ): Promise<Pagination<UserFollowedReportsResponseDto>> {
         const userId = req.user.id;
-        return await this.followsService.getUserFollowedReports(userId);
+        return await this.followsService.getUserFollowedReports(userId, { page, limit });
     }
 
     /**
@@ -139,9 +147,12 @@ export class UserFollowsController {
     @ApiNotFoundResponse({
         description: 'User not found',
     })
+    @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+    @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     async getUserFollowedReports(
         @Param('userId', ParseIntPipe) userId: number,
-    ): Promise<UserFollowedReportsResponseDto> {
-        return await this.followsService.getUserFollowedReports(userId);
+        @Query() { page, limit }: PaginationDto,
+    ): Promise<Pagination<UserFollowedReportsResponseDto>> {
+        return await this.followsService.getUserFollowedReports(userId, { page, limit });
     }
 }

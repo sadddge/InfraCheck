@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 import {
     invalidRequest,
     reportAlreadyFollowed,
@@ -123,19 +124,28 @@ export class FollowsService implements IFollowsService {
     }
 
     /** @inheritDoc */
-    async getUserFollowedReports(userId: number): Promise<UserFollowedReportsResponseDto> {
+    async getUserFollowedReports(
+        userId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<UserFollowedReportsResponseDto>> {
         await this.validateUser(userId);
 
-        const [reports, total] = await this.reportRepository
+        const qb = this.reportRepository
             .createQueryBuilder('report')
             .innerJoin('report.followers', 'follower', 'follower.id = :userId', { userId })
-            .select(['report.id'])
-            .getManyAndCount();
+            .select(['report.id']);
 
-        return {
-            reports: reports.map(report => report.id),
-            total,
-        };
+        const paginated = await paginate<Report>(qb, options);
+
+        const items = paginated.items.map(report => ({
+            reportId: report.id,
+        }));
+
+        return new Pagination<UserFollowedReportsResponseDto>(
+            items,
+            paginated.meta,
+            paginated.links,
+        );
     }
 
     /** @inheritDoc */

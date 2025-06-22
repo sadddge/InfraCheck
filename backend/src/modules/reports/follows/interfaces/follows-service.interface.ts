@@ -1,3 +1,4 @@
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import {
     FollowActionResponseDto,
     FollowStatusResponseDto,
@@ -71,10 +72,7 @@ export interface IFollowsService {
      * console.log(`Unfollow successful: ${result.success}`);
      * ```
      */
-    unfollowReport(
-        userId: number,
-        reportId: number,
-    ): Promise<FollowActionResponseDto>;
+    unfollowReport(userId: number, reportId: number): Promise<FollowActionResponseDto>;
 
     /**
      * Checks the follow relationship status between a user and a report.
@@ -94,10 +92,7 @@ export interface IFollowsService {
      * }
      * ```
      */
-    isFollowingReport(
-        userId: number,
-        reportId: number,
-    ): Promise<FollowStatusResponseDto>;
+    isFollowingReport(userId: number, reportId: number): Promise<FollowStatusResponseDto>;
 
     /**
      * Retrieves all users following a specific report with detailed information.
@@ -133,7 +128,10 @@ export interface IFollowsService {
      * followedReports.reports.forEach(report => console.log(report.title));
      * ```
      */
-    getUserFollowedReports(userId: number): Promise<UserFollowedReportsResponseDto>;
+    getUserFollowedReports(
+        userId: number,
+        oprtions: IPaginationOptions,
+    ): Promise<Pagination<UserFollowedReportsResponseDto>>;
 
     /**
      * Retrieves only the user IDs of all followers for a specific report.
