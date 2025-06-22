@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/features/auth/presentation/account_menu.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
@@ -316,7 +317,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => context.pop(),
+                      onPressed: () => context.go('/account'),
                       icon: const Icon(
                         Icons.arrow_back,
                         color: Colors.white,

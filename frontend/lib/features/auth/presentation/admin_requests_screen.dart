@@ -201,7 +201,7 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => context.pop(),
+                      onPressed: () => context.go('/account'),
                       icon: const Icon(
                         Icons.arrow_back,
                         color: Colors.white,
