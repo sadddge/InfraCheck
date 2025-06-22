@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { userAlreadyExists, userNotFound } from 'src/common/helpers/exception.helper';
@@ -37,10 +38,11 @@ export class UsersService implements IUserService {
     ) {}
 
     /** @inheritDoc */
-    async findAll(status?: UserStatus): Promise<UserDto[]> {
+    async findAll(options: IPaginationOptions, status?: UserStatus): Promise<Pagination<UserDto>> {
         const where = status ? { status: Equal(status) } : {};
-        return this.userRepository.find({
+        const paginated = await paginate(this.userRepository, options, {
             where,
+            order: { createdAt: 'DESC' },
             select: {
                 id: true,
                 phoneNumber: true,
@@ -52,6 +54,17 @@ export class UsersService implements IUserService {
                 passwordUpdatedAt: true,
             },
         });
+        const items: UserDto[] = paginated.items.map(user => ({
+            id: user.id,
+            phoneNumber: user.phoneNumber,
+            name: user.name,
+            lastName: user.lastName,
+            role: user.role,
+            status: user.status,
+            createdAt: user.createdAt,
+            passwordUpdatedAt: user.passwordUpdatedAt,
+        }));
+        return new Pagination<UserDto>(items, paginated.meta, paginated.links);
     }
 
     /** @inheritDoc */
