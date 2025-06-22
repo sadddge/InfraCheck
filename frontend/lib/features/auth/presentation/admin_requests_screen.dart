@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../../../shared/widgets/navigation_bar.dart';
+import '../../../core/services/user_service.dart';
+import '../../../core/models/user_model.dart';
+import '../../../core/services/api_service.dart';
 
 /// Pantalla de gestión de solicitudes de ingreso para administradores.
 /// 
@@ -25,45 +28,45 @@ class AdminRequestsScreen extends StatefulWidget {
 
 class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
   bool _isLoading = false;
-  List<PendingUser> _pendingUsers = [];
+  List<User> _pendingUsers = [];
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _loadPendingUsers();
   }
-
   Future<void> _loadPendingUsers() async {
     setState(() {
       _isLoading = true;
-    });    // TODO: Implementar llamada al backend para obtener usuarios pendientes
-    // - Endpoint: GET /v1/admin/users/pending
-    // - Filtros: por fecha, rol, estado
-    // - Paginación para manejar grandes cantidades
-    // - Refresh automático cada X minutos
-    // Por ahora simulamos datos de ejemplo
-    await Future.delayed(const Duration(seconds: 1));
-    
-    setState(() {
-      _pendingUsers = [
-        PendingUser(
-          id: 1,
-          name: 'Juan Pérez',
-          phoneNumber: '+56912345678',
-          createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        ),
-        PendingUser(
-          id: 2,
-          name: 'María González',
-          phoneNumber: '+56987654321',
-          createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-        ),
-      ];
-      _isLoading = false;
+      _errorMessage = null;
     });
-  }
 
-  Future<void> _handleUserAction(PendingUser user, bool approve) async {
+    try {
+      // Obtener usuarios pendientes de aprobación desde el backend
+      final users = await UserService.getPendingUsers();
+      
+      setState(() {
+        _pendingUsers = users;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e is ApiException ? e.message : 'Error al cargar solicitudes';
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+  Future<void> _handleUserAction(User user, bool approve) async {
     final action = approve ? 'aprobar' : 'rechazar';
     final confirmed = await showDialog<bool>(
       context: context,
@@ -106,26 +109,64 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
       });
 
       try {
-        // TODO: Implementar llamada al backend para actualizar el estado del usuario
-        await Future.delayed(const Duration(seconds: 1));
+        // Usar el servicio real para aprobar o rechazar usuario
+        final success = approve 
+            ? await UserService.approveUser(user.id.toString())
+            : await UserService.rejectUser(user.id.toString());
         
-        setState(() {
-          _pendingUsers.removeWhere((u) => u.id == user.id);
-        });
+        if (success) {
+          setState(() {
+            _pendingUsers.removeWhere((u) => u.id == user.id);
+          });
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Usuario ${approve ? 'aprobado' : 'rechazado'} exitosamente'),
-              backgroundColor: approve ? Colors.green : Colors.red,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Icon(
+                      approve ? Icons.check_circle : Icons.cancel,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('Usuario ${approve ? 'aprobado' : 'rechazado'} exitosamente'),
+                    ),
+                  ],
+                ),
+                backgroundColor: approve ? Colors.green : Colors.red,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+            
+            // Si no quedan más solicitudes, mostrar mensaje adicional
+            if (_pendingUsers.isEmpty) {
+              Future.delayed(const Duration(milliseconds: 3500), () {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Row(
+                        children: [
+                          Icon(Icons.task_alt, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('Todas las solicitudes han sido procesadas'),
+                        ],
+                      ),
+                      backgroundColor: AppColors.primary,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              });
+            }
+          }
         }
       } catch (e) {
         if (mounted) {
+          final errorMessage = e is ApiException ? e.message : 'Error al $action usuario';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error al $action usuario: $e'),
+              content: Text(errorMessage),
               backgroundColor: Colors.red,
             ),
           );
@@ -167,18 +208,62 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
                         size: 24,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
+                    const SizedBox(width: 8),                    Expanded(
                       child: Text(
                         'Solicitudes de Ingreso',
                         style: AppTextStyles.heading,
                       ),
+                    ),
+                    IconButton(
+                      onPressed: _isLoading ? null : _loadPendingUsers,
+                      icon: Icon(
+                        Icons.refresh,
+                        color: _isLoading ? Colors.white.withOpacity(0.5) : Colors.white,
+                        size: 24,
+                      ),
+                      tooltip: 'Actualizar solicitudes',
                     ),
                   ],
                 ),
               ),
             ),
           ),
+
+          // Estadísticas rápidas
+          if (!_isLoading && _pendingUsers.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.pending_actions,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${_pendingUsers.length} solicitud${_pendingUsers.length != 1 ? 'es' : ''} pendiente${_pendingUsers.length != 1 ? 's' : ''}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Contenido
           Expanded(
@@ -251,8 +336,7 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
       ),
     );
   }
-
-  Widget _buildUserCard(PendingUser user) {
+  Widget _buildUserCard(User user) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -292,7 +376,7 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user.name,
+                        user.name + (user.lastName != null ? ' ${user.lastName}' : ''),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -309,7 +393,7 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Registrado: ${_formatDate(user.createdAt)}',
+                        'Registrado: ${user.createdAt != null ? _formatDate(user.createdAt!) : 'Fecha no disponible'}',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.iconGrey,
@@ -349,8 +433,7 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
-                  ),
+                    ),                  ),
                 ),
               ],
             ),
@@ -374,23 +457,4 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
       return 'hace un momento';
     }
   }
-}
-
-/// Modelo temporal para representar usuarios pendientes de aprobación.
-/// 
-/// TODO: Migrar a un modelo compartido en core/models cuando se integre con el backend.
-/// Este modelo contiene la información mínima necesaria para mostrar
-/// solicitudes pendientes en la interfaz administrativa.
-class PendingUser {
-  final int id;
-  final String name;
-  final String phoneNumber;
-  final DateTime createdAt;
-
-  PendingUser({
-    required this.id,
-    required this.name,
-    required this.phoneNumber,
-    required this.createdAt,
-  });
 }
