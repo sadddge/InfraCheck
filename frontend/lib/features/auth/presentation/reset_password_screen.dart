@@ -291,31 +291,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRequirement(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 2),
-      child: Row(
-        children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 14,
-            color: AppColors.teal800.withOpacity(0.7),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: AppTextStyles.caption.copyWith(
-              fontSize: 11,
-              color: AppColors.teal800.withOpacity(0.8),
-            ),
-          ),
-        ],
-      ),
+        ],      ),
     );
   }
 }

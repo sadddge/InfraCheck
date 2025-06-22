@@ -7,6 +7,30 @@ import 'dart:io';
 import '../../../shared/theme/colors.dart';
 import '../domain/camera_provider.dart';
 
+/// Pantalla principal de captura de fotografías para reportes.
+/// 
+/// Proporciona una interfaz de cámara completa con controles táctiles,
+/// gestión de flash, cambio de cámara y captura automática con geolocalización.
+/// La pantalla se ejecuta en modo inmersivo para máxima área de visualización.
+/// 
+/// Características principales:
+/// - Vista previa de cámara en pantalla completa
+/// - Control de flash (automático, encendido, apagado)
+/// - Cambio entre cámara frontal y trasera
+/// - Captura con coordenadas GPS automáticas
+/// - Interfaz táctil optimizada para una mano
+/// - Auto-enfoque por toque en pantalla
+/// 
+/// Estados del UI:
+/// - Modo inmersivo (sin barras de sistema)
+/// - Controles superpuestos semitransparentes
+/// - Feedback visual durante captura
+/// - Manejo de errores de cámara y permisos
+/// 
+/// Uso:
+/// ```dart
+/// context.push('/camera');
+/// ```
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
 
@@ -14,11 +38,26 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
+/// Estado interno de la pantalla de cámara.
+/// 
+/// Gestiona la lógica de la interfaz de cámara incluyendo:
+/// - Control de flash y configuraciones de cámara
+/// - Cambio entre cámaras disponibles (frontal/trasera)
+/// - Captura de fotos con prevención de múltiples disparos
+/// - Configuración del sistema UI (modo inmersivo)
+/// - Cleanup de recursos al salir de la pantalla
 class _CameraScreenState extends State<CameraScreen> {
+  /// Estado actual del flash (encendido/apagado)
   bool _isFlashOn = false;
+  
+  /// Índice de la cámara actualmente seleccionada
   int _currentCameraIndex = 0;
+  
+  /// Lista de cámaras disponibles en el dispositivo
   List<CameraDescription> _cameras = [];
-  bool _isCapturing = false; // Estado para controlar la captura de fotos
+  
+  /// Estado para prevenir múltiples capturas simultáneas
+  bool _isCapturing = false;
 
   @override
   void initState() {
@@ -45,7 +84,10 @@ class _CameraScreenState extends State<CameraScreen> {
     ));
     super.dispose();
   }
-
+  /// Alterna el estado del flash de la cámara.
+  /// 
+  /// Cambia entre flash encendido (modo torch) y apagado. Solo funciona
+  /// si la cámara está inicializada y soporta flash.
   Future<void> _toggleFlash() async {
     final provider = context.read<CameraProvider>();
     if (provider.controller?.value.isInitialized ?? false) {
@@ -57,6 +99,12 @@ class _CameraScreenState extends State<CameraScreen> {
       );
     }
   }
+  
+  /// Cambia entre las cámaras disponibles (frontal/trasera).
+  /// 
+  /// Libera la cámara actual, cambia al siguiente índice disponible
+  /// y reinicializa con la nueva cámara. Resetea el flash ya que
+  /// muchas cámaras frontales no lo soportan.
   Future<void> _switchCamera() async {
     if (_cameras.length > 1) {
       final provider = context.read<CameraProvider>();
@@ -71,7 +119,15 @@ class _CameraScreenState extends State<CameraScreen> {
       // Reinicializar con la nueva cámara
       await provider.initCameraWithDescription(_cameras[_currentCameraIndex]);
     }
-  }  Future<void> _capturePhoto() async {
+  }
+
+  /// Captura una fotografía con geolocalización automática.
+  /// 
+  /// Previene múltiples capturas simultáneas y proporciona feedback
+  /// visual y háptico al usuario. Maneja errores de captura mostrando
+  /// mensajes informativos. Garantiza una duración mínima de animación
+  /// para mejor experiencia de usuario.
+  Future<void> _capturePhoto() async {
     if (_isCapturing) return; // Evitar múltiples capturas simultáneas
     
     setState(() {
