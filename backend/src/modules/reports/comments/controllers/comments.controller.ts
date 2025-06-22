@@ -7,6 +7,7 @@ import {
     Inject,
     Param,
     Post,
+    Query,
     Req,
     UseGuards,
 } from '@nestjs/common';
@@ -18,9 +19,12 @@ import {
     ApiOkResponse,
     ApiOperation,
     ApiParam,
+    ApiQuery,
     ApiTags,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Pagination } from 'nestjs-typeorm-paginate';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { UserAccessGuard } from 'src/common/guards/user-access.guard';
 import { CommentDto } from '../dto/comment.dto';
 import { CreateCommentDto } from '../dto/create-comment.dto';
@@ -62,26 +66,28 @@ export class CommentsController {
     ) {}
 
     /**
-     * Retrieves all comments for a specific report.
-     * Returns comments ordered by creation date (most recent first) with complete
-     * creator and report information. Public endpoint accessible to all authenticated users.
+     * Retrieves paginated comments for a specific report.
+     * Returns comments ordered by creation date (newest first) with pagination metadata.
+     * Public endpoint accessible to authenticated users.
      *
      * @param reportId The unique identifier of the report to retrieve comments for
-     * @returns Array of comment DTOs with creator and report information
+     * @param page Page number for pagination (default: 1)
+     * @param limit Number of items per page (default: 10, max: 100)
+     * @returns Paginated comment DTOs with creator and report information
      *
      * @example
      * ```typescript
-     * // Get all comments for report 123
-     * GET /api/v1/reports/123/comments
+     * // Get comments for report 123, page 2
+     * GET /api/v1/reports/123/comments?page=2&limit=20
      * Authorization: Bearer <token>
      * ```
      */
     @Get()
     @HttpCode(200)
     @ApiOperation({
-        summary: 'Retrieve all comments for a report',
+        summary: 'Retrieve paginated comments for a report',
         description:
-            'This endpoint retrieves all comments associated with a specific report, ordered by creation date (newest first).',
+            'This endpoint retrieves paginated comments associated with a specific report. Supports query parameters page and limit.',
     })
     @ApiParam({
         name: 'reportId',
@@ -90,8 +96,10 @@ export class CommentsController {
         required: true,
         example: 123,
     })
+    @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+    @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
     @ApiOkResponse({
-        description: 'Comments retrieved successfully.',
+        description: 'Paginated comments retrieved successfully.',
         type: CommentDto,
         isArray: true,
     })
@@ -101,8 +109,11 @@ export class CommentsController {
     @ApiNotFoundResponse({
         description: 'Report not found. The report with the specified ID does not exist.',
     })
-    async findAllByReportId(@Param('reportId') reportId: number): Promise<CommentDto[]> {
-        return await this.commentsService.findAllByReportId(reportId);
+    async findAllByReportId(
+        @Param('reportId') reportId: number,
+        @Query() { page, limit }: PaginationDto,
+    ): Promise<Pagination<CommentDto>> {
+        return this.commentsService.findAllByReportId(reportId, { page, limit });
     }
 
     /**

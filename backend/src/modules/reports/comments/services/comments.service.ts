@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 import { Comment } from 'src/database/entities/comment.entity';
 import { Equal, Repository } from 'typeorm';
 import { CommentDto } from '../dto/comment.dto';
@@ -36,14 +37,17 @@ export class CommentsService implements ICommentsService {
     ) {}
 
     /** @inheritDoc */
-    async findAllByReportId(reportId: number): Promise<CommentDto[]> {
-        const comments = await this.commentRepository.find({
+    async findAllByReportId(
+        reportId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<CommentDto>> {
+        const paginated = await paginate<Comment>(this.commentRepository, options, {
             where: { report: { id: Equal(reportId) } },
             relations: ['creator', 'report'],
             order: { createdAt: 'DESC' },
         });
-
-        return comments.map(comment => this.mapToDto(comment));
+        const items = paginated.items.map(comment => this.mapToDto(comment));
+        return new Pagination<CommentDto>(items, paginated.meta, paginated.links);
     }
 
     /** @inheritDoc */
