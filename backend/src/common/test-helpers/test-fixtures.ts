@@ -5,13 +5,13 @@ import { ReportImage } from '../../database/entities/report-image.entity';
 import { Report } from '../../database/entities/report.entity';
 import { User } from '../../database/entities/user.entity';
 import { Vote } from '../../database/entities/vote.entity';
+import { ReportDto } from '../../modules/reports/dto/report.dto';
 import { ReportCategory } from '../enums/report-category.enums';
 import { ReportChangeType } from '../enums/report-change-type.enums';
 import { ReportState } from '../enums/report-state.enums';
 import { Role } from '../enums/roles.enums';
 import { UserStatus } from '../enums/user-status.enums';
 import { VoteType } from '../enums/vote-type.enums';
-import { ReportDto } from '../../modules/reports/dto/report.dto';
 
 /**
  * Test fixtures for creating mock data

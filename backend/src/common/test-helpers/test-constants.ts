@@ -99,3 +99,68 @@ export const TEST_VERIFICATION_DATA = {
     },
     TEST_CODES: ['123456', '000000', '999999', '111111'],
 } as const;
+
+// Test metadata for create report tests
+export const TEST_METADATA = {
+    BASE_METADATA: {
+        title: TEST_REPORT_DATA.TITLE,
+        description: TEST_REPORT_DATA.DESCRIPTION,
+        category: TEST_REPORT_DATA.CATEGORY,
+        latitude: TEST_COORDINATES.LATITUDE,
+        longitude: TEST_COORDINATES.LONGITUDE,
+    },
+    IMAGE_METADATA: {
+        takenAt: TEST_DATES.CREATED_AT,
+        latitude: TEST_COORDINATES.LATITUDE,
+        longitude: TEST_COORDINATES.LONGITUDE,
+    },
+} as const;
+
+/**
+ * Creates metadata for report creation tests
+ */
+export function createReportMetadata(imageCount = 2) {
+    const images = Array(imageCount).fill(null).map(() => ({
+        takenAt: new Date(),
+        latitude: TEST_COORDINATES.LATITUDE,
+        longitude: TEST_COORDINATES.LONGITUDE,
+    }));
+
+    return {
+        ...TEST_METADATA.BASE_METADATA,
+        images,
+    };
+}
+
+/**
+ * Creates stringified metadata for report creation tests
+ */
+export function createReportMetadataString(imageCount = 2) {
+    return JSON.stringify(createReportMetadata(imageCount));
+}
+
+/**
+ * Creates mock history data
+ */
+export function createMockReportHistory() {
+    return [
+        {
+            id: 1,
+            reportId: 123,
+            changeType: 'STATE_CHANGE',
+            fromValue: ReportState.PENDING,
+            toValue: ReportState.IN_PROGRESS,
+            changeDate: TEST_DATES.CREATED_AT,
+            userId: 1,
+        },
+        {
+            id: 2,
+            reportId: 123,
+            changeType: 'STATE_CHANGE',
+            fromValue: ReportState.IN_PROGRESS,
+            toValue: ReportState.RESOLVED,
+            changeDate: TEST_DATES.UPDATED_AT,
+            userId: 2,
+        },
+    ];
+}
