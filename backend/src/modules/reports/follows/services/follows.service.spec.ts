@@ -4,6 +4,7 @@ import { AppException } from 'src/common/exceptions/app.exception';
 import { Report } from 'src/database/entities/report.entity';
 import { User } from 'src/database/entities/user.entity';
 import { Repository } from 'typeorm';
+import { createMockReport, createMockUser, mockPaginate } from '../../../../common/test-helpers';
 import { FollowsService } from './follows.service';
 
 describe('FollowsService', () => {
@@ -11,18 +12,19 @@ describe('FollowsService', () => {
     let userRepository: jest.Mocked<Repository<User>>;
     let reportRepository: jest.Mocked<Repository<Report>>;
 
-    const mockUser = {
+    // Use mock factories for test data
+    const mockUser = createMockUser({
         id: 1,
         name: 'John',
         lastName: 'Doe',
-    } as unknown as User;
+    });
 
-    const mockReport = {
+    const mockReport = createMockReport({
         id: 1,
         title: 'Test Report',
         description: 'Test Description',
         followers: [],
-    } as unknown as Report;
+    });
 
     const mockQueryBuilder = {
         relation: jest.fn().mockReturnThis(),
@@ -59,7 +61,6 @@ describe('FollowsService', () => {
                 },
             ],
         }).compile();
-
         service = module.get<FollowsService>(FollowsService);
         userRepository = module.get(getRepositoryToken(User));
         reportRepository = module.get(getRepositoryToken(Report));
@@ -189,144 +190,165 @@ describe('FollowsService', () => {
             await expect(service.isFollowingReport(1, 0)).rejects.toThrow(AppException);
         });
     });
-
     describe('getReportFollowers', () => {
-        const mockReportWithFollowers = {
-            ...mockReport,
-            followers: [
+        it('should return list of followers with pagination', async () => {
+            const reportId = 1;
+            const options = { page: 1, limit: 10 };
+            const mockUsers = [
                 { id: 1, name: 'John' },
                 { id: 2, name: 'Jane' },
-            ],
-        };
+            ];
 
-        it('should return list of follower names', async () => {
             reportRepository.findOne.mockResolvedValue(mockReport);
-            mockQueryBuilder.getOne.mockResolvedValue(mockReportWithFollowers);
 
-            const result = await service.getReportFollowers(1);
+            const mockPaginatedResponse = {
+                items: mockUsers,
+                meta: {
+                    totalItems: 2,
+                    itemCount: 2,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/followers?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/followers?page=1',
+                },
+            };
 
-            expect(result).toEqual({ followers: ['John', 'Jane'] });
-            expect(reportRepository.createQueryBuilder).toHaveBeenCalledWith('report');
-            expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
-                'report.followers',
-                'follower',
-            );
-            expect(mockQueryBuilder.where).toHaveBeenCalledWith('report.id = :reportId', {
-                reportId: 1,
-            });
-            expect(mockQueryBuilder.getOne).toHaveBeenCalled();
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
+
+            const result = await service.getReportFollowers(reportId, options);
+
+            expect(mockPaginate).toHaveBeenCalledWith(expect.any(Object), options);
+            expect(result.items).toEqual([
+                { userId: 1, username: 'John' },
+                { userId: 2, username: 'Jane' },
+            ]);
         });
 
         it('should return empty array when report has no followers', async () => {
+            const reportId = 1;
+            const options = { page: 1, limit: 10 };
+
             reportRepository.findOne.mockResolvedValue(mockReport);
-            mockQueryBuilder.getOne.mockResolvedValue({ ...mockReport, followers: [] });
 
-            const result = await service.getReportFollowers(1);
+            const mockPaginatedResponse = {
+                items: [],
+                meta: {
+                    totalItems: 0,
+                    itemCount: 0,
+                    itemsPerPage: 10,
+                    totalPages: 0,
+                    currentPage: 1,
+                },
+                links: {
+                    first: '',
+                    previous: '',
+                    next: '',
+                    last: '',
+                },
+            };
 
-            expect(result).toEqual({ followers: [] });
-        });
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
-        it('should return empty array when report is null', async () => {
-            reportRepository.findOne.mockResolvedValue(mockReport);
-            mockQueryBuilder.getOne.mockResolvedValue(null);
+            const result = await service.getReportFollowers(reportId, options);
 
-            const result = await service.getReportFollowers(1);
-
-            expect(result).toEqual({ followers: [] });
+            expect(result.items).toEqual([]);
         });
 
         it('should throw AppException when report does not exist', async () => {
+            const reportId = 1;
+            const options = { page: 1, limit: 10 };
+
             reportRepository.findOne.mockResolvedValue(null);
 
-            await expect(service.getReportFollowers(1)).rejects.toThrow(AppException);
+            await expect(service.getReportFollowers(reportId, options)).rejects.toThrow(
+                AppException,
+            );
         });
     });
 
     describe('getUserFollowedReports', () => {
         it('should return list of followed report IDs and total count', async () => {
+            const userId = 1;
+            const options = { page: 1, limit: 10 };
+            const mockReports = [
+                { id: 1, title: 'Report 1' },
+                { id: 2, title: 'Report 2' },
+                { id: 3, title: 'Report 3' },
+            ];
+
             userRepository.findOne.mockResolvedValue(mockUser);
-            const mockReports = [{ id: 1 }, { id: 2 }, { id: 3 }];
-            mockQueryBuilder.getManyAndCount.mockResolvedValue([mockReports, 3]);
 
-            const result = await service.getUserFollowedReports(1);
+            const mockPaginatedResponse = {
+                items: mockReports,
+                meta: {
+                    totalItems: 3,
+                    itemCount: 3,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/followed-reports?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/followed-reports?page=1',
+                },
+            };
 
-            expect(result).toEqual({ reports: [1, 2, 3], total: 3 });
-            expect(reportRepository.createQueryBuilder).toHaveBeenCalledWith('report');
-            expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
-                'report.followers',
-                'follower',
-                'follower.id = :userId',
-                { userId: 1 },
-            );
-            expect(mockQueryBuilder.select).toHaveBeenCalledWith(['report.id']);
-            expect(mockQueryBuilder.getManyAndCount).toHaveBeenCalled();
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
+
+            const result = await service.getUserFollowedReports(userId, options);
+
+            expect(mockPaginate).toHaveBeenCalledWith(expect.any(Object), options);
+            expect(result.items).toEqual([
+                { reportId: 1, reportTitle: 'Report 1' },
+                { reportId: 2, reportTitle: 'Report 2' },
+                { reportId: 3, reportTitle: 'Report 3' },
+            ]);
         });
-
         it('should return empty array when user follows no reports', async () => {
+            const userId = 1;
+            const options = { page: 1, limit: 10 };
+
             userRepository.findOne.mockResolvedValue(mockUser);
-            mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
 
-            const result = await service.getUserFollowedReports(1);
+            const mockPaginatedResponse = {
+                items: [],
+                meta: {
+                    totalItems: 0,
+                    itemCount: 0,
+                    itemsPerPage: 10,
+                    totalPages: 0,
+                    currentPage: 1,
+                },
+                links: {
+                    first: '',
+                    previous: '',
+                    next: '',
+                    last: '',
+                },
+            };
 
-            expect(result).toEqual({ reports: [], total: 0 });
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
+
+            const result = await service.getUserFollowedReports(userId, options);
+
+            expect(result.items).toEqual([]);
         });
-
         it('should throw AppException when user does not exist', async () => {
+            const userId = 1;
+            const options = { page: 1, limit: 10 };
+
             userRepository.findOne.mockResolvedValue(null);
 
-            await expect(service.getUserFollowedReports(1)).rejects.toThrow(AppException);
-        });
-    });
-
-    describe('getFollowersIds', () => {
-        const mockReportWithFollowers = {
-            ...mockReport,
-            followers: [
-                { id: 1, name: 'John' },
-                { id: 2, name: 'Jane' },
-            ],
-        };
-
-        it('should return list of follower IDs', async () => {
-            reportRepository.findOne.mockResolvedValue(mockReport);
-            mockQueryBuilder.getOne.mockResolvedValue(mockReportWithFollowers);
-
-            const result = await service.getFollowersIds(1);
-
-            expect(result).toEqual({ userIds: [1, 2] });
-            expect(reportRepository.createQueryBuilder).toHaveBeenCalledWith('report');
-            expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
-                'report.followers',
-                'follower',
+            await expect(service.getUserFollowedReports(userId, options)).rejects.toThrow(
+                AppException,
             );
-            expect(mockQueryBuilder.where).toHaveBeenCalledWith('report.id = :reportId', {
-                reportId: 1,
-            });
-            expect(mockQueryBuilder.getOne).toHaveBeenCalled();
-        });
-
-        it('should return empty array when report has no followers', async () => {
-            reportRepository.findOne.mockResolvedValue(mockReport);
-            mockQueryBuilder.getOne.mockResolvedValue({ ...mockReport, followers: [] });
-
-            const result = await service.getFollowersIds(1);
-
-            expect(result).toEqual({ userIds: [] });
-        });
-
-        it('should return empty array when report is null', async () => {
-            reportRepository.findOne.mockResolvedValue(mockReport);
-            mockQueryBuilder.getOne.mockResolvedValue(null);
-
-            const result = await service.getFollowersIds(1);
-
-            expect(result).toEqual({ userIds: [] });
-        });
-
-        it('should throw AppException when report does not exist', async () => {
-            reportRepository.findOne.mockResolvedValue(null);
-
-            await expect(service.getFollowersIds(1)).rejects.toThrow(AppException);
         });
     });
 });

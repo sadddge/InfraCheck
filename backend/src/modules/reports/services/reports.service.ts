@@ -1,7 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
+import { ReportChangeType } from 'src/common/enums/report-change-type.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { reportNotFound } from 'src/common/helpers/exception.helper';
+import { ReportChange } from 'src/database/entities/report-change.entity';
 import { Report } from 'src/database/entities/report.entity';
 import {
     IUploadService,
@@ -39,6 +42,8 @@ export class ReportsService implements IReportsService {
      * @param uploadService Service for handling image uploads and processing
      */
     constructor(
+        @InjectRepository(ReportChange)
+        private readonly changeRepository: Repository<ReportChange>,
         @InjectRepository(Report)
         private readonly reportRepository: Repository<Report>,
         @Inject(UPLOAD_SERVICE)
@@ -46,12 +51,13 @@ export class ReportsService implements IReportsService {
     ) {}
 
     /** @inheritDoc */
-    async findAll(): Promise<ReportDto[]> {
-        const reports = await this.reportRepository.find({
+    async findAll(options: IPaginationOptions): Promise<Pagination<ReportDto>> {
+        const paginated = await paginate(this.reportRepository, options, {
             relations: ['creator', 'images'],
+            order: { createdAt: 'DESC' },
         });
 
-        return reports.map(report => ({
+        const items: ReportDto[] = paginated.items.map(report => ({
             id: report.id,
             title: report.title,
             description: report.description,
@@ -69,6 +75,8 @@ export class ReportsService implements IReportsService {
                 url: img.imageUrl,
             })),
         }));
+
+        return new Pagination(items, paginated.meta, paginated.links);
     }
 
     /** @inheritDoc */
@@ -103,21 +111,41 @@ export class ReportsService implements IReportsService {
     }
 
     /** @inheritDoc */
-    async findHistoryByReportId(reportId: number): Promise<ReportChangeDto[]> {
-        const report = await this.reportRepository.findOne({
+    async findHistoryByReportId(
+        reportId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<ReportChangeDto>> {
+        const exists = await this.reportRepository.findOne({
             where: { id: Equal(reportId) },
-            relations: ['changes', 'changes.creator'],
         });
-        if (!report) {
+        if (!exists) {
             reportNotFound();
         }
-        return report.changes.map(change => ({
-            creatorId: change.creator.id,
+
+        const qb = this.changeRepository
+            .createQueryBuilder('change')
+            .innerJoin('change.report', 'report', 'report.id = :reportId', { reportId })
+            .innerJoinAndSelect('change.creator', 'creator')
+            .select([
+                'creator.id',
+                'change.id',
+                'change.changeType',
+                'change.from',
+                'change.to',
+                'change.createdAt',
+            ])
+            .orderBy('change.createdAt', 'DESC');
+
+        const paginated = await paginate<ReportChange>(qb, options);
+        const items: ReportChangeDto[] = paginated.items.map(change => ({
+            id: change.id,
             changeType: change.changeType,
             from: change.from,
             to: change.to,
             createdAt: change.createdAt,
+            creatorId: change.creator.id,
         }));
+        return new Pagination<ReportChangeDto>(items, paginated.meta, paginated.links);
     }
 
     /** @inheritDoc */
@@ -183,7 +211,7 @@ export class ReportsService implements IReportsService {
     }
 
     /** @inheritDoc */
-    async updateState(id: number, state: ReportState): Promise<ReportDto> {
+    async updateState(id: number, creatorId: number, state: ReportState): Promise<ReportDto> {
         const report = await this.reportRepository.findOne({
             where: { id: Equal(id) },
             relations: ['creator', 'images'],
@@ -192,6 +220,20 @@ export class ReportsService implements IReportsService {
         if (!report) {
             reportNotFound();
         }
+
+        if (report.state === state) {
+            return this.findById(report.id);
+        }
+
+        const change = this.changeRepository.create({
+            report,
+            creator: { id: creatorId },
+            changeType: ReportChangeType.STATE,
+            from: report.state,
+            to: state,
+        });
+
+        await this.changeRepository.save(change);
 
         report.state = state;
         const updatedReport = await this.reportRepository.save(report);

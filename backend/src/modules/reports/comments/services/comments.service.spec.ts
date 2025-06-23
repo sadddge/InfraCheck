@@ -2,21 +2,38 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Comment } from 'src/database/entities/comment.entity';
 import { Repository } from 'typeorm';
+import {
+    createMockComment,
+    createMockRepository,
+    mockPaginate,
+} from '../../../../common/test-helpers';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { CommentsService } from './comments.service';
 
 describe('CommentsService', () => {
     let service: CommentsService;
-    let repository: Repository<Comment>;
+    let repository: jest.Mocked<Repository<Comment>>;
 
-    const mockRepository = {
-        find: jest.fn(),
-        create: jest.fn(),
-        save: jest.fn(),
-        delete: jest.fn(),
-    };
+    // Helper function to reduce code duplication
+    const createMockPaginatedResponse = (items: unknown[], totalItems?: number) => ({
+        items,
+        meta: {
+            totalItems: totalItems ?? items.length,
+            itemCount: items.length,
+            itemsPerPage: 10,
+            totalPages: totalItems ? Math.ceil(totalItems / 10) : Math.ceil(items.length / 10),
+            currentPage: 1,
+        },
+        links: {
+            first: 'http://localhost:3000/comments?page=1',
+            previous: '',
+            next: '',
+            last: `http://localhost:3000/comments?page=${totalItems ? Math.ceil(totalItems / 10) : Math.ceil(items.length / 10)}`,
+        },
+    });
 
     beforeEach(async () => {
+        const mockRepository = createMockRepository<Repository<Comment>>();
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 CommentsService,
@@ -26,9 +43,8 @@ describe('CommentsService', () => {
                 },
             ],
         }).compile();
-
         service = module.get<CommentsService>(CommentsService);
-        repository = module.get<Repository<Comment>>(getRepositoryToken(Comment));
+        repository = module.get(getRepositoryToken(Comment));
     });
 
     afterEach(() => {
@@ -39,6 +55,7 @@ describe('CommentsService', () => {
         it('should return an array of comment DTOs for a given report ID', async () => {
             // Arrange
             const reportId = 1;
+            const options = { page: 1, limit: 10 };
             const mockComments = [
                 {
                     id: 1,
@@ -48,20 +65,21 @@ describe('CommentsService', () => {
                     report: { id: 1, title: 'Test Report' },
                 },
             ];
+            const mockPaginatedResponse = createMockPaginatedResponse(mockComments);
 
-            mockRepository.find.mockResolvedValue(mockComments);
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, options);
 
             // Assert
-            expect(repository.find).toHaveBeenCalledWith({
+            expect(mockPaginate).toHaveBeenCalledWith(repository, options, {
                 where: { report: { id: expect.any(Object) } },
                 relations: ['creator', 'report'],
                 order: { createdAt: 'DESC' },
             });
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
+            expect(result.items).toHaveLength(1);
+            expect(result.items[0]).toEqual({
                 id: 1,
                 content: 'Test comment',
                 createdAt: mockComments[0].createdAt,
@@ -76,27 +94,31 @@ describe('CommentsService', () => {
                 },
             });
         });
-
         it('should return an empty array when no comments exist for the report', async () => {
             // Arrange
             const reportId = 1;
-            mockRepository.find.mockResolvedValue([]);
+            const options = { page: 1, limit: 10 };
+            const mockPaginatedResponse = createMockPaginatedResponse([]);
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, options);
 
             // Assert
-            expect(result).toEqual([]);
+            expect(result.items).toEqual([]);
         });
-
         it('should handle database errors', async () => {
             // Arrange
             const reportId = 1;
+            const options = { page: 1, limit: 10 };
             const error = new Error('Database error');
-            mockRepository.find.mockRejectedValue(error);
+            mockPaginate.mockRejectedValue(error);
 
             // Act & Assert
-            await expect(service.findAllByReportId(reportId)).rejects.toThrow('Database error');
+            await expect(service.findAllByReportId(reportId, options)).rejects.toThrow(
+                'Database error',
+            );
         });
     });
 
@@ -106,23 +128,17 @@ describe('CommentsService', () => {
             const reportId = 1;
             const userId = 1;
             const createCommentDto: CreateCommentDto = { content: 'New comment' };
-
-            const mockCreatedComment = {
+            const mockCreatedComment = createMockComment({
                 content: 'New comment',
-                report: { id: reportId },
-                creator: { id: userId },
-            };
+            });
 
-            const mockSavedComment = {
+            const mockSavedComment = createMockComment({
                 id: 1,
                 content: 'New comment',
                 createdAt: new Date(),
-                creator: { id: 1, name: 'John', lastName: 'Doe' },
-                report: { id: 1, title: 'Test Report' },
-            };
-
-            mockRepository.create.mockReturnValue(mockCreatedComment);
-            mockRepository.save.mockResolvedValue(mockSavedComment);
+            });
+            repository.create.mockReturnValue(mockCreatedComment);
+            repository.save.mockResolvedValue(mockSavedComment);
 
             // Act
             const result = await service.createComment(reportId, userId, createCommentDto);
@@ -140,8 +156,8 @@ describe('CommentsService', () => {
                 createdAt: mockSavedComment.createdAt,
                 creator: {
                     id: 1,
-                    firstName: 'John',
-                    lastName: 'Doe',
+                    firstName: 'Test User',
+                    lastName: 'Test Last',
                 },
                 report: {
                     id: 1,
@@ -156,9 +172,8 @@ describe('CommentsService', () => {
             const userId = 1;
             const createCommentDto: CreateCommentDto = { content: 'New comment' };
             const error = new Error('Save error');
-
-            mockRepository.create.mockReturnValue({});
-            mockRepository.save.mockRejectedValue(error);
+            repository.create.mockReturnValue({} as Comment);
+            repository.save.mockRejectedValue(error);
 
             // Act & Assert
             await expect(service.createComment(reportId, userId, createCommentDto)).rejects.toThrow(
@@ -171,7 +186,7 @@ describe('CommentsService', () => {
         it('should delete a comment by ID', async () => {
             // Arrange
             const commentId = 1;
-            mockRepository.delete.mockResolvedValue({ affected: 1 });
+            repository.delete.mockResolvedValue({ affected: 1, raw: {} });
 
             // Act
             await service.delete(commentId);
@@ -184,7 +199,7 @@ describe('CommentsService', () => {
             // Arrange
             const commentId = 1;
             const error = new Error('Delete error');
-            mockRepository.delete.mockRejectedValue(error);
+            repository.delete.mockRejectedValue(error);
 
             // Act & Assert
             await expect(service.delete(commentId)).rejects.toThrow('Delete error');
@@ -193,7 +208,7 @@ describe('CommentsService', () => {
         it('should not throw error when deleting non-existent comment', async () => {
             // Arrange
             const commentId = 999;
-            mockRepository.delete.mockResolvedValue({ affected: 0 });
+            repository.delete.mockResolvedValue({ affected: 0, raw: {} });
 
             // Act & Assert
             await expect(service.delete(commentId)).resolves.not.toThrow();
@@ -211,14 +226,15 @@ describe('CommentsService', () => {
                 creator: { id: 2, name: 'Jane', lastName: 'Smith' },
                 report: { id: 1, title: 'Sample Report' },
             };
+            const mockPaginatedResponse = createMockPaginatedResponse([mockComment]);
 
-            mockRepository.find.mockResolvedValue([mockComment]);
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, { page: 1, limit: 10 });
 
             // Assert
-            expect(result[0]).toEqual({
+            expect(result.items[0]).toEqual({
                 id: 1,
                 content: 'Test content',
                 createdAt: new Date('2023-01-01'),
@@ -233,7 +249,6 @@ describe('CommentsService', () => {
                 },
             });
         });
-
         it('should handle special characters in content', async () => {
             // Arrange
             const reportId = 1;
@@ -245,14 +260,15 @@ describe('CommentsService', () => {
                 creator: { id: 1, name: 'Test', lastName: 'User' },
                 report: { id: 1, title: 'Test Report' },
             };
+            const mockPaginatedResponse = createMockPaginatedResponse([mockComment]);
 
-            mockRepository.find.mockResolvedValue([mockComment]);
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, { page: 1, limit: 10 });
 
             // Assert
-            expect(result[0].content).toBe(specialContent);
+            expect(result.items[0].content).toBe(specialContent);
         });
     });
 
@@ -262,7 +278,6 @@ describe('CommentsService', () => {
             const reportId = 1;
             const date1 = new Date('2023-01-01');
             const date2 = new Date('2023-01-02');
-
             const mockComments = [
                 {
                     id: 2,
@@ -279,35 +294,31 @@ describe('CommentsService', () => {
                     report: { id: 1, title: 'Test Report' },
                 },
             ];
+            const mockPaginatedResponse = createMockPaginatedResponse(mockComments);
 
-            mockRepository.find.mockResolvedValue(mockComments);
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, { page: 1, limit: 10 });
 
             // Assert
-            expect(result).toHaveLength(2);
-            expect(result[0].id).toBe(2); // More recent first due to DESC order
-            expect(result[1].id).toBe(1);
+            expect(result.items).toHaveLength(2);
+            expect(result.items[0].id).toBe(2); // More recent first due to DESC order
+            expect(result.items[1].id).toBe(1);
         });
-
         it('should handle large comment content', async () => {
             // Arrange
             const reportId = 1;
             const userId = 1;
             const largeContent = 'A'.repeat(1000); // 1000 character string
             const createCommentDto: CreateCommentDto = { content: largeContent };
-
-            const mockSavedComment = {
+            const mockSavedComment = createMockComment({
                 id: 1,
                 content: largeContent,
                 createdAt: new Date(),
-                creator: { id: 1, name: 'John', lastName: 'Doe' },
-                report: { id: 1, title: 'Test Report' },
-            };
-
-            mockRepository.create.mockReturnValue({});
-            mockRepository.save.mockResolvedValue(mockSavedComment);
+            });
+            repository.create.mockReturnValue({} as Comment);
+            repository.save.mockResolvedValue(mockSavedComment);
 
             // Act
             const result = await service.createComment(reportId, userId, createCommentDto);

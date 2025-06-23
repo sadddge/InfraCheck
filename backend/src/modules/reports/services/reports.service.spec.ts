@@ -1,144 +1,106 @@
-﻿import { AppException } from '../../../common/exceptions/app.exception';
-import { Test, TestingModule } from '@nestjs/testing';
+﻿import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AppException } from '../../../common/exceptions/app.exception';
 
-import { Readable } from 'node:stream';
-import { ReportCategory } from 'src/common/enums/report-category.enums';
-import { ReportChangeType } from 'src/common/enums/report-change-type.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
-import { Role } from 'src/common/enums/roles.enums';
-import { UserStatus } from 'src/common/enums/user-status.enums';
 import { ReportChange } from 'src/database/entities/report-change.entity';
-import { ReportImage } from 'src/database/entities/report-image.entity';
 import { Report } from 'src/database/entities/report.entity';
-import { User } from 'src/database/entities/user.entity';
 import {
     IUploadService,
     UPLOAD_SERVICE,
 } from 'src/modules/upload/interfaces/upload-service.interface';
+import {
+    DEFAULT_PAGINATION_DTO,
+    TEST_COORDINATES,
+    TEST_DATES,
+    TEST_IDS,
+    TEST_REPORT_DATA,
+    createMockFiles,
+    createMockPaginationResponse,
+    createMockReport,
+    createMockReportChange,
+    createMockReportImage,
+    createMockRepository,
+    createMockUploadService,
+    mockPaginate,
+} from '../../../common/test-helpers';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportsService } from './reports.service';
 
 describe('ReportsService', () => {
     let service: ReportsService;
     let reportRepository: jest.Mocked<Repository<Report>>;
+    let changeRepository: jest.Mocked<Repository<ReportChange>>;
     let uploadService: jest.Mocked<IUploadService>;
 
-    // Mock data
-    const mockUser: User = {
-        id: 1,
-        name: 'Test User',
-        lastName: 'Test Last',
-        phoneNumber: '+1234567890',
-        password: 'hashedPassword',
-        role: Role.NEIGHBOR,
-        status: UserStatus.ACTIVE,
-        createdAt: new Date(),
-        passwordUpdatedAt: null,
-        refreshTokens: [],
-        reports: [],
-        comments: [],
-        votes: [],
-        reportChanges: [],
-        messages: [],
-        reportsFollowed: [],
-    };
+    // Mock data using test fixtures
+    const mockReportImage = createMockReportImage();
+    const mockReport = createMockReport({ images: [mockReportImage] });
+    const mockReportChange = createMockReportChange();
 
-    const mockReportImage: ReportImage = {
-        id: 1,
-        imageUrl: 'https://example.com/image1.jpg',
-        takenAt: new Date('2024-01-01T10:00:00Z'),
-        latitude: -33.4489,
-        longitude: -70.6693,
-        createdAt: new Date('2024-01-01T10:00:00Z'),
-        report: {} as Report,
-    };
+    // Helper functions to reduce code duplication
+    const createMockQueryBuilder = () => ({
+        innerJoin: jest.fn().mockReturnThis(),
+        innerJoinAndSelect: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+    });
+    const createExpectedReportDto = (
+        report = mockReport,
+        images = [mockReportImage],
+        creatorId?: number,
+    ) => ({
+        id: report.id,
+        title: report.title,
+        description: report.description,
+        category: report.category,
+        state: report.state,
+        isVisible: report.isVisible,
+        latitude: report.latitude,
+        longitude: report.longitude,
+        createdAt: report.createdAt,
+        creatorId: creatorId ?? report.creator?.id,
+        images: images.map(img => ({
+            takenAt: img.takenAt,
+            latitude: img.latitude,
+            longitude: img.longitude,
+            url: img.imageUrl,
+        })),
+    });
 
-    const mockReport: Report = {
-        id: 1,
-        title: 'Test Report',
-        description: 'Test description',
-        category: ReportCategory.INFRASTRUCTURE,
-        state: ReportState.PENDING,
-        isVisible: true,
-        latitude: -33.4489,
-        longitude: -70.6693,
-        createdAt: new Date('2024-01-01T10:00:00Z'),
-        creator: mockUser,
-        images: [mockReportImage],
-        changes: [],
-        comments: [],
-        votes: [],
-        followers: [],
-    };
-
-    const mockReportChange: ReportChange = {
-        id: 1,
-        changeType: ReportChangeType.STATE,
-        from: ReportState.PENDING,
-        to: ReportState.IN_PROGRESS,
-        createdAt: new Date('2024-01-02T10:00:00Z'),
-        creator: mockUser,
-        report: mockReport,
-    };
+    const createExpectedReportChangeDto = (change = mockReportChange) => ({
+        id: change.id,
+        changeType: change.changeType,
+        from: change.from,
+        to: change.to,
+        createdAt: change.createdAt,
+        creatorId: change.creator.id,
+    });
 
     const mockCreateReportDto: CreateReportDto = {
-        title: 'New Report',
-        description: 'New report description',
-        category: ReportCategory.INFRASTRUCTURE,
+        title: TEST_REPORT_DATA.TITLE,
+        description: TEST_REPORT_DATA.DESCRIPTION,
+        category: TEST_REPORT_DATA.CATEGORY,
         images: [
             {
-                takenAt: '2024-01-01T10:00:00Z',
-                latitude: -33.4489,
-                longitude: -70.6693,
+                takenAt: TEST_DATES.CREATED_AT.toISOString(),
+                latitude: TEST_COORDINATES.LATITUDE,
+                longitude: TEST_COORDINATES.LONGITUDE,
             },
             {
-                takenAt: '2024-01-01T10:05:00Z',
-                latitude: -33.449,
-                longitude: -70.6694,
+                takenAt: TEST_DATES.UPDATED_AT.toISOString(),
+                latitude: TEST_COORDINATES.LATITUDE + 0.001,
+                longitude: TEST_COORDINATES.LONGITUDE + 0.001,
             },
         ],
     };
 
-    const mockFiles: Express.Multer.File[] = [
-        {
-            fieldname: 'images',
-            originalname: 'image1.jpg',
-            encoding: '7bit',
-            mimetype: 'image/jpeg',
-            size: 1024,
-            buffer: Buffer.from('fake-image-data'),
-            destination: '',
-            filename: '',
-            path: '',
-            stream: new Readable(),
-        },
-        {
-            fieldname: 'images',
-            originalname: 'image2.jpg',
-            encoding: '7bit',
-            mimetype: 'image/jpeg',
-            size: 2048,
-            buffer: Buffer.from('fake-image-data-2'),
-            destination: '',
-            filename: '',
-            path: '',
-            stream: new Readable(),
-        },
-    ];
-
+    const mockFiles = createMockFiles(2);
     beforeEach(async () => {
-        const mockReportRepository = {
-            find: jest.fn(),
-            findOne: jest.fn(),
-            create: jest.fn(),
-            save: jest.fn(),
-        };
-
-        const mockUploadService = {
-            uploadFile: jest.fn(),
-        };
+        const mockReportRepository = createMockRepository<Repository<Report>>();
+        const mockChangeRepository = createMockRepository<Repository<ReportChange>>();
+        const mockUploadService = createMockUploadService();
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -148,77 +110,68 @@ describe('ReportsService', () => {
                     useValue: mockReportRepository,
                 },
                 {
+                    provide: getRepositoryToken(ReportChange),
+                    useValue: mockChangeRepository,
+                },
+                {
                     provide: UPLOAD_SERVICE,
                     useValue: mockUploadService,
                 },
             ],
         }).compile();
-
         service = module.get<ReportsService>(ReportsService);
         reportRepository = module.get(getRepositoryToken(Report));
+        changeRepository = module.get(getRepositoryToken(ReportChange));
         uploadService = module.get(UPLOAD_SERVICE);
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
     it('should be defined', () => {
         expect(service).toBeDefined();
     });
-
     describe('findAll', () => {
         it('should return all reports with mapped DTOs', async () => {
             // Arrange
             const reports = [mockReport];
-            reportRepository.find.mockResolvedValue(reports);
+            const mockPaginatedResponse = createMockPaginationResponse(reports);
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAll();
+            const result = await service.findAll(DEFAULT_PAGINATION_DTO);
 
             // Assert
-            expect(reportRepository.find).toHaveBeenCalledWith({
+            expect(mockPaginate).toHaveBeenCalledWith(reportRepository, DEFAULT_PAGINATION_DTO, {
                 relations: ['creator', 'images'],
+                order: { createdAt: 'DESC' },
             });
 
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
-                id: mockReport.id,
-                title: mockReport.title,
-                description: mockReport.description,
-                category: mockReport.category,
-                state: mockReport.state,
-                isVisible: mockReport.isVisible,
-                latitude: mockReport.latitude,
-                longitude: mockReport.longitude,
-                createdAt: mockReport.createdAt,
-                creatorId: mockReport.creator.id,
-                images: [
-                    {
-                        takenAt: mockReportImage.takenAt,
-                        latitude: mockReportImage.latitude,
-                        longitude: mockReportImage.longitude,
-                        url: mockReportImage.imageUrl,
-                    },
-                ],
-            });
+            expect(result.items).toHaveLength(1);
+            expect(result.items[0]).toEqual(createExpectedReportDto());
         });
-
         it('should return empty array when no reports exist', async () => {
             // Arrange
-            reportRepository.find.mockResolvedValue([]);
+            const mockPaginatedResponse = createMockPaginationResponse([]);
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAll();
+            const result = await service.findAll(DEFAULT_PAGINATION_DTO);
 
             // Assert
-            expect(result).toEqual([]);
+            expect(result.items).toEqual([]);
         });
     });
-
     describe('findById', () => {
         it('should return a report by ID', async () => {
             // Arrange
             reportRepository.findOne.mockResolvedValue(mockReport);
 
             // Act
-            const result = await service.findById(1);
+            const result = await service.findById(TEST_IDS.USER_ID);
 
             // Assert
             expect(reportRepository.findOne).toHaveBeenCalledWith({
@@ -226,26 +179,7 @@ describe('ReportsService', () => {
                 relations: ['creator', 'images'],
             });
 
-            expect(result).toEqual({
-                id: mockReport.id,
-                title: mockReport.title,
-                description: mockReport.description,
-                category: mockReport.category,
-                state: mockReport.state,
-                isVisible: mockReport.isVisible,
-                latitude: mockReport.latitude,
-                longitude: mockReport.longitude,
-                createdAt: mockReport.createdAt,
-                creatorId: mockReport.creator.id,
-                images: [
-                    {
-                        takenAt: mockReportImage.takenAt,
-                        latitude: mockReportImage.latitude,
-                        longitude: mockReportImage.longitude,
-                        url: mockReportImage.imageUrl,
-                    },
-                ],
-            });
+            expect(result).toEqual(createExpectedReportDto());
         });
 
         it('should throw AppException when report not found', async () => {
@@ -256,56 +190,57 @@ describe('ReportsService', () => {
             await expect(service.findById(999)).rejects.toThrow(AppException);
         });
     });
-
     describe('findHistoryByReportId', () => {
         it('should return report change history', async () => {
             // Arrange
-            const reportWithChanges = {
-                ...mockReport,
-                changes: [mockReportChange],
-            };
-            reportRepository.findOne.mockResolvedValue(reportWithChanges);
+            const options = { page: 1, limit: 10 };
+
+            // Mock para verificar que el reporte existe
+            reportRepository.findOne.mockResolvedValue(mockReport);
+            // Mock para el query builder
+            const mockQueryBuilder = createMockQueryBuilder();
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+            changeRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as unknown as any);
+
+            // Mock para paginate del query builder
+            const mockPaginatedResponse = createMockPaginationResponse([mockReportChange]);
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findHistoryByReportId(1);
+            const result = await service.findHistoryByReportId(1, options);
 
             // Assert
             expect(reportRepository.findOne).toHaveBeenCalledWith({
                 where: { id: expect.any(Object) },
-                relations: ['changes', 'changes.creator'],
             });
 
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
-                creatorId: mockReportChange.creator.id,
-                changeType: mockReportChange.changeType,
-                from: mockReportChange.from,
-                to: mockReportChange.to,
-                createdAt: mockReportChange.createdAt,
-            });
+            expect(result.items).toHaveLength(1);
+            expect(result.items[0]).toEqual(createExpectedReportChangeDto());
         });
-
         it('should throw AppException when report not found for history', async () => {
             // Arrange
+            const options = { page: 1, limit: 10 };
             reportRepository.findOne.mockResolvedValue(null);
 
             // Act & Assert
-            await expect(service.findHistoryByReportId(999)).rejects.toThrow(AppException);
+            await expect(service.findHistoryByReportId(999, options)).rejects.toThrow(AppException);
         });
-
         it('should return empty array when report has no changes', async () => {
             // Arrange
-            const reportWithoutChanges = {
-                ...mockReport,
-                changes: [],
-            };
-            reportRepository.findOne.mockResolvedValue(reportWithoutChanges);
+            const options = { page: 1, limit: 10 };
+            reportRepository.findOne.mockResolvedValue(mockReport);
+            const mockQueryBuilder = createMockQueryBuilder();
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+            changeRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as unknown as any);
+
+            const mockPaginatedResponse = createMockPaginationResponse([]);
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findHistoryByReportId(1);
+            const result = await service.findHistoryByReportId(1, options);
 
             // Assert
-            expect(result).toEqual([]);
+            expect(result.items).toEqual([]);
         });
     });
 
@@ -327,8 +262,8 @@ describe('ReportsService', () => {
                 title: mockCreateReportDto.title,
                 description: mockCreateReportDto.description,
                 category: mockCreateReportDto.category,
-                latitude: -33.44895, // Average of latitudes
-                longitude: -70.66935, // Average of longitudes
+                latitude: -33.4484, // Average of latitudes
+                longitude: -70.6688, // Average of longitudes
                 images: [
                     {
                         imageUrl: uploadedUrls[0],
@@ -377,16 +312,14 @@ describe('ReportsService', () => {
                     ],
                     creator: { id: 1 },
                 }),
-            );
-
-            // Check latitude and longitude separately with precision tolerance
+            ); // Check latitude and longitude separately with precision tolerance
             const createCall = reportRepository.create.mock.calls[0][0];
-            expect(createCall.latitude).toBeCloseTo(-33.44895, 4);
-            expect(createCall.longitude).toBeCloseTo(-70.66935, 4);
+            expect(createCall.latitude).toBeCloseTo(-33.4484, 4);
+            expect(createCall.longitude).toBeCloseTo(-70.6688, 4);
 
             expect(reportRepository.save).toHaveBeenCalledWith(createdReport);
-
-            expect(result).toEqual({
+            // Create expected DTO manually for this complex case
+            const expectedDto = {
                 id: createdReport.id,
                 title: createdReport.title,
                 description: createdReport.description,
@@ -403,7 +336,8 @@ describe('ReportsService', () => {
                     longitude: img.longitude,
                     url: img.imageUrl,
                 })),
-            });
+            };
+            expect(result).toEqual(expectedDto);
         });
 
         it('should handle upload service errors gracefully', async () => {
@@ -457,7 +391,6 @@ describe('ReportsService', () => {
             );
         });
     });
-
     describe('updateState', () => {
         it('should update report state', async () => {
             // Arrange
@@ -465,23 +398,14 @@ describe('ReportsService', () => {
             reportRepository.findOne.mockResolvedValue(mockReport);
             reportRepository.save.mockResolvedValue(updatedReport);
 
-            // Mock findById call that happens after update
-            const findByIdSpy = jest.spyOn(service, 'findById').mockResolvedValue({
-                id: updatedReport.id,
-                title: updatedReport.title,
-                description: updatedReport.description,
-                category: updatedReport.category,
-                state: updatedReport.state,
-                isVisible: updatedReport.isVisible,
-                latitude: updatedReport.latitude,
-                longitude: updatedReport.longitude,
-                createdAt: updatedReport.createdAt,
-                creatorId: updatedReport.creator.id,
-                images: [],
-            });
+            // Mock para el cambio
+            changeRepository.create.mockReturnValue(mockReportChange);
+            changeRepository.save.mockResolvedValue(mockReportChange); // Mock findById call that happens after update
+            const expectedResult = createExpectedReportDto(updatedReport, []);
+            const findByIdSpy = jest.spyOn(service, 'findById').mockResolvedValue(expectedResult);
 
             // Act
-            const result = await service.updateState(1, ReportState.IN_PROGRESS);
+            const result = await service.updateState(1, 1, ReportState.IN_PROGRESS);
 
             // Assert
             expect(reportRepository.findOne).toHaveBeenCalledWith({
@@ -494,6 +418,9 @@ describe('ReportsService', () => {
                 state: ReportState.IN_PROGRESS,
             });
 
+            expect(changeRepository.create).toHaveBeenCalled();
+            expect(changeRepository.save).toHaveBeenCalled();
+
             expect(findByIdSpy).toHaveBeenCalledWith(updatedReport.id);
             expect(result.state).toBe(ReportState.IN_PROGRESS);
         });
@@ -503,7 +430,9 @@ describe('ReportsService', () => {
             reportRepository.findOne.mockResolvedValue(null);
 
             // Act & Assert
-            await expect(service.updateState(999, ReportState.IN_PROGRESS)).rejects.toThrow(AppException);
+            await expect(service.updateState(999, 1, ReportState.IN_PROGRESS)).rejects.toThrow(
+                AppException,
+            );
 
             expect(reportRepository.save).not.toHaveBeenCalled();
         });
@@ -540,14 +469,14 @@ describe('ReportsService', () => {
             );
         });
     });
-
     describe('error handling', () => {
         it('should handle database errors in findAll', async () => {
             // Arrange
-            reportRepository.find.mockRejectedValue(new Error('Database error'));
+            const options = { page: 1, limit: 10 };
+            mockPaginate.mockRejectedValue(new Error('Database error'));
 
             // Act & Assert
-            await expect(service.findAll()).rejects.toThrow('Database error');
+            await expect(service.findAll(options)).rejects.toThrow('Database error');
         });
 
         it('should handle database errors in save operation', async () => {
@@ -563,4 +492,3 @@ describe('ReportsService', () => {
         });
     });
 });
-

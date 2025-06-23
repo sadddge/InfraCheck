@@ -1,3 +1,4 @@
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { CommentDto } from '../dto/comment.dto';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 
@@ -46,7 +47,10 @@ export interface ICommentsService {
      * });
      * ```
      */
-    findAllByReportId(reportId: number): Promise<CommentDto[]>;
+    findAllByReportId(
+        reportId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<CommentDto>>;
 
     /**
      * Creates a new comment on a specific report by a user.

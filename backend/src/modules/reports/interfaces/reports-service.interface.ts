@@ -1,3 +1,4 @@
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportChangeDto } from '../dto/report-change.dto';
@@ -42,7 +43,7 @@ export interface IReportsService {
      * reports.forEach(report => console.log(report.title));
      * ```
      */
-    findAll(): Promise<ReportDto[]>;
+    findAll(options: IPaginationOptions): Promise<Pagination<ReportDto>>;
 
     /**
      * Finds a specific report by its unique identifier.
@@ -74,7 +75,10 @@ export interface IReportsService {
      * history.forEach(change => console.log(`${change.fromState} -> ${change.toState}`));
      * ```
      */
-    findHistoryByReportId(reportId: number): Promise<ReportChangeDto[]>;
+    findHistoryByReportId(
+        reportId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<ReportChangeDto>>;
 
     /**
      * Creates a new infrastructure report with image uploads.
@@ -114,9 +118,9 @@ export interface IReportsService {
      *
      * @example
      * ```typescript
-     * const updatedReport = await reportsService.updateState(123, ReportState.IN_PROGRESS);
+     * const updatedReport = await reportsService.updateState(123, userId, ReportState.IN_PROGRESS);
      * console.log(`Report now ${updatedReport.state}`);
      * ```
      */
-    updateState(id: number, state: ReportState): Promise<ReportDto>;
+    updateState(id: number, creatorId: number, state: ReportState): Promise<ReportDto>;
 }

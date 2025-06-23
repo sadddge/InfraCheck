@@ -1,5 +1,5 @@
-import type { Readable } from 'node:stream';
 import { Test, TestingModule } from '@nestjs/testing';
+import { TEST_IMAGE_DATA, TEST_URLS, createMockFile } from '../../../common/test-helpers';
 import {
     IImageProcessor,
     IMAGE_PROCESSOR,
@@ -16,19 +16,14 @@ describe('UploadService', () => {
     let imageProcessor: jest.Mocked<IImageProcessor>;
     let imageValidator: jest.Mocked<IImageValidator>;
     let storageService: jest.Mocked<IStorageService>;
-
-    const mockFile: Express.Multer.File = {
+    const mockFile: Express.Multer.File = createMockFile({
         fieldname: 'file',
         originalname: 'test-image.jpg',
-        encoding: '7bit',
-        mimetype: 'image/jpeg',
+        encoding: TEST_IMAGE_DATA.ENCODING,
+        mimetype: TEST_IMAGE_DATA.MIME_TYPE,
         buffer: Buffer.from('mock file buffer'),
-        size: 1024,
-        destination: '',
-        filename: '',
-        path: '',
-        stream: {} as Readable,
-    };
+        size: TEST_IMAGE_DATA.SIZE,
+    });
 
     beforeEach(async () => {
         const mockImageProcessor = {
@@ -75,7 +70,7 @@ describe('UploadService', () => {
         it('should successfully upload a file', async () => {
             // Arrange
             const processedBuffer = Buffer.from('processed image');
-            const expectedUrl = 'https://example.com/uploads/123456-test-image.jpg';
+            const expectedUrl = TEST_URLS.IMAGE_UPLOAD;
 
             imageProcessor.processImage.mockResolvedValue(processedBuffer);
             imageValidator.validate.mockResolvedValue();
@@ -156,7 +151,7 @@ describe('UploadService', () => {
         it('should generate unique file names for multiple uploads', async () => {
             // Arrange
             const processedBuffer = Buffer.from('processed image');
-            const expectedUrl = 'https://example.com/uploads/file.jpg';
+            const expectedUrl = TEST_URLS.GENERIC_UPLOAD;
 
             imageProcessor.processImage.mockResolvedValue(processedBuffer);
             imageValidator.validate.mockResolvedValue();

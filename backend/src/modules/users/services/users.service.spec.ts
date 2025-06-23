@@ -5,6 +5,7 @@ import { DeleteResult, Repository } from 'typeorm';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
+import { createMockUser, mockPaginate } from '../../../common/test-helpers';
 import { expectUserErrorAsync } from '../../../common/test-helpers/exception-test.helper';
 import { RegisterDto } from '../../auth/dto/register.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -12,10 +13,8 @@ import { UsersService } from './users.service';
 
 describe('UsersService', () => {
     let service: UsersService;
-    let userRepository: jest.Mocked<Repository<User>>;
-
-    // Mock data
-    const mockUser: User = {
+    let userRepository: jest.Mocked<Repository<User>>; // Mock data using test fixtures
+    const mockUser = createMockUser({
         id: 1,
         name: 'Test User',
         lastName: 'Test Last',
@@ -25,14 +24,7 @@ describe('UsersService', () => {
         status: UserStatus.ACTIVE,
         createdAt: new Date('2024-01-01T10:00:00Z'),
         passwordUpdatedAt: new Date('2024-01-01T10:00:00Z'),
-        refreshTokens: [],
-        reports: [],
-        comments: [],
-        votes: [],
-        reportChanges: [],
-        messages: [],
-        reportsFollowed: [],
-    };
+    });
 
     const mockUserDto = {
         id: mockUser.id,
@@ -76,27 +68,49 @@ describe('UsersService', () => {
                 },
             ],
         }).compile();
-
         service = module.get<UsersService>(UsersService);
         userRepository = module.get(getRepositoryToken(User));
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
     it('should be defined', () => {
         expect(service).toBeDefined();
     });
-
     describe('findAll', () => {
         it('should return all users when no status filter is provided', async () => {
             // Arrange
-            const users = [mockUserDto, { ...mockUserDto, id: 2, phoneNumber: '+0987654321' }];
-            userRepository.find.mockResolvedValue(users as User[]);
+            const options = { page: 1, limit: 10 };
+            const users = [mockUser, { ...mockUser, id: 2, phoneNumber: '+0987654321' }];
+
+            const mockPaginatedResponse = {
+                items: users,
+                meta: {
+                    totalItems: 2,
+                    itemCount: 2,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/users?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/users?page=1',
+                },
+            };
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAll();
+            const result = await service.findAll(options);
 
             // Assert
-            expect(userRepository.find).toHaveBeenCalledWith({
+            expect(mockPaginate).toHaveBeenCalledWith(userRepository, options, {
                 where: {},
+                order: { createdAt: 'DESC' },
                 select: {
                     id: true,
                     phoneNumber: true,
@@ -108,20 +122,40 @@ describe('UsersService', () => {
                     passwordUpdatedAt: true,
                 },
             });
-            expect(result).toEqual(users);
+            expect(result.items).toHaveLength(2);
+            expect(result.items[0]).toEqual(mockUserDto);
         });
-
         it('should return filtered users when status is provided', async () => {
             // Arrange
-            const activeUsers = [mockUserDto];
-            userRepository.find.mockResolvedValue(activeUsers as User[]);
+            const options = { page: 1, limit: 10 };
+            const activeUsers = [mockUser];
+
+            const mockPaginatedResponse = {
+                items: activeUsers,
+                meta: {
+                    totalItems: 1,
+                    itemCount: 1,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/users?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/users?page=1',
+                },
+            };
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAll(UserStatus.ACTIVE);
+            const result = await service.findAll(options, UserStatus.ACTIVE);
 
             // Assert
-            expect(userRepository.find).toHaveBeenCalledWith({
+            expect(mockPaginate).toHaveBeenCalledWith(userRepository, options, {
                 where: { status: expect.any(Object) },
+                order: { createdAt: 'DESC' },
                 select: {
                     id: true,
                     phoneNumber: true,
@@ -133,18 +167,36 @@ describe('UsersService', () => {
                     passwordUpdatedAt: true,
                 },
             });
-            expect(result).toEqual(activeUsers);
+            expect(result.items).toHaveLength(1);
+            expect(result.items[0]).toEqual(mockUserDto);
         });
-
         it('should return empty array when no users exist', async () => {
             // Arrange
-            userRepository.find.mockResolvedValue([]);
+            const options = { page: 1, limit: 10 };
+            const mockPaginatedResponse = {
+                items: [],
+                meta: {
+                    totalItems: 0,
+                    itemCount: 0,
+                    itemsPerPage: 10,
+                    totalPages: 0,
+                    currentPage: 1,
+                },
+                links: {
+                    first: '',
+                    previous: '',
+                    next: '',
+                    last: '',
+                },
+            };
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAll();
+            const result = await service.findAll(options);
 
             // Assert
-            expect(result).toEqual([]);
+            expect(result.items).toEqual([]);
         });
     });
 
@@ -276,10 +328,11 @@ describe('UsersService', () => {
             expect(findByIdSpy).toHaveBeenCalledWith(1);
             expect(result).toEqual(updatedUserDto);
         });
-
         it('should throw AppException with USER_NOT_FOUND when user not found for status update', async () => {
             // Arrange
-            userRepository.findOne.mockResolvedValue(null); // Act & Assert
+            userRepository.findOne.mockResolvedValue(null);
+
+            // Act & Assert
             await expect(service.updateStatus(999, UserStatus.ACTIVE)).rejects.toThrow(
                 expectUserErrorAsync.notFound(),
             );
@@ -327,12 +380,14 @@ describe('UsersService', () => {
             expect(findByIdSpy).toHaveBeenCalledWith(newUser.id);
             expect(result).toEqual(newUserDto);
         });
-
         it('should throw AppException with USER_ALREADY_EXISTS when phone number already exists', async () => {
             // Arrange
             userRepository.findOne.mockResolvedValue(mockUser); // Existing user
 
-            // Act & Assert            await expect(service.registerNeighbor(mockRegisterDto)).rejects.toThrow(expectUserErrorAsync.alreadyExists());
+            // Act & Assert
+            await expect(service.registerNeighbor(mockRegisterDto)).rejects.toThrow(
+                expectUserErrorAsync.alreadyExists(),
+            );
 
             expect(userRepository.create).not.toHaveBeenCalled();
             expect(userRepository.save).not.toHaveBeenCalled();
@@ -381,10 +436,11 @@ describe('UsersService', () => {
             expect(findByIdSpy).toHaveBeenCalledWith(newAdmin.id);
             expect(result).toEqual(newAdminDto);
         });
-
         it('should throw AppException with USER_ALREADY_EXISTS when phone number already exists for admin creation', async () => {
             // Arrange
-            userRepository.findOne.mockResolvedValue(mockUser); // Existing user            // Act & Assert
+            userRepository.findOne.mockResolvedValue(mockUser); // Existing user
+
+            // Act & Assert
             await expect(service.createAdmin(mockRegisterDto)).rejects.toThrow(
                 expectUserErrorAsync.alreadyExists(),
             );
@@ -406,11 +462,12 @@ describe('UsersService', () => {
             // Assert
             expect(userRepository.delete).toHaveBeenCalledWith(1);
         });
-
         it('should throw AppException with USER_NOT_FOUND when user not found for deletion', async () => {
             // Arrange
             const deleteResult: DeleteResult = { affected: 0, raw: {} };
-            userRepository.delete.mockResolvedValue(deleteResult); // Act & Assert
+            userRepository.delete.mockResolvedValue(deleteResult);
+
+            // Act & Assert
             await expect(service.remove(999)).rejects.toThrow(expectUserErrorAsync.notFound());
         });
     });
@@ -494,10 +551,11 @@ describe('UsersService', () => {
     describe('error handling', () => {
         it('should handle database errors in findAll', async () => {
             // Arrange
-            userRepository.find.mockRejectedValue(new Error('Database connection error'));
+            const options = { page: 1, limit: 10 };
+            mockPaginate.mockRejectedValue(new Error('Database connection error'));
 
             // Act & Assert
-            await expect(service.findAll()).rejects.toThrow('Database connection error');
+            await expect(service.findAll(options)).rejects.toThrow('Database connection error');
         });
 
         it('should handle database errors in save operation', async () => {

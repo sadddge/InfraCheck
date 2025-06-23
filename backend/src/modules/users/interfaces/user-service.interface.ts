@@ -1,3 +1,4 @@
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
 import { RegisterDto } from 'src/modules/auth/dto/register.dto';
@@ -33,22 +34,14 @@ export const USER_SERVICE = 'USER_SERVICE';
  */
 export interface IUserService {
     /**
-     * Retrieves all users from the system with optional status filtering.
+     * Retrieves paginated users from the system with optional status filtering.
      * Supports administrative user listing with status-based filtering.
      *
      * @param status Optional user status filter to limit results
-     * @returns Array of user data transfer objects
-     *
-     * @example
-     * ```typescript
-     * // Get all users
-     * const allUsers = await userService.findAll();
-     *
-     * // Get only active users
-     * const activeUsers = await userService.findAll(UserStatus.ACTIVE);
-     * ```
+     * @param options Pagination options (page, limit)
+     * @returns Paginated list of user data transfer objects
      */
-    findAll(status?: UserStatus): Promise<UserDto[]>;
+    findAll(options: IPaginationOptions, status?: UserStatus): Promise<Pagination<UserDto>>;
 
     /**
      * Finds a user by their unique identifier.
@@ -100,10 +93,7 @@ export interface IUserService {
      * });
      * ```
      */
-    update(
-        id: number,
-        updateUserDto: UpdateUserDto,
-    ): Promise<UserDto>;
+    update(id: number, updateUserDto: UpdateUserDto): Promise<UserDto>;
     /**
      * Updates user status for administrative approval workflows.
      * Used by administrators to approve, reject, or modify user access.
@@ -123,10 +113,7 @@ export interface IUserService {
      * const bannedUser = await userService.updateStatus(456, UserStatus.BANNED);
      * ```
      */
-    updateStatus(
-        id: number,
-        status: UserStatus,
-    ): Promise<UserDto>;
+    updateStatus(id: number, status: UserStatus): Promise<UserDto>;
 
     /**
      * Registers a new neighbor user in the system.

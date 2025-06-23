@@ -5,14 +5,12 @@ import { FollowsController } from './follows.controller';
 describe('FollowsController', () => {
     let controller: FollowsController;
     let followsService: jest.Mocked<IFollowsService>;
-
     const mockFollowsService = {
         followReport: jest.fn(),
         unfollowReport: jest.fn(),
         isFollowingReport: jest.fn(),
         getReportFollowers: jest.fn(),
         getUserFollowedReports: jest.fn(),
-        getFollowersIds: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -129,93 +127,73 @@ describe('FollowsController', () => {
     describe('getReportFollowers', () => {
         it('should call followsService.getReportFollowers with correct reportId and return followers', async () => {
             const reportId = 123;
+            const paginationDto = { page: 1, limit: 10 };
             const expectedResponse = {
-                reportId: 123,
-                followers: [
-                    { id: 1, name: 'John', lastName: 'Doe' },
-                    { id: 2, name: 'Jane', lastName: 'Smith' },
+                items: [
+                    { userId: 1, username: 'John' },
+                    { userId: 2, username: 'Jane' },
                 ],
-                totalFollowers: 2,
+                meta: {
+                    totalItems: 2,
+                    itemCount: 2,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/followers?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/followers?page=1',
+                },
             };
 
             mockFollowsService.getReportFollowers.mockResolvedValue(expectedResponse);
 
-            const result = await controller.getReportFollowers(reportId);
+            const result = await controller.getReportFollowers(reportId, paginationDto);
 
-            expect(followsService.getReportFollowers).toHaveBeenCalledWith(reportId);
+            expect(followsService.getReportFollowers).toHaveBeenCalledWith(reportId, paginationDto);
             expect(result).toEqual(expectedResponse);
         });
-
         it('should propagate errors from followsService.getReportFollowers', async () => {
             const reportId = 999;
+            const paginationDto = { page: 1, limit: 10 };
             const error = new Error('Report not found');
 
             mockFollowsService.getReportFollowers.mockRejectedValue(error);
 
-            await expect(controller.getReportFollowers(reportId)).rejects.toThrow(
+            await expect(controller.getReportFollowers(reportId, paginationDto)).rejects.toThrow(
                 'Report not found',
             );
-            expect(followsService.getReportFollowers).toHaveBeenCalledWith(reportId);
+            expect(followsService.getReportFollowers).toHaveBeenCalledWith(reportId, paginationDto);
         });
-
         it('should return empty followers list when report has no followers', async () => {
             const reportId = 123;
+            const paginationDto = { page: 1, limit: 10 };
             const expectedResponse = {
-                reportId: 123,
-                followers: [],
-                totalFollowers: 0,
+                items: [],
+                meta: {
+                    totalItems: 0,
+                    itemCount: 0,
+                    itemsPerPage: 10,
+                    totalPages: 0,
+                    currentPage: 1,
+                },
+                links: {
+                    first: '',
+                    previous: '',
+                    next: '',
+                    last: '',
+                },
             };
 
             mockFollowsService.getReportFollowers.mockResolvedValue(expectedResponse);
 
-            const result = await controller.getReportFollowers(reportId);
+            const result = await controller.getReportFollowers(reportId, paginationDto);
 
-            expect(followsService.getReportFollowers).toHaveBeenCalledWith(reportId);
+            expect(followsService.getReportFollowers).toHaveBeenCalledWith(reportId, paginationDto);
             expect(result).toEqual(expectedResponse);
-            expect(result.followers).toEqual([]);
-        });
-    });
-
-    describe('getReportFollowersIds', () => {
-        it('should call followsService.getFollowersIds with correct reportId and return follower IDs', async () => {
-            const reportId = 123;
-            const expectedResponse = {
-                userIds: [1, 2, 3],
-            };
-
-            mockFollowsService.getFollowersIds.mockResolvedValue(expectedResponse);
-
-            const result = await controller.getReportFollowersIds(reportId);
-
-            expect(followsService.getFollowersIds).toHaveBeenCalledWith(reportId);
-            expect(result).toEqual(expectedResponse);
-        });
-
-        it('should propagate errors from followsService.getFollowersIds', async () => {
-            const reportId = 999;
-            const error = new Error('Report not found');
-
-            mockFollowsService.getFollowersIds.mockRejectedValue(error);
-
-            await expect(controller.getReportFollowersIds(reportId)).rejects.toThrow(
-                'Report not found',
-            );
-            expect(followsService.getFollowersIds).toHaveBeenCalledWith(reportId);
-        });
-
-        it('should return empty IDs list when report has no followers', async () => {
-            const reportId = 123;
-            const expectedResponse = {
-                userIds: [],
-            };
-
-            mockFollowsService.getFollowersIds.mockResolvedValue(expectedResponse);
-
-            const result = await controller.getReportFollowersIds(reportId);
-
-            expect(followsService.getFollowersIds).toHaveBeenCalledWith(reportId);
-            expect(result).toEqual(expectedResponse);
-            expect(result.userIds).toEqual([]);
+            expect(result.items).toEqual([]);
         });
     });
 

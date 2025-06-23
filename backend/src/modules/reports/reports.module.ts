@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ReportChange } from 'src/database/entities/report-change.entity';
 import { Report } from 'src/database/entities/report.entity';
 import { UploadModule } from '../upload/upload.module';
 import { CommentsModule } from './comments/comments.module';
@@ -9,7 +10,12 @@ import { REPORTS_SERVICE } from './interfaces/reports-service.interface';
 import { ReportsService } from './services/reports.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Report]), UploadModule, CommentsModule, FollowsModule],
+    imports: [
+        TypeOrmModule.forFeature([Report, ReportChange]),
+        UploadModule,
+        CommentsModule,
+        FollowsModule,
+    ],
     controllers: [ReportsController],
     providers: [
         {
