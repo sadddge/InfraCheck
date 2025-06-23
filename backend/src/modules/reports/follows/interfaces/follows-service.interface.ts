@@ -134,6 +134,6 @@ export interface IFollowsService {
      */
     getUserFollowedReports(
         userId: number,
-        oprtions: IPaginationOptions,
+        options: IPaginationOptions,
     ): Promise<Pagination<UserFollowedReportsResponseDto>>;
 }

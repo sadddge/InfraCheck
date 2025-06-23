@@ -22,4 +22,4 @@
 export { FollowActionResponseDto } from './follow-action-response.dto';
 export { FollowStatusResponseDto } from './follow-status-response.dto';
 export { ReportFollowerDto } from './report-followers-response.dto';
-export { UserFollowedReportsResponseDto } from './user-followed-reports-response.dto';
+export { UserFollowedReportsDto } from './user-followed-reports-response.dto';
