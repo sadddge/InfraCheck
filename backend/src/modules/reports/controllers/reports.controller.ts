@@ -384,7 +384,8 @@ export class ReportsController {
     async updateReportState(
         @Param('id') id: string,
         @Body('state') state: ReportState,
+        @Req() req,
     ): Promise<ReportDto> {
-        return await this.reportsService.updateState(+id, state);
+        return await this.reportsService.updateState(+id, req.user.id, state);
     }
 }

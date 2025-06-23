@@ -119,9 +119,9 @@ export interface IReportsService {
      *
      * @example
      * ```typescript
-     * const updatedReport = await reportsService.updateState(123, ReportState.IN_PROGRESS);
+     * const updatedReport = await reportsService.updateState(123, userId, ReportState.IN_PROGRESS);
      * console.log(`Report now ${updatedReport.state}`);
      * ```
      */
-    updateState(id: number, state: ReportState): Promise<ReportDto>;
+    updateState(id: number, creatorId: number, state: ReportState): Promise<ReportDto>;
 }

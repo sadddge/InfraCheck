@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
+import { ReportChangeType } from 'src/common/enums/report-change-type.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { reportNotFound } from 'src/common/helpers/exception.helper';
 import { ReportChange } from 'src/database/entities/report-change.entity';
@@ -129,6 +130,7 @@ export class ReportsService implements IReportsService {
             .innerJoin('change.report', 'report', 'report.id = :reportId', { reportId })
             .innerJoinAndSelect('change.creator', 'creator')
             .select([
+                'creator.id',
                 'change.id',
                 'change.changeType',
                 'change.from',
@@ -212,7 +214,7 @@ export class ReportsService implements IReportsService {
     }
 
     /** @inheritDoc */
-    async updateState(id: number, state: ReportState): Promise<ReportDto> {
+    async updateState(id: number, creatorId: number, state: ReportState): Promise<ReportDto> {
         const report = await this.reportRepository.findOne({
             where: { id: Equal(id) },
             relations: ['creator', 'images'],
@@ -221,6 +223,20 @@ export class ReportsService implements IReportsService {
         if (!report) {
             reportNotFound();
         }
+
+        if (report.state === state) {
+            return this.findById(report.id);
+        }
+
+        const change = this.changeRepository.create({
+            report,
+            creator: { id: creatorId },
+            changeType: ReportChangeType.STATE,
+            from: report.state,
+            to: state,
+        });
+
+        await this.changeRepository.save(change);
 
         report.state = state;
         const updatedReport = await this.reportRepository.save(report);
