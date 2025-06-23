@@ -14,6 +14,24 @@ describe('CommentsService', () => {
     let service: CommentsService;
     let repository: jest.Mocked<Repository<Comment>>;
 
+    // Helper function to reduce code duplication
+    const createMockPaginatedResponse = (items: unknown[], totalItems?: number) => ({
+        items,
+        meta: {
+            totalItems: totalItems ?? items.length,
+            itemCount: items.length,
+            itemsPerPage: 10,
+            totalPages: totalItems ? Math.ceil(totalItems / 10) : Math.ceil(items.length / 10),
+            currentPage: 1,
+        },
+        links: {
+            first: 'http://localhost:3000/comments?page=1',
+            previous: '',
+            next: '',
+            last: `http://localhost:3000/comments?page=${totalItems ? Math.ceil(totalItems / 10) : Math.ceil(items.length / 10)}`,
+        },
+    });
+
     beforeEach(async () => {
         const mockRepository = createMockRepository<Repository<Comment>>();
         const module: TestingModule = await Test.createTestingModule({
@@ -47,23 +65,7 @@ describe('CommentsService', () => {
                     report: { id: 1, title: 'Test Report' },
                 },
             ];
-
-            const mockPaginatedResponse = {
-                items: mockComments,
-                meta: {
-                    totalItems: 1,
-                    itemCount: 1,
-                    itemsPerPage: 10,
-                    totalPages: 1,
-                    currentPage: 1,
-                },
-                links: {
-                    first: 'http://localhost:3000/comments?page=1',
-                    previous: '',
-                    next: '',
-                    last: 'http://localhost:3000/comments?page=1',
-                },
-            };
+            const mockPaginatedResponse = createMockPaginatedResponse(mockComments);
 
             mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
@@ -96,23 +98,7 @@ describe('CommentsService', () => {
             // Arrange
             const reportId = 1;
             const options = { page: 1, limit: 10 };
-
-            const mockPaginatedResponse = {
-                items: [],
-                meta: {
-                    totalItems: 0,
-                    itemCount: 0,
-                    itemsPerPage: 10,
-                    totalPages: 0,
-                    currentPage: 1,
-                },
-                links: {
-                    first: '',
-                    previous: '',
-                    next: '',
-                    last: '',
-                },
-            };
+            const mockPaginatedResponse = createMockPaginatedResponse([]);
 
             mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
@@ -240,23 +226,7 @@ describe('CommentsService', () => {
                 creator: { id: 2, name: 'Jane', lastName: 'Smith' },
                 report: { id: 1, title: 'Sample Report' },
             };
-
-            const mockPaginatedResponse = {
-                items: [mockComment],
-                meta: {
-                    totalItems: 1,
-                    itemCount: 1,
-                    itemsPerPage: 10,
-                    totalPages: 1,
-                    currentPage: 1,
-                },
-                links: {
-                    first: 'http://localhost:3000/comments?page=1',
-                    previous: '',
-                    next: '',
-                    last: 'http://localhost:3000/comments?page=1',
-                },
-            };
+            const mockPaginatedResponse = createMockPaginatedResponse([mockComment]);
 
             mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
@@ -290,23 +260,7 @@ describe('CommentsService', () => {
                 creator: { id: 1, name: 'Test', lastName: 'User' },
                 report: { id: 1, title: 'Test Report' },
             };
-
-            const mockPaginatedResponse = {
-                items: [mockComment],
-                meta: {
-                    totalItems: 1,
-                    itemCount: 1,
-                    itemsPerPage: 10,
-                    totalPages: 1,
-                    currentPage: 1,
-                },
-                links: {
-                    first: 'http://localhost:3000/comments?page=1',
-                    previous: '',
-                    next: '',
-                    last: 'http://localhost:3000/comments?page=1',
-                },
-            };
+            const mockPaginatedResponse = createMockPaginatedResponse([mockComment]);
 
             mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
@@ -324,7 +278,6 @@ describe('CommentsService', () => {
             const reportId = 1;
             const date1 = new Date('2023-01-01');
             const date2 = new Date('2023-01-02');
-
             const mockComments = [
                 {
                     id: 2,
@@ -341,23 +294,7 @@ describe('CommentsService', () => {
                     report: { id: 1, title: 'Test Report' },
                 },
             ];
-
-            const mockPaginatedResponse = {
-                items: mockComments,
-                meta: {
-                    totalItems: 2,
-                    itemCount: 2,
-                    itemsPerPage: 10,
-                    totalPages: 1,
-                    currentPage: 1,
-                },
-                links: {
-                    first: 'http://localhost:3000/comments?page=1',
-                    previous: '',
-                    next: '',
-                    last: 'http://localhost:3000/comments?page=1',
-                },
-            };
+            const mockPaginatedResponse = createMockPaginatedResponse(mockComments);
 
             mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
@@ -369,7 +306,6 @@ describe('CommentsService', () => {
             expect(result.items[0].id).toBe(2); // More recent first due to DESC order
             expect(result.items[1].id).toBe(1);
         });
-
         it('should handle large comment content', async () => {
             // Arrange
             const reportId = 1;

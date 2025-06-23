@@ -39,6 +39,45 @@ describe('ReportsService', () => {
     const mockReport = createMockReport({ images: [mockReportImage] });
     const mockReportChange = createMockReportChange();
 
+    // Helper functions to reduce code duplication
+    const createMockQueryBuilder = () => ({
+        innerJoin: jest.fn().mockReturnThis(),
+        innerJoinAndSelect: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+    });
+    const createExpectedReportDto = (
+        report = mockReport,
+        images = [mockReportImage],
+        creatorId?: number,
+    ) => ({
+        id: report.id,
+        title: report.title,
+        description: report.description,
+        category: report.category,
+        state: report.state,
+        isVisible: report.isVisible,
+        latitude: report.latitude,
+        longitude: report.longitude,
+        createdAt: report.createdAt,
+        creatorId: creatorId ?? report.creator?.id,
+        images: images.map(img => ({
+            takenAt: img.takenAt,
+            latitude: img.latitude,
+            longitude: img.longitude,
+            url: img.imageUrl,
+        })),
+    });
+
+    const createExpectedReportChangeDto = (change = mockReportChange) => ({
+        id: change.id,
+        changeType: change.changeType,
+        from: change.from,
+        to: change.to,
+        createdAt: change.createdAt,
+        creatorId: change.creator.id,
+    });
+
     const mockCreateReportDto: CreateReportDto = {
         title: TEST_REPORT_DATA.TITLE,
         description: TEST_REPORT_DATA.DESCRIPTION,
@@ -111,26 +150,7 @@ describe('ReportsService', () => {
             });
 
             expect(result.items).toHaveLength(1);
-            expect(result.items[0]).toEqual({
-                id: mockReport.id,
-                title: mockReport.title,
-                description: mockReport.description,
-                category: mockReport.category,
-                state: mockReport.state,
-                isVisible: mockReport.isVisible,
-                latitude: mockReport.latitude,
-                longitude: mockReport.longitude,
-                createdAt: mockReport.createdAt,
-                creatorId: mockReport.creator.id,
-                images: [
-                    {
-                        takenAt: mockReportImage.takenAt,
-                        latitude: mockReportImage.latitude,
-                        longitude: mockReportImage.longitude,
-                        url: mockReportImage.imageUrl,
-                    },
-                ],
-            });
+            expect(result.items[0]).toEqual(createExpectedReportDto());
         });
         it('should return empty array when no reports exist', async () => {
             // Arrange
@@ -159,26 +179,7 @@ describe('ReportsService', () => {
                 relations: ['creator', 'images'],
             });
 
-            expect(result).toEqual({
-                id: mockReport.id,
-                title: mockReport.title,
-                description: mockReport.description,
-                category: mockReport.category,
-                state: mockReport.state,
-                isVisible: mockReport.isVisible,
-                latitude: mockReport.latitude,
-                longitude: mockReport.longitude,
-                createdAt: mockReport.createdAt,
-                creatorId: mockReport.creator.id,
-                images: [
-                    {
-                        takenAt: mockReportImage.takenAt,
-                        latitude: mockReportImage.latitude,
-                        longitude: mockReportImage.longitude,
-                        url: mockReportImage.imageUrl,
-                    },
-                ],
-            });
+            expect(result).toEqual(createExpectedReportDto());
         });
 
         it('should throw AppException when report not found', async () => {
@@ -197,32 +198,12 @@ describe('ReportsService', () => {
             // Mock para verificar que el reporte existe
             reportRepository.findOne.mockResolvedValue(mockReport);
             // Mock para el query builder
-            const mockQueryBuilder = {
-                innerJoin: jest.fn().mockReturnThis(),
-                innerJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-            };
+            const mockQueryBuilder = createMockQueryBuilder();
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             changeRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as unknown as any);
 
             // Mock para paginate del query builder
-            const mockPaginatedResponse = {
-                items: [mockReportChange],
-                meta: {
-                    totalItems: 1,
-                    itemCount: 1,
-                    itemsPerPage: 10,
-                    totalPages: 1,
-                    currentPage: 1,
-                },
-                links: {
-                    first: 'http://localhost:3000/changes?page=1',
-                    previous: '',
-                    next: '',
-                    last: 'http://localhost:3000/changes?page=1',
-                },
-            };
+            const mockPaginatedResponse = createMockPaginationResponse([mockReportChange]);
             mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
@@ -234,14 +215,7 @@ describe('ReportsService', () => {
             });
 
             expect(result.items).toHaveLength(1);
-            expect(result.items[0]).toEqual({
-                id: mockReportChange.id,
-                changeType: mockReportChange.changeType,
-                from: mockReportChange.from,
-                to: mockReportChange.to,
-                createdAt: mockReportChange.createdAt,
-                creatorId: mockReportChange.creator.id,
-            });
+            expect(result.items[0]).toEqual(createExpectedReportChangeDto());
         });
         it('should throw AppException when report not found for history', async () => {
             // Arrange
@@ -251,36 +225,15 @@ describe('ReportsService', () => {
             // Act & Assert
             await expect(service.findHistoryByReportId(999, options)).rejects.toThrow(AppException);
         });
-
         it('should return empty array when report has no changes', async () => {
             // Arrange
             const options = { page: 1, limit: 10 };
             reportRepository.findOne.mockResolvedValue(mockReport);
-            const mockQueryBuilder = {
-                innerJoin: jest.fn().mockReturnThis(),
-                innerJoinAndSelect: jest.fn().mockReturnThis(),
-                select: jest.fn().mockReturnThis(),
-                orderBy: jest.fn().mockReturnThis(),
-            };
+            const mockQueryBuilder = createMockQueryBuilder();
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             changeRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as unknown as any);
 
-            const mockPaginatedResponse = {
-                items: [],
-                meta: {
-                    totalItems: 0,
-                    itemCount: 0,
-                    itemsPerPage: 10,
-                    totalPages: 0,
-                    currentPage: 1,
-                },
-                links: {
-                    first: '',
-                    previous: '',
-                    next: '',
-                    last: '',
-                },
-            };
+            const mockPaginatedResponse = createMockPaginationResponse([]);
             mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
@@ -365,8 +318,8 @@ describe('ReportsService', () => {
             expect(createCall.longitude).toBeCloseTo(-70.6688, 4);
 
             expect(reportRepository.save).toHaveBeenCalledWith(createdReport);
-
-            expect(result).toEqual({
+            // Create expected DTO manually for this complex case
+            const expectedDto = {
                 id: createdReport.id,
                 title: createdReport.title,
                 description: createdReport.description,
@@ -383,7 +336,8 @@ describe('ReportsService', () => {
                     longitude: img.longitude,
                     url: img.imageUrl,
                 })),
-            });
+            };
+            expect(result).toEqual(expectedDto);
         });
 
         it('should handle upload service errors gracefully', async () => {
@@ -446,22 +400,9 @@ describe('ReportsService', () => {
 
             // Mock para el cambio
             changeRepository.create.mockReturnValue(mockReportChange);
-            changeRepository.save.mockResolvedValue(mockReportChange);
-
-            // Mock findById call that happens after update
-            const findByIdSpy = jest.spyOn(service, 'findById').mockResolvedValue({
-                id: updatedReport.id,
-                title: updatedReport.title,
-                description: updatedReport.description,
-                category: updatedReport.category,
-                state: updatedReport.state,
-                isVisible: updatedReport.isVisible,
-                latitude: updatedReport.latitude,
-                longitude: updatedReport.longitude,
-                createdAt: updatedReport.createdAt,
-                creatorId: updatedReport.creator.id,
-                images: [],
-            });
+            changeRepository.save.mockResolvedValue(mockReportChange); // Mock findById call that happens after update
+            const expectedResult = createExpectedReportDto(updatedReport, []);
+            const findByIdSpy = jest.spyOn(service, 'findById').mockResolvedValue(expectedResult);
 
             // Act
             const result = await service.updateState(1, 1, ReportState.IN_PROGRESS);
