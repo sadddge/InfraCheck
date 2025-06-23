@@ -38,11 +38,10 @@ class AppTextStyles {
     color: AppColors.teal900,
     letterSpacing: -0.3,
   );
-
   /// Estilo para placeholder text en campos de entrada
   static final inputHint = TextStyle(
     fontSize: 14,
-    color: AppColors.teal900.withOpacity(0.5),
+    color: AppColors.teal900.withValues(alpha: 0.5),
     letterSpacing: -0.3,
   );
 
@@ -89,10 +88,9 @@ class AppTextStyles {
     color: AppColors.teal900,
     height: 1.4,
   );
-
   static final caption = TextStyle(
     fontSize: 12,
-    color: AppColors.teal800.withOpacity(0.7),
+    color: AppColors.teal800.withValues(alpha: 0.7),
     height: 1.3,
   );
 

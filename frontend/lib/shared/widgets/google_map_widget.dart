@@ -115,7 +115,11 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
         });
       }
     }
-  }  /// Inicia el seguimiento continuo de la ubicación del usuario
+  }  /// Inicia el seguimiento continuo de la ubicación del usuario.
+  /// 
+  /// Configura un stream de posición que se actualiza cuando el usuario
+  /// se mueve más de 10 metros. Útil para mantener la vista del mapa
+  /// sincronizada con la posición actual durante uso prolongado.
   void _startLocationTracking() {
     if (!mounted) return;
     
@@ -138,7 +142,13 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
         }
       },
     );
-  }/// Actualiza la ubicación actual y mueve la cámara para seguir al usuario
+  }  /// Actualiza la ubicación actual y mueve la cámara para seguir al usuario.
+  /// 
+  /// Procesa una nueva posición GPS, actualiza el estado del widget
+  /// y anima la cámara del mapa para mantener al usuario centrado.
+  /// En la primera actualización, también ajusta el zoom apropiado.
+  /// 
+  /// [position] Nueva posición GPS del usuario
   void _updateLocationAndFollowUser(Position position) {
     if (!mounted) return;
     

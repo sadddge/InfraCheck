@@ -109,7 +109,7 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
           ),
           // Blur effect
           BackdropFilter(
@@ -164,7 +164,7 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
                               Shadow(
                                 offset: const Offset(0, 2),
                                 blurRadius: 4,
-                                color: const Color(0xFF000000).withOpacity(0.25),
+                                color: const Color(0xFF000000).withValues(alpha: 0.25),
                               ),
                             ],
                           ),

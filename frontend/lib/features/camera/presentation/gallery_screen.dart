@@ -5,6 +5,18 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/theme/colors.dart';
 import '../domain/camera_provider.dart';
 
+/// Pantalla de galería para visualizar y gestionar fotografías capturadas.
+/// 
+/// Permite a los usuarios:
+/// - Ver todas las fotos tomadas en una grilla
+/// - Seleccionar múltiples fotos para operaciones en lote
+/// - Eliminar fotos individualmente o en grupos
+/// - Navegar hacia la creación de reportes con fotos seleccionadas
+/// - Vista previa de fotos seleccionadas en la parte superior
+/// 
+/// Incluye funcionalidades avanzadas como modo de selección,
+/// feedback visual para fotos seleccionadas y manejo inteligente
+/// de navegación (limpia selección antes de salir).
 class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});
 
@@ -12,10 +24,27 @@ class GalleryScreen extends StatefulWidget {
   State<GalleryScreen> createState() => _GalleryScreenState();
 }
 
+/// Estado interno de la pantalla de galería.
+/// 
+/// Gestiona:
+/// - Modo de selección múltiple
+/// - Lista de fotos seleccionadas
+/// - Interacciones de usuario con la grilla
+/// - Navegación y diálogos de confirmación
 class _GalleryScreenState extends State<GalleryScreen> {
+  /// Conjunto de índices de fotos actualmente seleccionadas
   final Set<int> _selectedPhotos = <int>{};
+  
+  /// Indica si la interfaz está en modo de selección múltiple
   bool _isSelectionMode = false;
 
+  /// Alterna el estado de selección de una fotografía.
+  /// 
+  /// Si la foto ya está seleccionada, la deselecciona. Si no está seleccionada,
+  /// la agrega a la selección y activa el modo de selección múltiple.
+  /// Cuando se deseleccionan todas las fotos, sale del modo de selección.
+  /// 
+  /// [index] Índice de la foto en la lista a alternar
   void _togglePhotoSelection(int index) {
     setState(() {
       if (_selectedPhotos.contains(index)) {
@@ -29,7 +58,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
       }
     });
   }
-
+  /// Limpia toda la selección y sale del modo de selección múltiple.
   void _clearSelection() {
     setState(() {
       _selectedPhotos.clear();
@@ -50,9 +79,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () async {
+            ),            TextButton(              onPressed: () async {
+                if (!context.mounted) return;
+                
                 final provider = context.read<CameraProvider>();
                 final photosToDelete = _selectedPhotos.toList()..sort((a, b) => b.compareTo(a));
                 
@@ -63,7 +92,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 }
                 
                 _clearSelection();
-                Navigator.of(context).pop();
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               },
               child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
             ),
@@ -77,7 +108,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
     // Aquí implementarías la navegación a la creación del reporte
     // con las fotos seleccionadas
     final selectedPhotosList = _selectedPhotos.toList();
-    print('Crear reporte con fotos en índices: $selectedPhotosList');
+    debugPrint('Crear reporte con fotos en índices: $selectedPhotosList');
     
     // Por ahora solo mostramos un SnackBar
     ScaffoldMessenger.of(context).showSnackBar(
@@ -234,11 +265,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       
                       return GestureDetector(
                         onTap: () => _togglePhotoSelection(index),
-                        onLongPress: () => _togglePhotoSelection(index),
-                        child: Stack(
+                        onLongPress: () => _togglePhotoSelection(index),                        child: Stack(
                           children: [
                             // Imagen
-                            Container(                            decoration: BoxDecoration(
+                            Container(
+                              decoration: BoxDecoration(
                                 border: isSelected 
                                     ? Border.all(color: AppColors.accent, width: 3)
                                     : null,
@@ -260,10 +291,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 },
                               ),
                             ),
-                              // Overlay de selección
+                            
+                            // Overlay de selección
                             if (isSelected)
                               Container(
-                                color: AppColors.accent.withOpacity(0.3),
+                                color: AppColors.accent.withValues(alpha: 0.3),
                                 child: const Center(
                                   child: Icon(
                                     Icons.check_circle,

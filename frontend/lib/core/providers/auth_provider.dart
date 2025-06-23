@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../models/auth_models.dart';
@@ -284,7 +285,7 @@ class AuthProvider extends ChangeNotifier {  /// Estado actual de autenticación
       await ApiService.clearTokens();
     } catch (e) {
       // Continuar con logout incluso si hay error limpiando tokens
-      print('Error clearing tokens: $e');
+      debugPrint('Error clearing tokens: $e');
     }
     
     // Siempre marcar como no autenticado

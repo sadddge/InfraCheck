@@ -1,14 +1,44 @@
-/// Configuración centralizada para todas las llamadas a la API
+/// Configuración centralizada para todas las llamadas a la API.
 /// 
 /// Define las URLs base, endpoints y configuraciones de timeout
-/// para la comunicación con el backend de InfraCheck
-class ApiConfig {  /// URL base del servidor backend
-  /// TODO: Configurar para diferentes entornos (dev, staging, prod)
-  /// - Development: http://localhost:3000/api
-  /// - Staging: https://api-staging.infracheck.com/api
-  /// - Production: https://api.infracheck.com/api
-  /// Implementar usando flutter_dotenv o dart-define para configuración por entorno
-  static const String baseUrl = 'http://localhost:3000/api';
+/// para la comunicación con el backend de InfraCheck. Este archivo
+/// centraliza toda la configuración de red para facilitar el mantenimiento
+/// y la configuración por entornos.
+/// 
+/// Uso recomendado:
+/// ```dart
+/// final response = await ApiService.post(
+///   ApiConfig.loginEndpoint,
+///   data: loginData,
+/// );
+/// ```
+class ApiConfig {
+  /// URL base del servidor backend
+  /// 
+  /// ⚠️ **CONFIGURACIÓN POR ENTORNOS PENDIENTE**
+  /// 
+  /// Actualmente configurado para desarrollo local. Se debe implementar
+  /// configuración dinámica usando:
+  /// 
+  /// **Opción 1: flutter_dotenv**
+  /// ```bash
+  /// flutter pub add flutter_dotenv
+  /// ```
+  /// Crear archivo `.env`:
+  /// ```
+  /// API_BASE_URL=http://localhost:3000/api
+  /// ```
+  /// 
+  /// **Opción 2: dart-define**
+  /// ```bash
+  /// flutter run --dart-define=API_BASE_URL=http://localhost:3000/api
+  /// ```
+  /// 
+  /// **URLs por entorno:**
+  /// - Development: `http://localhost:3000/api`
+  /// - Staging: `https://api-staging.infracheck.com/api`
+  /// - Production: `https://api.infracheck.com/api`
+  static const String baseUrl = 'http://192.168.50.209:3000/api';
 
   // === ENDPOINTS DE AUTENTICACIÓN ===
   /// Endpoint para iniciar sesión

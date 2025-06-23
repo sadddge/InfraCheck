@@ -54,32 +54,33 @@ class _VerifyRecoverPasswordState extends State<VerifyRecoverPassword> {
       final success = await authProvider.verifyRecoverPassword(
         widget.phoneNumber,
         _codeController.text.trim(),
-      );
-
-      setState(() {
+      );      setState(() {
         _isLoading = false;
       });
 
       if (success) {
-        // Mostrar mensaje de éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Código verificado exitosamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // Navegar a la pantalla de restablecimiento de contraseña
-        context.go('/reset-password', extra: widget.phoneNumber);
+        // Verificar que el widget sigue montado antes de usar context
+        if (mounted) {
+          // Mostrar mensaje de éxito
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Código verificado exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Navegar a la pantalla de restablecimiento de contraseña
+          context.go('/reset-password', extra: widget.phoneNumber);
+        }
       } else {
         // Mostrar mensaje de error del provider
-        final errorMessage = authProvider.errorMessage ?? 'Error al verificar el código';
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
+        final errorMessage = authProvider.errorMessage ?? 'Error al verificar el código';        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -108,7 +109,7 @@ class _VerifyRecoverPasswordState extends State<VerifyRecoverPassword> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
           ),
           // Blur effect
           BackdropFilter(
@@ -163,7 +164,7 @@ class _VerifyRecoverPasswordState extends State<VerifyRecoverPassword> {
                               Shadow(
                                 offset: const Offset(0, 2),
                                 blurRadius: 4,
-                                color: const Color(0xFF000000).withOpacity(0.25),
+                                color: const Color(0xFF000000).withValues(alpha: 0.25),
                               ),
                             ],
                           ),

@@ -112,7 +112,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
           ),
           // Blur effect
           BackdropFilter(
@@ -176,7 +176,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 4,
                           ),
                         ],
@@ -291,31 +291,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRequirement(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 2),
-      child: Row(
-        children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 14,
-            color: AppColors.teal800.withOpacity(0.7),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: AppTextStyles.caption.copyWith(
-              fontSize: 11,
-              color: AppColors.teal800.withOpacity(0.8),
-            ),
-          ),
-        ],
-      ),
+        ],      ),
     );
   }
 }

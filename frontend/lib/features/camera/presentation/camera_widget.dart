@@ -5,6 +5,16 @@ import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../domain/camera_provider.dart';
 
+/// Widget reutilizable que encapsula la funcionalidad de cámara.
+/// 
+/// Proporciona una interfaz completa de cámara que incluye:
+/// - Vista previa de la cámara en tiempo real
+/// - Estados de carga y inicialización
+/// - Vista en miniatura de la galería de fotos capturadas
+/// - Integración completa con CameraProvider para gestión de estado
+/// 
+/// Diseñado para ser embebido en otras pantallas que necesiten
+/// funcionalidad de cámara sin duplicar lógica de UI.
 class CameraWidget extends StatelessWidget {
   const CameraWidget({super.key});
 
@@ -49,10 +59,9 @@ class CameraWidget extends StatelessWidget {
               child: Container(
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  borderRadius: BorderRadius.circular(16),                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -99,10 +108,9 @@ class CameraWidget extends StatelessWidget {
                           border: Border.all(
                             color: AppColors.primary,
                             width: 4,
-                          ),
-                          boxShadow: [
+                          ),                          boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -134,9 +142,8 @@ class CameraWidget extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
+                        ),                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -169,9 +176,8 @@ class CameraWidget extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                        ),                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

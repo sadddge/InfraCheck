@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:camera/camera.dart';
@@ -7,6 +8,30 @@ import 'dart:io';
 import '../../../shared/theme/colors.dart';
 import '../domain/camera_provider.dart';
 
+/// Pantalla principal de captura de fotografías para reportes.
+/// 
+/// Proporciona una interfaz de cámara completa con controles táctiles,
+/// gestión de flash, cambio de cámara y captura automática con geolocalización.
+/// La pantalla se ejecuta en modo inmersivo para máxima área de visualización.
+/// 
+/// Características principales:
+/// - Vista previa de cámara en pantalla completa
+/// - Control de flash (automático, encendido, apagado)
+/// - Cambio entre cámara frontal y trasera
+/// - Captura con coordenadas GPS automáticas
+/// - Interfaz táctil optimizada para una mano
+/// - Auto-enfoque por toque en pantalla
+/// 
+/// Estados del UI:
+/// - Modo inmersivo (sin barras de sistema)
+/// - Controles superpuestos semitransparentes
+/// - Feedback visual durante captura
+/// - Manejo de errores de cámara y permisos
+/// 
+/// Uso:
+/// ```dart
+/// context.push('/camera');
+/// ```
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
 
@@ -14,11 +39,26 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
+/// Estado interno de la pantalla de cámara.
+/// 
+/// Gestiona la lógica de la interfaz de cámara incluyendo:
+/// - Control de flash y configuraciones de cámara
+/// - Cambio entre cámaras disponibles (frontal/trasera)
+/// - Captura de fotos con prevención de múltiples disparos
+/// - Configuración del sistema UI (modo inmersivo)
+/// - Cleanup de recursos al salir de la pantalla
 class _CameraScreenState extends State<CameraScreen> {
+  /// Estado actual del flash (encendido/apagado)
   bool _isFlashOn = false;
+  
+  /// Índice de la cámara actualmente seleccionada
   int _currentCameraIndex = 0;
+  
+  /// Lista de cámaras disponibles en el dispositivo
   List<CameraDescription> _cameras = [];
-  bool _isCapturing = false; // Estado para controlar la captura de fotos
+  
+  /// Estado para prevenir múltiples capturas simultáneas
+  bool _isCapturing = false;
 
   @override
   void initState() {
@@ -45,7 +85,10 @@ class _CameraScreenState extends State<CameraScreen> {
     ));
     super.dispose();
   }
-
+  /// Alterna el estado del flash de la cámara.
+  /// 
+  /// Cambia entre flash encendido (modo torch) y apagado. Solo funciona
+  /// si la cámara está inicializada y soporta flash.
   Future<void> _toggleFlash() async {
     final provider = context.read<CameraProvider>();
     if (provider.controller?.value.isInitialized ?? false) {
@@ -57,6 +100,12 @@ class _CameraScreenState extends State<CameraScreen> {
       );
     }
   }
+  
+  /// Cambia entre las cámaras disponibles (frontal/trasera).
+  /// 
+  /// Libera la cámara actual, cambia al siguiente índice disponible
+  /// y reinicializa con la nueva cámara. Resetea el flash ya que
+  /// muchas cámaras frontales no lo soportan.
   Future<void> _switchCamera() async {
     if (_cameras.length > 1) {
       final provider = context.read<CameraProvider>();
@@ -71,7 +120,15 @@ class _CameraScreenState extends State<CameraScreen> {
       // Reinicializar con la nueva cámara
       await provider.initCameraWithDescription(_cameras[_currentCameraIndex]);
     }
-  }  Future<void> _capturePhoto() async {
+  }
+
+  /// Captura una fotografía con geolocalización automática.
+  /// 
+  /// Previene múltiples capturas simultáneas y proporciona feedback
+  /// visual y háptico al usuario. Maneja errores de captura mostrando
+  /// mensajes informativos. Garantiza una duración mínima de animación
+  /// para mejor experiencia de usuario.
+  Future<void> _capturePhoto() async {
     if (_isCapturing) return; // Evitar múltiples capturas simultáneas
     
     setState(() {
@@ -115,6 +172,16 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     }
   }
+  /// Maneja la navegación hacia atrás desde la pantalla de cámara.
+  /// 
+  /// Controla el comportamiento del botón "atrás" del sistema para:
+  /// - Prevenir salida durante captura de fotos
+  /// - Liberar recursos de cámara antes de salir
+  /// - Mostrar mensajes informativos al usuario
+  /// - Garantizar limpieza adecuada de memoria
+  /// 
+  /// Returns:
+  ///   true si se puede salir de la pantalla, false en caso contrario
   Future<bool> _onWillPop() async {
     // Si está capturando una foto, no permitir salir y mostrar mensaje
     if (_isCapturing) {
@@ -137,10 +204,9 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       // Liberar recursos de la cámara antes de salir
       final provider = context.read<CameraProvider>();
-      await provider.releaseCameraResources();
-    } catch (e) {
+      await provider.releaseCameraResources();    } catch (e) {
       // Si hay error liberando recursos, aún así permitir salir
-      print('Error liberando recursos de cámara: $e');
+      debugPrint('Error liberando recursos de cámara: $e');
     }
     
     return true; // Permitir salir
@@ -210,18 +276,17 @@ class _CameraScreenState extends State<CameraScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Botón cerrar (X)
-                        GestureDetector(
-                          onTap: () async {
+                      children: [                        // Botón cerrar (X)
+                        GestureDetector(                          onTap: () async {
                             await provider.releaseCameraResources();
-                            context.go('/home');
+                            if (context.mounted) {
+                              context.go('/home');
+                            }
                           },
                           child: Container(
                             width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
+                            height: 40,                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -236,11 +301,10 @@ class _CameraScreenState extends State<CameraScreen> {
                         GestureDetector(
                           onTap: _toggleFlash,                        child: Container(
                             width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
+                            height: 40,                            decoration: BoxDecoration(
                               color: _isFlashOn 
-                                  ? AppColors.accent.withOpacity(0.8)
-                                  : Colors.black.withOpacity(0.5),
+                                  ? AppColors.accent.withValues(alpha: 0.8)
+                                  : Colors.black.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                               border: _isFlashOn 
                                   ? Border.all(color: Colors.white, width: 1)
@@ -270,12 +334,12 @@ class _CameraScreenState extends State<CameraScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Botón galería con preview
-                        GestureDetector(
-                          onTap: () async {
+                      children: [                        // Botón galería con preview
+                        GestureDetector(                          onTap: () async {
                             await provider.releaseCameraResources();
-                            context.go('/photo-gallery');
+                            if (context.mounted) {
+                              context.go('/photo-gallery');
+                            }
                           },
                           child: Container(
                             width: 60,
@@ -319,19 +383,17 @@ class _CameraScreenState extends State<CameraScreen> {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _isCapturing 
-                                  ? AppColors.accent.withOpacity(0.8)
+                              shape: BoxShape.circle,                              color: _isCapturing 
+                                  ? AppColors.accent.withValues(alpha: 0.8)
                                   : AppColors.accent, // Amarillo claro
                               border: Border.all(
                                 color: _isCapturing 
-                                    ? const Color(0xFFE6C200).withOpacity(0.8)
+                                    ? const Color(0xFFE6C200).withValues(alpha: 0.8)
                                     : const Color(0xFFE6C200), // Amarillo más fuerte
                                 width: _isCapturing ? 2 : 4,
-                              ),
-                              boxShadow: _isCapturing ? [] : [
+                              ),                              boxShadow: _isCapturing ? [] : [
                                 BoxShadow(
-                                  color: AppColors.accent.withOpacity(0.3),
+                                  color: AppColors.accent.withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   spreadRadius: 2,
                                 ),
@@ -343,9 +405,8 @@ class _CameraScreenState extends State<CameraScreen> {
                                       width: 28,
                                       height: 28,
                                       child: CircularProgressIndicator(
-                                        strokeWidth: 3,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.black.withOpacity(0.8),
+                                        strokeWidth: 3,                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.black.withValues(alpha: 0.8),
                                         ),
                                       ),
                                     ),
@@ -363,9 +424,8 @@ class _CameraScreenState extends State<CameraScreen> {
                           onTap: _switchCamera,
                           child: Container(
                             width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
+                            height: 60,                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 1),
                             ),
