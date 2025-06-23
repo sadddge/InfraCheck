@@ -172,6 +172,16 @@ class _CameraScreenState extends State<CameraScreen> {
       }
     }
   }
+  /// Maneja la navegación hacia atrás desde la pantalla de cámara.
+  /// 
+  /// Controla el comportamiento del botón "atrás" del sistema para:
+  /// - Prevenir salida durante captura de fotos
+  /// - Liberar recursos de cámara antes de salir
+  /// - Mostrar mensajes informativos al usuario
+  /// - Garantizar limpieza adecuada de memoria
+  /// 
+  /// Returns:
+  ///   true si se puede salir de la pantalla, false en caso contrario
   Future<bool> _onWillPop() async {
     // Si está capturando una foto, no permitir salir y mostrar mensaje
     if (_isCapturing) {

@@ -5,6 +5,16 @@ import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../domain/camera_provider.dart';
 
+/// Widget reutilizable que encapsula la funcionalidad de cámara.
+/// 
+/// Proporciona una interfaz completa de cámara que incluye:
+/// - Vista previa de la cámara en tiempo real
+/// - Estados de carga y inicialización
+/// - Vista en miniatura de la galería de fotos capturadas
+/// - Integración completa con CameraProvider para gestión de estado
+/// 
+/// Diseñado para ser embebido en otras pantallas que necesiten
+/// funcionalidad de cámara sin duplicar lógica de UI.
 class CameraWidget extends StatelessWidget {
   const CameraWidget({super.key});
 
