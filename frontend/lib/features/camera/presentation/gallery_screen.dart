@@ -50,8 +50,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancelar'),
-            ),
-            TextButton(              onPressed: () async {
+            ),            TextButton(              onPressed: () async {
+                if (!context.mounted) return;
+                
                 final provider = context.read<CameraProvider>();
                 final photosToDelete = _selectedPhotos.toList()..sort((a, b) => b.compareTo(a));
                 
@@ -62,7 +63,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 }
                 
                 _clearSelection();
-                if (mounted) {
+                if (context.mounted) {
                   Navigator.of(context).pop();
                 }
               },
@@ -235,11 +236,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       
                       return GestureDetector(
                         onTap: () => _togglePhotoSelection(index),
-                        onLongPress: () => _togglePhotoSelection(index),
-                        child: Stack(
+                        onLongPress: () => _togglePhotoSelection(index),                        child: Stack(
                           children: [
                             // Imagen
-                            Container(                            decoration: BoxDecoration(
+                            Container(
+                              decoration: BoxDecoration(
                                 border: isSelected 
                                     ? Border.all(color: AppColors.accent, width: 3)
                                     : null,
@@ -261,10 +262,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 },
                               ),
                             ),
-                              // Overlay de selección
+                            
+                            // Overlay de selección
                             if (isSelected)
                               Container(
-                                color: AppColors.accent.withOpacity(0.3),
+                                color: AppColors.accent.withValues(alpha: 0.3),
                                 child: const Center(
                                   child: Icon(
                                     Icons.check_circle,

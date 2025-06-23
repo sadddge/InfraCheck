@@ -32,14 +32,14 @@ class PhotoService {
       if (permission == LocationPermission.deniedForever) {
         // Permisos denegados permanentemente, usar coordenadas por defecto
         return null;
-      }
-
-      // Si tenemos permisos, obtener la posición
+      }      // Si tenemos permisos, obtener la posición
       if (permission == LocationPermission.whileInUse ||
           permission == LocationPermission.always) {
         return await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 10),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 10),
+          ),
         );
       }
     } catch (e) {

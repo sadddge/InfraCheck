@@ -35,10 +35,9 @@ class UserStatusWidget extends StatelessWidget {
         border: Border.all(
           color: _getBorderColor(),
           width: 2,
-        ),
-        boxShadow: [
+        ),        boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -75,9 +74,8 @@ class UserStatusWidget extends StatelessWidget {
           
           // Descripción
           Text(
-            userStatus.description,
-            style: AppTextStyles.inputText.copyWith(
-              color: _getTextColor().withOpacity(0.8),
+            userStatus.description,            style: AppTextStyles.inputText.copyWith(
+              color: _getTextColor().withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
           ),
@@ -136,9 +134,8 @@ class UserStatusWidget extends StatelessWidget {
         );
       case UserStatus.pendingApproval:
         return Text(
-          'Tu solicitud está siendo revisada. Te notificaremos cuando sea aprobada.',
-          style: AppTextStyles.caption.copyWith(
-            color: _getTextColor().withOpacity(0.7),
+          'Tu solicitud está siendo revisada. Te notificaremos cuando sea aprobada.',          style: AppTextStyles.caption.copyWith(
+            color: _getTextColor().withValues(alpha: 0.7),
             fontStyle: FontStyle.italic,
           ),
           textAlign: TextAlign.center,

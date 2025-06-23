@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:camera/camera.dart';
@@ -193,10 +194,9 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       // Liberar recursos de la cámara antes de salir
       final provider = context.read<CameraProvider>();
-      await provider.releaseCameraResources();
-    } catch (e) {
+      await provider.releaseCameraResources();    } catch (e) {
       // Si hay error liberando recursos, aún así permitir salir
-      print('Error liberando recursos de cámara: $e');
+      debugPrint('Error liberando recursos de cámara: $e');
     }
     
     return true; // Permitir salir
@@ -266,18 +266,17 @@ class _CameraScreenState extends State<CameraScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Botón cerrar (X)
-                        GestureDetector(
-                          onTap: () async {
+                      children: [                        // Botón cerrar (X)
+                        GestureDetector(                          onTap: () async {
                             await provider.releaseCameraResources();
-                            context.go('/home');
+                            if (context.mounted) {
+                              context.go('/home');
+                            }
                           },
                           child: Container(
                             width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
+                            height: 40,                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -292,11 +291,10 @@ class _CameraScreenState extends State<CameraScreen> {
                         GestureDetector(
                           onTap: _toggleFlash,                        child: Container(
                             width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
+                            height: 40,                            decoration: BoxDecoration(
                               color: _isFlashOn 
-                                  ? AppColors.accent.withOpacity(0.8)
-                                  : Colors.black.withOpacity(0.5),
+                                  ? AppColors.accent.withValues(alpha: 0.8)
+                                  : Colors.black.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                               border: _isFlashOn 
                                   ? Border.all(color: Colors.white, width: 1)
@@ -326,12 +324,12 @@ class _CameraScreenState extends State<CameraScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Botón galería con preview
-                        GestureDetector(
-                          onTap: () async {
+                      children: [                        // Botón galería con preview
+                        GestureDetector(                          onTap: () async {
                             await provider.releaseCameraResources();
-                            context.go('/photo-gallery');
+                            if (context.mounted) {
+                              context.go('/photo-gallery');
+                            }
                           },
                           child: Container(
                             width: 60,
@@ -375,19 +373,17 @@ class _CameraScreenState extends State<CameraScreen> {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _isCapturing 
-                                  ? AppColors.accent.withOpacity(0.8)
+                              shape: BoxShape.circle,                              color: _isCapturing 
+                                  ? AppColors.accent.withValues(alpha: 0.8)
                                   : AppColors.accent, // Amarillo claro
                               border: Border.all(
                                 color: _isCapturing 
-                                    ? const Color(0xFFE6C200).withOpacity(0.8)
+                                    ? const Color(0xFFE6C200).withValues(alpha: 0.8)
                                     : const Color(0xFFE6C200), // Amarillo más fuerte
                                 width: _isCapturing ? 2 : 4,
-                              ),
-                              boxShadow: _isCapturing ? [] : [
+                              ),                              boxShadow: _isCapturing ? [] : [
                                 BoxShadow(
-                                  color: AppColors.accent.withOpacity(0.3),
+                                  color: AppColors.accent.withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   spreadRadius: 2,
                                 ),
@@ -399,9 +395,8 @@ class _CameraScreenState extends State<CameraScreen> {
                                       width: 28,
                                       height: 28,
                                       child: CircularProgressIndicator(
-                                        strokeWidth: 3,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.black.withOpacity(0.8),
+                                        strokeWidth: 3,                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.black.withValues(alpha: 0.8),
                                         ),
                                       ),
                                     ),
@@ -419,9 +414,8 @@ class _CameraScreenState extends State<CameraScreen> {
                           onTap: _switchCamera,
                           child: Container(
                             width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
+                            height: 60,                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 1),
                             ),
