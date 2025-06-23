@@ -1,5 +1,4 @@
-import { IPaginationOptions } from 'nestjs-typeorm-paginate';
-import { Pagination } from 'nestjs-typeorm-paginate/dist/pagination';
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportChangeDto } from '../dto/report-change.dto';
