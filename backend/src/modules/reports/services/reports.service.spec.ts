@@ -23,23 +23,10 @@ import {
     createMockReportImage,
     createMockRepository,
     createMockUploadService,
-    setupTestCleanup,
+    mockPaginate,
 } from '../../../common/test-helpers';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportsService } from './reports.service';
-
-// Mock paginate function
-jest.mock('nestjs-typeorm-paginate', () => ({
-    paginate: jest.fn(),
-    Pagination: jest.fn().mockImplementation((items, meta, links) => ({
-        items,
-        meta,
-        links,
-    })),
-}));
-
-import { paginate } from 'nestjs-typeorm-paginate';
-const mockPaginate = paginate as jest.MockedFunction<typeof paginate>;
 
 describe('ReportsService', () => {
     let service: ReportsService;
@@ -99,8 +86,9 @@ describe('ReportsService', () => {
         uploadService = module.get(UPLOAD_SERVICE);
     });
 
-    // Setup test cleanup
-    setupTestCleanup();
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
     it('should be defined', () => {
         expect(service).toBeDefined();

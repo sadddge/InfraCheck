@@ -5,13 +5,11 @@ import { DeleteResult, Repository } from 'typeorm';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
-import { createMockUser, setupTestCleanup } from '../../../common/test-helpers';
+import { createMockUser, mockPaginate } from '../../../common/test-helpers';
 import { expectUserErrorAsync } from '../../../common/test-helpers/exception-test.helper';
 import { RegisterDto } from '../../auth/dto/register.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UsersService } from './users.service';
-
-import { mockPaginate } from '../../../common/test-helpers/pagination-mock';
 
 describe('UsersService', () => {
     let service: UsersService;
@@ -74,8 +72,9 @@ describe('UsersService', () => {
         userRepository = module.get(getRepositoryToken(User));
     });
 
-    // Setup test cleanup
-    setupTestCleanup();
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
     it('should be defined', () => {
         expect(service).toBeDefined();

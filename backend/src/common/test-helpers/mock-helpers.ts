@@ -3,13 +3,6 @@
  */
 
 /**
- * Creates a jest mock function
- */
-export function createMockFunction() {
-    return jest.fn();
-}
-
-/**
  * Common mock for class-validator
  */
 export const mockClassValidator = {
@@ -34,45 +27,6 @@ export const mockClassTransformer = {
     plainToInstance: jest.fn(),
     Type: () => () => {},
 };
-
-/**
- * Centralized pagination mock setup for nestjs-typeorm-paginate
- * Returns the mocked paginate function for use in tests.
- */
-export function mockNestjsTypeormPaginate() {
-    const mockPaginate = jest.fn();
-    jest.mock('nestjs-typeorm-paginate', () => ({
-        paginate: mockPaginate,
-        Pagination: jest.fn().mockImplementation((items, meta, links) => ({
-            items,
-            meta,
-            links,
-        })),
-    }));
-
-    return mockPaginate;
-}
-
-/**
- * Mock setup for external libraries
- */
-export function setupMocks() {
-    // Mock class-validator
-    jest.mock('class-validator', () => mockClassValidator);
-
-    // Mock class-transformer
-    jest.mock('class-transformer', () => mockClassTransformer);
-
-    // Mock nestjs-typeorm-paginate
-    mockNestjsTypeormPaginate();
-}
-
-/**
- * Reset all mocks
- */
-export function resetMocks() {
-    jest.clearAllMocks();
-}
 
 /**
  * Creates a mock repository
@@ -103,19 +57,6 @@ export function createMockRepository<T>() {
 }
 
 /**
- * Creates a mock service with common methods
- */
-export function createMockService<T>(methods: (keyof T)[]): jest.Mocked<T> {
-    const mockService = {} as jest.Mocked<T>;
-
-    for (const method of methods) {
-        (mockService[method] as jest.Mock) = jest.fn();
-    }
-
-    return mockService;
-}
-
-/**
  * Creates a mock reports service
  */
 export function createMockReportsService() {
@@ -134,18 +75,6 @@ export function createMockReportsService() {
 export function createMockUploadService() {
     return {
         uploadFile: jest.fn(),
-    };
-}
-
-/**
- * Creates a mock user service
- */
-export function createMockUserService() {
-    return {
-        findByPhoneNumberWithPassword: jest.fn(),
-        findById: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
     };
 }
 

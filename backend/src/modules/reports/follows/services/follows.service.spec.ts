@@ -4,25 +4,8 @@ import { AppException } from 'src/common/exceptions/app.exception';
 import { Report } from 'src/database/entities/report.entity';
 import { User } from 'src/database/entities/user.entity';
 import { Repository } from 'typeorm';
+import { createMockReport, createMockUser, mockPaginate } from '../../../../common/test-helpers';
 import { FollowsService } from './follows.service';
-import {
-    createMockUser,
-    createMockReport,
-    setupTestCleanup,
-} from '../../../../common/test-helpers';
-
-// Mock paginate function
-jest.mock('nestjs-typeorm-paginate', () => ({
-    paginate: jest.fn(),
-    Pagination: jest.fn().mockImplementation((items, meta, links) => ({
-        items,
-        meta,
-        links,
-    })),
-}));
-
-import { paginate } from 'nestjs-typeorm-paginate';
-const mockPaginate = paginate as jest.MockedFunction<typeof paginate>;
 
 describe('FollowsService', () => {
     let service: FollowsService;
@@ -77,13 +60,15 @@ describe('FollowsService', () => {
                     },
                 },
             ],
-        }).compile();        service = module.get<FollowsService>(FollowsService);
+        }).compile();
+        service = module.get<FollowsService>(FollowsService);
         userRepository = module.get(getRepositoryToken(User));
         reportRepository = module.get(getRepositoryToken(Report));
     });
 
-    // Setup standard test cleanup
-    setupTestCleanup();
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
     describe('followReport', () => {
         beforeEach(() => {

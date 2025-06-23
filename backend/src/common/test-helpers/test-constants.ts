@@ -120,11 +120,13 @@ export const TEST_METADATA = {
  * Creates metadata for report creation tests
  */
 export function createReportMetadata(imageCount = 2) {
-    const images = Array(imageCount).fill(null).map(() => ({
-        takenAt: new Date(),
-        latitude: TEST_COORDINATES.LATITUDE,
-        longitude: TEST_COORDINATES.LONGITUDE,
-    }));
+    const images = Array(imageCount)
+        .fill(null)
+        .map(() => ({
+            takenAt: new Date(),
+            latitude: TEST_COORDINATES.LATITUDE,
+            longitude: TEST_COORDINATES.LONGITUDE,
+        }));
 
     return {
         ...TEST_METADATA.BASE_METADATA,

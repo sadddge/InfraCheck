@@ -6,7 +6,6 @@ import {
     createEmptyPaginationResponse,
     createMockPaginationResponse,
     createMockRequest,
-    resetMocks,
 } from '../../../common/test-helpers';
 import {
     FOLLOWS_SERVICE,
@@ -38,7 +37,7 @@ describe('UserFollowsController', () => {
     });
 
     afterEach(() => {
-        resetMocks();
+        jest.clearAllMocks();
     });
 
     describe('getCurrentUserFollowedReports', () => {

@@ -5,23 +5,10 @@ import { Repository } from 'typeorm';
 import {
     createMockComment,
     createMockRepository,
-    setupTestCleanup,
+    mockPaginate,
 } from '../../../../common/test-helpers';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { CommentsService } from './comments.service';
-
-// Mock paginate function
-jest.mock('nestjs-typeorm-paginate', () => ({
-    paginate: jest.fn(),
-    Pagination: jest.fn().mockImplementation((items, meta, links) => ({
-        items,
-        meta,
-        links,
-    })),
-}));
-
-import { paginate } from 'nestjs-typeorm-paginate';
-const mockPaginate = paginate as jest.MockedFunction<typeof paginate>;
 
 describe('CommentsService', () => {
     let service: CommentsService;
@@ -40,13 +27,11 @@ describe('CommentsService', () => {
         }).compile();
         service = module.get<CommentsService>(CommentsService);
         repository = module.get(getRepositoryToken(Comment));
-
-        // Reset mocks before each test
-        jest.clearAllMocks();
     });
 
-    // Use centralized cleanup helper for consistency
-    setupTestCleanup();
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
     describe('findAllByReportId', () => {
         it('should return an array of comment DTOs for a given report ID', async () => {
