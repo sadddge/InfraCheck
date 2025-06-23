@@ -5,6 +5,19 @@ import { Repository } from 'typeorm';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { CommentsService } from './comments.service';
 
+// Mock paginate function
+jest.mock('nestjs-typeorm-paginate', () => ({
+    paginate: jest.fn(),
+    Pagination: jest.fn().mockImplementation((items, meta, links) => ({
+        items,
+        meta,
+        links,
+    })),
+}));
+
+import { paginate } from 'nestjs-typeorm-paginate';
+const mockPaginate = paginate as jest.MockedFunction<typeof paginate>;
+
 describe('CommentsService', () => {
     let service: CommentsService;
     let repository: Repository<Comment>;
@@ -29,6 +42,9 @@ describe('CommentsService', () => {
 
         service = module.get<CommentsService>(CommentsService);
         repository = module.get<Repository<Comment>>(getRepositoryToken(Comment));
+
+        // Reset mocks before each test
+        jest.clearAllMocks();
     });
 
     afterEach(() => {
@@ -39,6 +55,7 @@ describe('CommentsService', () => {
         it('should return an array of comment DTOs for a given report ID', async () => {
             // Arrange
             const reportId = 1;
+            const options = { page: 1, limit: 10 };
             const mockComments = [
                 {
                     id: 1,
@@ -49,19 +66,36 @@ describe('CommentsService', () => {
                 },
             ];
 
-            mockRepository.find.mockResolvedValue(mockComments);
+            const mockPaginatedResponse = {
+                items: mockComments,
+                meta: {
+                    totalItems: 1,
+                    itemCount: 1,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/comments?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/comments?page=1',
+                },
+            };
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, options);
 
             // Assert
-            expect(repository.find).toHaveBeenCalledWith({
+            expect(mockPaginate).toHaveBeenCalledWith(repository, options, {
                 where: { report: { id: expect.any(Object) } },
                 relations: ['creator', 'report'],
                 order: { createdAt: 'DESC' },
             });
-            expect(result).toHaveLength(1);
-            expect(result[0]).toEqual({
+            expect(result.items).toHaveLength(1);
+            expect(result.items[0]).toEqual({
                 id: 1,
                 content: 'Test comment',
                 createdAt: mockComments[0].createdAt,
@@ -76,27 +110,47 @@ describe('CommentsService', () => {
                 },
             });
         });
-
         it('should return an empty array when no comments exist for the report', async () => {
             // Arrange
             const reportId = 1;
-            mockRepository.find.mockResolvedValue([]);
+            const options = { page: 1, limit: 10 };
+
+            const mockPaginatedResponse = {
+                items: [],
+                meta: {
+                    totalItems: 0,
+                    itemCount: 0,
+                    itemsPerPage: 10,
+                    totalPages: 0,
+                    currentPage: 1,
+                },
+                links: {
+                    first: '',
+                    previous: '',
+                    next: '',
+                    last: '',
+                },
+            };
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, options);
 
             // Assert
-            expect(result).toEqual([]);
+            expect(result.items).toEqual([]);
         });
-
         it('should handle database errors', async () => {
             // Arrange
             const reportId = 1;
+            const options = { page: 1, limit: 10 };
             const error = new Error('Database error');
-            mockRepository.find.mockRejectedValue(error);
+            mockPaginate.mockRejectedValue(error);
 
             // Act & Assert
-            await expect(service.findAllByReportId(reportId)).rejects.toThrow('Database error');
+            await expect(service.findAllByReportId(reportId, options)).rejects.toThrow(
+                'Database error',
+            );
         });
     });
 
@@ -212,13 +266,30 @@ describe('CommentsService', () => {
                 report: { id: 1, title: 'Sample Report' },
             };
 
-            mockRepository.find.mockResolvedValue([mockComment]);
+            const mockPaginatedResponse = {
+                items: [mockComment],
+                meta: {
+                    totalItems: 1,
+                    itemCount: 1,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/comments?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/comments?page=1',
+                },
+            };
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, { page: 1, limit: 10 });
 
             // Assert
-            expect(result[0]).toEqual({
+            expect(result.items[0]).toEqual({
                 id: 1,
                 content: 'Test content',
                 createdAt: new Date('2023-01-01'),
@@ -233,7 +304,6 @@ describe('CommentsService', () => {
                 },
             });
         });
-
         it('should handle special characters in content', async () => {
             // Arrange
             const reportId = 1;
@@ -246,13 +316,30 @@ describe('CommentsService', () => {
                 report: { id: 1, title: 'Test Report' },
             };
 
-            mockRepository.find.mockResolvedValue([mockComment]);
+            const mockPaginatedResponse = {
+                items: [mockComment],
+                meta: {
+                    totalItems: 1,
+                    itemCount: 1,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/comments?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/comments?page=1',
+                },
+            };
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, { page: 1, limit: 10 });
 
             // Assert
-            expect(result[0].content).toBe(specialContent);
+            expect(result.items[0].content).toBe(specialContent);
         });
     });
 
@@ -280,15 +367,32 @@ describe('CommentsService', () => {
                 },
             ];
 
-            mockRepository.find.mockResolvedValue(mockComments);
+            const mockPaginatedResponse = {
+                items: mockComments,
+                meta: {
+                    totalItems: 2,
+                    itemCount: 2,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/comments?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/comments?page=1',
+                },
+            };
+
+            mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAllByReportId(reportId);
+            const result = await service.findAllByReportId(reportId, { page: 1, limit: 10 });
 
             // Assert
-            expect(result).toHaveLength(2);
-            expect(result[0].id).toBe(2); // More recent first due to DESC order
-            expect(result[1].id).toBe(1);
+            expect(result.items).toHaveLength(2);
+            expect(result.items[0].id).toBe(2); // More recent first due to DESC order
+            expect(result.items[1].id).toBe(1);
         });
 
         it('should handle large comment content', async () => {

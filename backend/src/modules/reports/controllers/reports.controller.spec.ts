@@ -1,7 +1,7 @@
-﻿import { AppException } from '../../../common/exceptions/app.exception';
-import { Test, TestingModule } from '@nestjs/testing';
+﻿import { Test, TestingModule } from '@nestjs/testing';
 import { ReportCategory } from 'src/common/enums/report-category.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
+import { AppException } from '../../../common/exceptions/app.exception';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { IReportsService, REPORTS_SERVICE } from '../interfaces/reports-service.interface';
 import { ReportsController } from './reports.controller';
@@ -22,6 +22,9 @@ jest.mock('class-validator', () => ({
     MaxLength: () => () => {},
     IsArray: () => () => {},
     ValidateNested: () => () => {},
+    IsOptional: () => () => {},
+    Min: () => () => {},
+    Max: () => () => {},
 }));
 
 import { plainToInstance } from 'class-transformer';
@@ -92,21 +95,23 @@ describe('ReportsController', () => {
                     images: [],
                 },
             ];
-
             mockReportsService.findAll.mockResolvedValue(mockReports);
 
-            const result = await controller.getAllReports();
+            const paginationDto = { page: 1, limit: 10 };
+            const result = await controller.getAllReports(paginationDto);
 
-            expect(reportsService.findAll).toHaveBeenCalled();
+            expect(reportsService.findAll).toHaveBeenCalledWith(paginationDto);
             expect(result).toEqual(mockReports);
         });
-
         it('should propagate errors from reportsService.findAll', async () => {
             const error = new Error('Database connection failed');
+            const paginationDto = { page: 1, limit: 10 };
             mockReportsService.findAll.mockRejectedValue(error);
 
-            await expect(controller.getAllReports()).rejects.toThrow('Database connection failed');
-            expect(reportsService.findAll).toHaveBeenCalled();
+            await expect(controller.getAllReports(paginationDto)).rejects.toThrow(
+                'Database connection failed',
+            );
+            expect(reportsService.findAll).toHaveBeenCalledWith(paginationDto);
         });
     });
 
@@ -224,13 +229,17 @@ describe('ReportsController', () => {
         });
 
         it('should throw AppException when no files are uploaded', async () => {
-            await expect(controller.createReport([], rawMetadata, mockRequest)).rejects.toThrow(AppException);
+            await expect(controller.createReport([], rawMetadata, mockRequest)).rejects.toThrow(
+                AppException,
+            );
 
             expect(reportsService.createReport).not.toHaveBeenCalled();
         });
 
         it('should throw AppException when no metadata is provided', async () => {
-            await expect(controller.createReport(mockFiles, '', mockRequest)).rejects.toThrow(AppException);
+            await expect(controller.createReport(mockFiles, '', mockRequest)).rejects.toThrow(
+                AppException,
+            );
 
             expect(reportsService.createReport).not.toHaveBeenCalled();
         });
@@ -303,22 +312,24 @@ describe('ReportsController', () => {
                     userId: 2,
                 },
             ];
-
             mockReportsService.findHistoryByReportId.mockResolvedValue(mockHistory);
 
-            const result = await controller.getReportHistory(reportId);
+            const paginationDto = { page: 1, limit: 10 };
+            const result = await controller.getReportHistory(reportId, paginationDto);
 
-            expect(reportsService.findHistoryByReportId).toHaveBeenCalledWith(123);
+            expect(reportsService.findHistoryByReportId).toHaveBeenCalledWith(123, paginationDto);
             expect(result).toEqual(mockHistory);
         });
-
         it('should propagate errors from reportsService.findHistoryByReportId', async () => {
             const reportId = '999';
+            const paginationDto = { page: 1, limit: 10 };
             const error = new Error('Report not found');
             mockReportsService.findHistoryByReportId.mockRejectedValue(error);
 
-            await expect(controller.getReportHistory(reportId)).rejects.toThrow('Report not found');
-            expect(reportsService.findHistoryByReportId).toHaveBeenCalledWith(999);
+            await expect(controller.getReportHistory(reportId, paginationDto)).rejects.toThrow(
+                'Report not found',
+            );
+            expect(reportsService.findHistoryByReportId).toHaveBeenCalledWith(999, paginationDto);
         });
     });
 
@@ -339,26 +350,25 @@ describe('ReportsController', () => {
                 creatorId: 1,
                 images: [],
             };
-
             mockReportsService.updateState.mockResolvedValue(mockUpdatedReport);
 
-            const result = await controller.updateReportState(reportId, newState);
+            const mockRequest = { user: { id: 1 } };
+            const result = await controller.updateReportState(reportId, newState, mockRequest);
 
-            expect(reportsService.updateState).toHaveBeenCalledWith(123, newState);
+            expect(reportsService.updateState).toHaveBeenCalledWith(123, 1, newState);
             expect(result).toEqual(mockUpdatedReport);
         });
-
         it('should propagate errors from reportsService.updateState', async () => {
             const reportId = '999';
             const newState = ReportState.RESOLVED;
+            const mockRequest = { user: { id: 1 } };
             const error = new Error('Report not found');
             mockReportsService.updateState.mockRejectedValue(error);
 
-            await expect(controller.updateReportState(reportId, newState)).rejects.toThrow(
-                'Report not found',
-            );
-            expect(reportsService.updateState).toHaveBeenCalledWith(999, newState);
+            await expect(
+                controller.updateReportState(reportId, newState, mockRequest),
+            ).rejects.toThrow('Report not found');
+            expect(reportsService.updateState).toHaveBeenCalledWith(999, 1, newState);
         });
     });
 });
-

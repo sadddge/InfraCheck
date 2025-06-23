@@ -30,65 +30,97 @@ describe('CommentsController', () => {
     describe('findAllByReportId', () => {
         it('should call commentsService.findAllByReportId with correct reportId and return comments', async () => {
             const reportId = 123;
-            const mockComments = [
-                {
-                    id: 1,
-                    content: 'This is a test comment',
-                    createdAt: new Date(),
-                    reportId: 123,
-                    creatorId: 1,
-                    creator: {
+            const paginationDto = { page: 1, limit: 10 };
+            const mockPaginatedResponse = {
+                items: [
+                    {
                         id: 1,
-                        name: 'John',
-                        lastName: 'Doe',
-                        phoneNumber: '+56912345678',
+                        content: 'This is a test comment',
+                        createdAt: new Date(),
+                        reportId: 123,
+                        creatorId: 1,
+                        creator: {
+                            id: 1,
+                            name: 'John',
+                            lastName: 'Doe',
+                            phoneNumber: '+56912345678',
+                        },
                     },
-                },
-                {
-                    id: 2,
-                    content: 'Another test comment',
-                    createdAt: new Date(),
-                    reportId: 123,
-                    creatorId: 2,
-                    creator: {
+                    {
                         id: 2,
-                        name: 'Jane',
-                        lastName: 'Smith',
-                        phoneNumber: '+56987654321',
+                        content: 'Another test comment',
+                        createdAt: new Date(),
+                        reportId: 123,
+                        creatorId: 2,
+                        creator: {
+                            id: 2,
+                            name: 'Jane',
+                            lastName: 'Smith',
+                            phoneNumber: '+56987654321',
+                        },
                     },
+                ],
+                meta: {
+                    totalItems: 2,
+                    itemCount: 2,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
                 },
-            ];
+                links: {
+                    first: 'http://localhost:3000/comments?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/comments?page=1',
+                },
+            };
 
-            mockCommentsService.findAllByReportId.mockResolvedValue(mockComments);
+            mockCommentsService.findAllByReportId.mockResolvedValue(mockPaginatedResponse);
 
-            const result = await controller.findAllByReportId(reportId);
+            const result = await controller.findAllByReportId(reportId, paginationDto);
 
-            expect(commentsService.findAllByReportId).toHaveBeenCalledWith(reportId);
-            expect(result).toEqual(mockComments);
+            expect(commentsService.findAllByReportId).toHaveBeenCalledWith(reportId, paginationDto);
+            expect(result).toEqual(mockPaginatedResponse);
         });
-
         it('should propagate errors from commentsService.findAllByReportId', async () => {
             const reportId = 999;
+            const paginationDto = { page: 1, limit: 10 };
             const error = new Error('Report not found');
             mockCommentsService.findAllByReportId.mockRejectedValue(error);
 
-            await expect(controller.findAllByReportId(reportId)).rejects.toThrow(
+            await expect(controller.findAllByReportId(reportId, paginationDto)).rejects.toThrow(
                 'Report not found',
             );
-            expect(commentsService.findAllByReportId).toHaveBeenCalledWith(reportId);
+            expect(commentsService.findAllByReportId).toHaveBeenCalledWith(reportId, paginationDto);
         });
-
         it('should return empty array when no comments exist for report', async () => {
             const reportId = 123;
-            const emptyComments = [];
+            const paginationDto = { page: 1, limit: 10 };
+            const emptyPaginatedResponse = {
+                items: [],
+                meta: {
+                    totalItems: 0,
+                    itemCount: 0,
+                    itemsPerPage: 10,
+                    totalPages: 0,
+                    currentPage: 1,
+                },
+                links: {
+                    first: '',
+                    previous: '',
+                    next: '',
+                    last: '',
+                },
+            };
 
-            mockCommentsService.findAllByReportId.mockResolvedValue(emptyComments);
+            mockCommentsService.findAllByReportId.mockResolvedValue(emptyPaginatedResponse);
 
-            const result = await controller.findAllByReportId(reportId);
+            const result = await controller.findAllByReportId(reportId, paginationDto);
 
-            expect(commentsService.findAllByReportId).toHaveBeenCalledWith(reportId);
-            expect(result).toEqual([]);
-            expect(Array.isArray(result)).toBe(true);
+            expect(commentsService.findAllByReportId).toHaveBeenCalledWith(reportId, paginationDto);
+            expect(result).toEqual(emptyPaginatedResponse);
+            expect(result.items).toEqual([]);
+            expect(Array.isArray(result.items)).toBe(true);
         });
     });
 

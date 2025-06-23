@@ -41,64 +41,100 @@ describe('UsersController', () => {
     describe('findAll', () => {
         it('should call usersService.findAll with no status filter and return all users', async () => {
             const query: UserQueryDto = {};
-            const mockUsers = [
-                {
-                    id: 1,
-                    phoneNumber: '+56912345678',
-                    name: 'John',
-                    lastName: 'Doe',
-                    status: UserStatus.ACTIVE,
-                    role: Role.NEIGHBOR,
-                    createdAt: new Date(),
+            const paginationDto = { page: 1, limit: 10 };
+            const mockPaginatedUsers = {
+                items: [
+                    {
+                        id: 1,
+                        phoneNumber: '+56912345678',
+                        name: 'John',
+                        lastName: 'Doe',
+                        status: UserStatus.ACTIVE,
+                        role: Role.NEIGHBOR,
+                        createdAt: new Date(),
+                        passwordUpdatedAt: new Date(),
+                    },
+                    {
+                        id: 2,
+                        phoneNumber: '+56987654321',
+                        name: 'Jane',
+                        lastName: 'Smith',
+                        status: UserStatus.PENDING_VERIFICATION,
+                        role: Role.NEIGHBOR,
+                        createdAt: new Date(),
+                        passwordUpdatedAt: new Date(),
+                    },
+                ],
+                meta: {
+                    totalItems: 2,
+                    itemCount: 2,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
                 },
-                {
-                    id: 2,
-                    phoneNumber: '+56987654321',
-                    name: 'Jane',
-                    lastName: 'Smith',
-                    status: UserStatus.PENDING_VERIFICATION,
-                    role: Role.NEIGHBOR,
-                    createdAt: new Date(),
+                links: {
+                    first: 'http://localhost:3000/users?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/users?page=1',
                 },
-            ];
+            };
 
-            mockUsersService.findAll.mockResolvedValue(mockUsers);
+            mockUsersService.findAll.mockResolvedValue(mockPaginatedUsers);
 
-            const result = await controller.findAll(query);
+            const result = await controller.findAll(query, paginationDto);
 
-            expect(usersService.findAll).toHaveBeenCalledWith(undefined);
-            expect(result).toEqual(mockUsers);
+            expect(usersService.findAll).toHaveBeenCalledWith(paginationDto, undefined);
+            expect(result).toEqual(mockPaginatedUsers);
         });
-
         it('should call usersService.findAll with status filter when provided', async () => {
             const query: UserQueryDto = { status: UserStatus.ACTIVE };
-            const mockActiveUsers = [
-                {
-                    id: 1,
-                    phoneNumber: '+56912345678',
-                    name: 'John',
-                    lastName: 'Doe',
-                    status: UserStatus.ACTIVE,
-                    role: Role.NEIGHBOR,
-                    createdAt: new Date(),
+            const paginationDto = { page: 1, limit: 10 };
+            const mockPaginatedActiveUsers = {
+                items: [
+                    {
+                        id: 1,
+                        phoneNumber: '+56912345678',
+                        name: 'John',
+                        lastName: 'Doe',
+                        status: UserStatus.ACTIVE,
+                        role: Role.NEIGHBOR,
+                        createdAt: new Date(),
+                        passwordUpdatedAt: new Date(),
+                    },
+                ],
+                meta: {
+                    totalItems: 1,
+                    itemCount: 1,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
                 },
-            ];
+                links: {
+                    first: 'http://localhost:3000/users?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/users?page=1',
+                },
+            };
 
-            mockUsersService.findAll.mockResolvedValue(mockActiveUsers);
+            mockUsersService.findAll.mockResolvedValue(mockPaginatedActiveUsers);
 
-            const result = await controller.findAll(query);
+            const result = await controller.findAll(query, paginationDto);
 
-            expect(usersService.findAll).toHaveBeenCalledWith(UserStatus.ACTIVE);
-            expect(result).toEqual(mockActiveUsers);
+            expect(usersService.findAll).toHaveBeenCalledWith(paginationDto, UserStatus.ACTIVE);
+            expect(result).toEqual(mockPaginatedActiveUsers);
         });
-
         it('should propagate errors from usersService.findAll', async () => {
             const query: UserQueryDto = {};
+            const paginationDto = { page: 1, limit: 10 };
             const error = new Error('Database connection failed');
             mockUsersService.findAll.mockRejectedValue(error);
 
-            await expect(controller.findAll(query)).rejects.toThrow('Database connection failed');
-            expect(usersService.findAll).toHaveBeenCalledWith(undefined);
+            await expect(controller.findAll(query, paginationDto)).rejects.toThrow(
+                'Database connection failed',
+            );
+            expect(usersService.findAll).toHaveBeenCalledWith(paginationDto, undefined);
         });
     });
 
