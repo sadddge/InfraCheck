@@ -5,6 +5,14 @@ import { AppException } from '../../../common/exceptions/app.exception';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { IReportsService, REPORTS_SERVICE } from '../interfaces/reports-service.interface';
 import { ReportsController } from './reports.controller';
+import {
+    createMockReportsService,
+    createMockReportDto,
+    createMockFiles,
+    setupTestCleanup,
+    DEFAULT_PAGINATION_DTO,
+    TEST_COORDINATES,
+} from '../../../common/test-helpers';
 
 // Mock class-transformer and class-validator
 jest.mock('class-transformer', () => ({
@@ -34,13 +42,8 @@ describe('ReportsController', () => {
     let controller: ReportsController;
     let reportsService: jest.Mocked<IReportsService>;
 
-    const mockReportsService = {
-        findAll: jest.fn(),
-        findById: jest.fn(),
-        findHistoryByReportId: jest.fn(),
-        createReport: jest.fn(),
-        updateState: jest.fn(),
-    };
+    // Use centralized mock service factory
+    const mockReportsService = createMockReportsService();
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -52,9 +55,8 @@ describe('ReportsController', () => {
         reportsService = module.get(REPORTS_SERVICE);
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
+    // Use centralized cleanup
+    setupTestCleanup();
 
     describe('getReportCategories', () => {
         it('should return all report categories', () => {
@@ -63,45 +65,51 @@ describe('ReportsController', () => {
             expect(result).toEqual(Object.values(ReportCategory));
             expect(Array.isArray(result)).toBe(true);
         });
-    });
-
-    describe('getAllReports', () => {
-        it('should call reportsService.findAll and return reports', async () => {
+    });    describe('getAllReports', () => {        it('should call reportsService.findAll and return reports', async () => {
+            // Use factory functions for mock data
             const mockReports = [
-                {
+                createMockReportDto({
                     id: 1,
                     title: 'Test Report 1',
                     description: 'Description 1',
                     category: ReportCategory.INFRASTRUCTURE,
                     state: ReportState.PENDING,
-                    isVisible: true,
-                    latitude: -33.4489,
-                    longitude: -70.6693,
-                    createdAt: new Date(),
                     creatorId: 1,
-                    images: [],
-                },
-                {
+                }),
+                createMockReportDto({
                     id: 2,
                     title: 'Test Report 2',
                     description: 'Description 2',
                     category: ReportCategory.SECURITY,
                     state: ReportState.IN_PROGRESS,
-                    isVisible: true,
-                    latitude: -33.4489,
-                    longitude: -70.6693,
-                    createdAt: new Date(),
                     creatorId: 2,
-                    images: [],
-                },
+                }),
             ];
-            mockReportsService.findAll.mockResolvedValue(mockReports);
+            
+            const mockPaginatedResponse = {
+                items: mockReports,
+                meta: {
+                    totalItems: 2,
+                    itemCount: 2,
+                    itemsPerPage: 10,
+                    totalPages: 1,
+                    currentPage: 1,
+                },
+                links: {
+                    first: 'http://localhost:3000/reports?page=1',
+                    previous: '',
+                    next: '',
+                    last: 'http://localhost:3000/reports?page=1',
+                },
+            };
+            
+            reportsService.findAll.mockResolvedValue(mockPaginatedResponse);
 
-            const paginationDto = { page: 1, limit: 10 };
+            const paginationDto = DEFAULT_PAGINATION_DTO;
             const result = await controller.getAllReports(paginationDto);
 
             expect(reportsService.findAll).toHaveBeenCalledWith(paginationDto);
-            expect(result).toEqual(mockReports);
+            expect(result).toEqual(mockPaginatedResponse);
         });
         it('should propagate errors from reportsService.findAll', async () => {
             const error = new Error('Database connection failed');
@@ -113,24 +121,13 @@ describe('ReportsController', () => {
             );
             expect(reportsService.findAll).toHaveBeenCalledWith(paginationDto);
         });
-    });
-
-    describe('getReportById', () => {
+    });    describe('getReportById', () => {
         it('should call reportsService.findById with correct id and return report', async () => {
             const reportId = '123';
-            const mockReport = {
+            const mockReport = createMockReportDto({
                 id: 123,
-                title: 'Test Report',
-                description: 'Test Description',
-                category: ReportCategory.INFRASTRUCTURE,
-                state: ReportState.PENDING,
-                isVisible: true,
-                latitude: -33.4489,
-                longitude: -70.6693,
-                createdAt: new Date(),
                 creatorId: 1,
-                images: [],
-            };
+            });
 
             mockReportsService.findById.mockResolvedValue(mockReport);
 
@@ -148,71 +145,37 @@ describe('ReportsController', () => {
             await expect(controller.getReportById(reportId)).rejects.toThrow('Report not found');
             expect(reportsService.findById).toHaveBeenCalledWith(999);
         });
-    });
-
-    describe('createReport', () => {
-        const mockFiles = [
-            {
-                fieldname: 'images',
-                originalname: 'test1.jpg',
-                encoding: '7bit',
-                mimetype: 'image/jpeg',
-                buffer: Buffer.from('fake-image-data'),
-                size: 1024,
-            },
-            {
-                fieldname: 'images',
-                originalname: 'test2.jpg',
-                encoding: '7bit',
-                mimetype: 'image/jpeg',
-                buffer: Buffer.from('fake-image-data-2'),
-                size: 2048,
-            },
-        ] as Express.Multer.File[];
-
-        const rawMetadata = JSON.stringify({
+    });    describe('createReport', () => {
+        const mockFiles = createMockFiles(2);        const rawMetadata = JSON.stringify({
             title: 'Test Report',
             description: 'Test Description',
             category: ReportCategory.INFRASTRUCTURE,
-            latitude: -33.4489,
-            longitude: -70.6693,
+            latitude: TEST_COORDINATES.LATITUDE,
+            longitude: TEST_COORDINATES.LONGITUDE,
             images: [
-                { takenAt: new Date(), latitude: -33.4489, longitude: -70.6693 },
-                { takenAt: new Date(), latitude: -33.4489, longitude: -70.6693 },
+                { takenAt: new Date(), latitude: TEST_COORDINATES.LATITUDE, longitude: TEST_COORDINATES.LONGITUDE },
+                { takenAt: new Date(), latitude: TEST_COORDINATES.LATITUDE, longitude: TEST_COORDINATES.LONGITUDE },
             ],
         });
 
-        const mockRequest = { user: { id: 5 } };
-
-        beforeEach(() => {
+        const mockRequest = { user: { id: 5 } };        beforeEach(() => {
             (plainToInstance as jest.Mock).mockReturnValue({
                 title: 'Test Report',
                 description: 'Test Description',
                 category: ReportCategory.INFRASTRUCTURE,
-                latitude: -33.4489,
-                longitude: -70.6693,
+                latitude: TEST_COORDINATES.LATITUDE,
+                longitude: TEST_COORDINATES.LONGITUDE,
                 images: [
-                    { takenAt: new Date(), latitude: -33.4489, longitude: -70.6693 },
-                    { takenAt: new Date(), latitude: -33.4489, longitude: -70.6693 },
+                    { takenAt: new Date(), latitude: TEST_COORDINATES.LATITUDE, longitude: TEST_COORDINATES.LONGITUDE },
+                    { takenAt: new Date(), latitude: TEST_COORDINATES.LATITUDE, longitude: TEST_COORDINATES.LONGITUDE },
                 ],
             });
             (validate as jest.Mock).mockResolvedValue([]);
-        });
-
-        it('should create report successfully with valid data', async () => {
-            const expectedReport = {
+        });it('should create report successfully with valid data', async () => {
+            const expectedReport = createMockReportDto({
                 id: 1,
-                title: 'Test Report',
-                description: 'Test Description',
-                category: ReportCategory.INFRASTRUCTURE,
-                state: ReportState.PENDING,
-                isVisible: true,
-                latitude: -33.4489,
-                longitude: -70.6693,
-                createdAt: new Date(),
                 creatorId: 5,
-                images: [],
-            };
+            });
 
             mockReportsService.createReport.mockResolvedValue(expectedReport);
 
@@ -254,20 +217,16 @@ describe('ReportsController', () => {
             ).rejects.toThrow(AppException);
 
             expect(reportsService.createReport).not.toHaveBeenCalled();
-        });
-
-        it('should throw AppException when file count does not match metadata', async () => {
+        });        it('should throw AppException when file count does not match metadata', async () => {
             const metadataWithOneImage = JSON.stringify({
                 title: 'Test Report',
                 description: 'Test Description',
                 category: ReportCategory.INFRASTRUCTURE,
-                latitude: -33.4489,
-                longitude: -70.6693,
-                images: [{ takenAt: new Date(), latitude: -33.4489, longitude: -70.6693 }],
-            });
-
-            (plainToInstance as jest.Mock).mockReturnValue({
-                images: [{ takenAt: new Date(), latitude: -33.4489, longitude: -70.6693 }],
+                latitude: TEST_COORDINATES.LATITUDE,
+                longitude: TEST_COORDINATES.LONGITUDE,
+                images: [{ takenAt: new Date(), latitude: TEST_COORDINATES.LATITUDE, longitude: TEST_COORDINATES.LONGITUDE }],
+            });            (plainToInstance as jest.Mock).mockReturnValue({
+                images: [{ takenAt: new Date(), latitude: TEST_COORDINATES.LATITUDE, longitude: TEST_COORDINATES.LONGITUDE }],
             });
 
             await expect(
@@ -333,23 +292,14 @@ describe('ReportsController', () => {
         });
     });
 
-    describe('updateReportState', () => {
-        it('should call reportsService.updateState with correct parameters and return updated report', async () => {
+    describe('updateReportState', () => {        it('should call reportsService.updateState with correct parameters and return updated report', async () => {
             const reportId = '123';
             const newState = ReportState.RESOLVED;
-            const mockUpdatedReport = {
+            const mockUpdatedReport = createMockReportDto({
                 id: 123,
-                title: 'Test Report',
-                description: 'Test Description',
-                category: ReportCategory.INFRASTRUCTURE,
                 state: ReportState.RESOLVED,
-                isVisible: true,
-                latitude: -33.4489,
-                longitude: -70.6693,
-                createdAt: new Date(),
                 creatorId: 1,
-                images: [],
-            };
+            });
             mockReportsService.updateState.mockResolvedValue(mockUpdatedReport);
 
             const mockRequest = { user: { id: 1 } };

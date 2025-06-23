@@ -5,6 +5,11 @@ import { Report } from 'src/database/entities/report.entity';
 import { User } from 'src/database/entities/user.entity';
 import { Repository } from 'typeorm';
 import { FollowsService } from './follows.service';
+import {
+    createMockUser,
+    createMockReport,
+    setupTestCleanup,
+} from '../../../../common/test-helpers';
 
 // Mock paginate function
 jest.mock('nestjs-typeorm-paginate', () => ({
@@ -24,18 +29,19 @@ describe('FollowsService', () => {
     let userRepository: jest.Mocked<Repository<User>>;
     let reportRepository: jest.Mocked<Repository<Report>>;
 
-    const mockUser = {
+    // Use mock factories for test data
+    const mockUser = createMockUser({
         id: 1,
         name: 'John',
         lastName: 'Doe',
-    } as unknown as User;
+    });
 
-    const mockReport = {
+    const mockReport = createMockReport({
         id: 1,
         title: 'Test Report',
         description: 'Test Description',
         followers: [],
-    } as unknown as Report;
+    });
 
     const mockQueryBuilder = {
         relation: jest.fn().mockReturnThis(),
@@ -71,16 +77,13 @@ describe('FollowsService', () => {
                     },
                 },
             ],
-        }).compile();
-
-        service = module.get<FollowsService>(FollowsService);
+        }).compile();        service = module.get<FollowsService>(FollowsService);
         userRepository = module.get(getRepositoryToken(User));
         reportRepository = module.get(getRepositoryToken(Report));
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
+    // Setup standard test cleanup
+    setupTestCleanup();
 
     describe('followReport', () => {
         beforeEach(() => {

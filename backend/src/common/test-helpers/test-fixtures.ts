@@ -11,6 +11,7 @@ import { ReportState } from '../enums/report-state.enums';
 import { Role } from '../enums/roles.enums';
 import { UserStatus } from '../enums/user-status.enums';
 import { VoteType } from '../enums/vote-type.enums';
+import { ReportDto } from '../../modules/reports/dto/report.dto';
 
 /**
  * Test fixtures for creating mock data
@@ -67,6 +68,27 @@ export function createMockReport(overrides: Partial<Report> = {}): Report {
     };
 
     return { ...defaultReport, ...overrides };
+}
+
+/**
+ * Creates a mock ReportDto
+ */
+export function createMockReportDto(overrides: Partial<ReportDto> = {}): ReportDto {
+    const defaultReportDto: ReportDto = {
+        id: 1,
+        title: 'Test Report',
+        description: 'Test description',
+        category: ReportCategory.INFRASTRUCTURE,
+        state: ReportState.PENDING,
+        isVisible: true,
+        latitude: -33.4489,
+        longitude: -70.6693,
+        createdAt: new Date('2024-01-01T10:00:00Z'),
+        creatorId: 1,
+        images: [],
+    };
+
+    return { ...defaultReportDto, ...overrides };
 }
 
 /**

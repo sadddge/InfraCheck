@@ -22,7 +22,8 @@ import {
     createMockReportChange,
     createMockReportImage,
     createMockRepository,
-    resetMocks,
+    createMockUploadService,
+    setupTestCleanup,
 } from '../../../common/test-helpers';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportsService } from './reports.service';
@@ -73,10 +74,7 @@ describe('ReportsService', () => {
     beforeEach(async () => {
         const mockReportRepository = createMockRepository<Repository<Report>>();
         const mockChangeRepository = createMockRepository<Repository<ReportChange>>();
-
-        const mockUploadService = {
-            uploadFile: jest.fn(),
-        };
+        const mockUploadService = createMockUploadService();
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -95,16 +93,14 @@ describe('ReportsService', () => {
                 },
             ],
         }).compile();
-
         service = module.get<ReportsService>(ReportsService);
         reportRepository = module.get(getRepositoryToken(Report));
         changeRepository = module.get(getRepositoryToken(ReportChange));
         uploadService = module.get(UPLOAD_SERVICE);
     });
 
-    afterEach(() => {
-        resetMocks();
-    });
+    // Setup test cleanup
+    setupTestCleanup();
 
     it('should be defined', () => {
         expect(service).toBeDefined();

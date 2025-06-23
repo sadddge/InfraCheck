@@ -2,6 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Comment } from 'src/database/entities/comment.entity';
 import { Repository } from 'typeorm';
+import {
+    createMockComment,
+    createMockRepository,
+    setupTestCleanup,
+} from '../../../../common/test-helpers';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { CommentsService } from './comments.service';
 
@@ -20,16 +25,10 @@ const mockPaginate = paginate as jest.MockedFunction<typeof paginate>;
 
 describe('CommentsService', () => {
     let service: CommentsService;
-    let repository: Repository<Comment>;
-
-    const mockRepository = {
-        find: jest.fn(),
-        create: jest.fn(),
-        save: jest.fn(),
-        delete: jest.fn(),
-    };
+    let repository: jest.Mocked<Repository<Comment>>;
 
     beforeEach(async () => {
+        const mockRepository = createMockRepository<Repository<Comment>>();
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 CommentsService,
@@ -39,17 +38,15 @@ describe('CommentsService', () => {
                 },
             ],
         }).compile();
-
         service = module.get<CommentsService>(CommentsService);
-        repository = module.get<Repository<Comment>>(getRepositoryToken(Comment));
+        repository = module.get(getRepositoryToken(Comment));
 
         // Reset mocks before each test
         jest.clearAllMocks();
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
+    // Use centralized cleanup helper for consistency
+    setupTestCleanup();
 
     describe('findAllByReportId', () => {
         it('should return an array of comment DTOs for a given report ID', async () => {
@@ -160,23 +157,17 @@ describe('CommentsService', () => {
             const reportId = 1;
             const userId = 1;
             const createCommentDto: CreateCommentDto = { content: 'New comment' };
-
-            const mockCreatedComment = {
+            const mockCreatedComment = createMockComment({
                 content: 'New comment',
-                report: { id: reportId },
-                creator: { id: userId },
-            };
+            });
 
-            const mockSavedComment = {
+            const mockSavedComment = createMockComment({
                 id: 1,
                 content: 'New comment',
                 createdAt: new Date(),
-                creator: { id: 1, name: 'John', lastName: 'Doe' },
-                report: { id: 1, title: 'Test Report' },
-            };
-
-            mockRepository.create.mockReturnValue(mockCreatedComment);
-            mockRepository.save.mockResolvedValue(mockSavedComment);
+            });
+            repository.create.mockReturnValue(mockCreatedComment);
+            repository.save.mockResolvedValue(mockSavedComment);
 
             // Act
             const result = await service.createComment(reportId, userId, createCommentDto);
@@ -194,8 +185,8 @@ describe('CommentsService', () => {
                 createdAt: mockSavedComment.createdAt,
                 creator: {
                     id: 1,
-                    firstName: 'John',
-                    lastName: 'Doe',
+                    firstName: 'Test User',
+                    lastName: 'Test Last',
                 },
                 report: {
                     id: 1,
@@ -210,9 +201,8 @@ describe('CommentsService', () => {
             const userId = 1;
             const createCommentDto: CreateCommentDto = { content: 'New comment' };
             const error = new Error('Save error');
-
-            mockRepository.create.mockReturnValue({});
-            mockRepository.save.mockRejectedValue(error);
+            repository.create.mockReturnValue({} as Comment);
+            repository.save.mockRejectedValue(error);
 
             // Act & Assert
             await expect(service.createComment(reportId, userId, createCommentDto)).rejects.toThrow(
@@ -225,7 +215,7 @@ describe('CommentsService', () => {
         it('should delete a comment by ID', async () => {
             // Arrange
             const commentId = 1;
-            mockRepository.delete.mockResolvedValue({ affected: 1 });
+            repository.delete.mockResolvedValue({ affected: 1, raw: {} });
 
             // Act
             await service.delete(commentId);
@@ -238,7 +228,7 @@ describe('CommentsService', () => {
             // Arrange
             const commentId = 1;
             const error = new Error('Delete error');
-            mockRepository.delete.mockRejectedValue(error);
+            repository.delete.mockRejectedValue(error);
 
             // Act & Assert
             await expect(service.delete(commentId)).rejects.toThrow('Delete error');
@@ -247,7 +237,7 @@ describe('CommentsService', () => {
         it('should not throw error when deleting non-existent comment', async () => {
             // Arrange
             const commentId = 999;
-            mockRepository.delete.mockResolvedValue({ affected: 0 });
+            repository.delete.mockResolvedValue({ affected: 0, raw: {} });
 
             // Act & Assert
             await expect(service.delete(commentId)).resolves.not.toThrow();
@@ -401,17 +391,13 @@ describe('CommentsService', () => {
             const userId = 1;
             const largeContent = 'A'.repeat(1000); // 1000 character string
             const createCommentDto: CreateCommentDto = { content: largeContent };
-
-            const mockSavedComment = {
+            const mockSavedComment = createMockComment({
                 id: 1,
                 content: largeContent,
                 createdAt: new Date(),
-                creator: { id: 1, name: 'John', lastName: 'Doe' },
-                report: { id: 1, title: 'Test Report' },
-            };
-
-            mockRepository.create.mockReturnValue({});
-            mockRepository.save.mockResolvedValue(mockSavedComment);
+            });
+            repository.create.mockReturnValue({} as Comment);
+            repository.save.mockResolvedValue(mockSavedComment);
 
             // Act
             const result = await service.createComment(reportId, userId, createCommentDto);

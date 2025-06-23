@@ -5,30 +5,18 @@ import { DeleteResult, Repository } from 'typeorm';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
+import { createMockUser, setupTestCleanup } from '../../../common/test-helpers';
 import { expectUserErrorAsync } from '../../../common/test-helpers/exception-test.helper';
 import { RegisterDto } from '../../auth/dto/register.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UsersService } from './users.service';
 
-// Mock paginate function
-jest.mock('nestjs-typeorm-paginate', () => ({
-    paginate: jest.fn(),
-    Pagination: jest.fn().mockImplementation((items, meta, links) => ({
-        items,
-        meta,
-        links,
-    })),
-}));
-
-import { paginate } from 'nestjs-typeorm-paginate';
-const mockPaginate = paginate as jest.MockedFunction<typeof paginate>;
+import { mockPaginate } from '../../../common/test-helpers/pagination-mock';
 
 describe('UsersService', () => {
     let service: UsersService;
-    let userRepository: jest.Mocked<Repository<User>>;
-
-    // Mock data
-    const mockUser: User = {
+    let userRepository: jest.Mocked<Repository<User>>; // Mock data using test fixtures
+    const mockUser = createMockUser({
         id: 1,
         name: 'Test User',
         lastName: 'Test Last',
@@ -38,14 +26,7 @@ describe('UsersService', () => {
         status: UserStatus.ACTIVE,
         createdAt: new Date('2024-01-01T10:00:00Z'),
         passwordUpdatedAt: new Date('2024-01-01T10:00:00Z'),
-        refreshTokens: [],
-        reports: [],
-        comments: [],
-        votes: [],
-        reportChanges: [],
-        messages: [],
-        reportsFollowed: [],
-    };
+    });
 
     const mockUserDto = {
         id: mockUser.id,
@@ -89,10 +70,12 @@ describe('UsersService', () => {
                 },
             ],
         }).compile();
-
         service = module.get<UsersService>(UsersService);
         userRepository = module.get(getRepositoryToken(User));
     });
+
+    // Setup test cleanup
+    setupTestCleanup();
 
     it('should be defined', () => {
         expect(service).toBeDefined();

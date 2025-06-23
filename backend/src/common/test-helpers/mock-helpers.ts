@@ -36,9 +36,22 @@ export const mockClassTransformer = {
 };
 
 /**
- * Common mock for nestjs-typeorm-paginate
+ * Centralized pagination mock setup for nestjs-typeorm-paginate
+ * Returns the mocked paginate function for use in tests.
  */
-export const mockPaginate = jest.fn();
+export function mockNestjsTypeormPaginate() {
+    const mockPaginate = jest.fn();
+    jest.mock('nestjs-typeorm-paginate', () => ({
+        paginate: mockPaginate,
+        Pagination: jest.fn().mockImplementation((items, meta, links) => ({
+            items,
+            meta,
+            links,
+        })),
+    }));
+
+    return mockPaginate;
+}
 
 /**
  * Mock setup for external libraries
@@ -51,14 +64,7 @@ export function setupMocks() {
     jest.mock('class-transformer', () => mockClassTransformer);
 
     // Mock nestjs-typeorm-paginate
-    jest.mock('nestjs-typeorm-paginate', () => ({
-        paginate: mockPaginate,
-        Pagination: jest.fn().mockImplementation((items, meta, links) => ({
-            items,
-            meta,
-            links,
-        })),
-    }));
+    mockNestjsTypeormPaginate();
 }
 
 /**
@@ -94,6 +100,53 @@ export function createMockRepository<T>() {
             getManyAndCount: jest.fn(),
         })),
     } as unknown as jest.Mocked<T>;
+}
+
+/**
+ * Creates a mock service with common methods
+ */
+export function createMockService<T>(methods: (keyof T)[]): jest.Mocked<T> {
+    const mockService = {} as jest.Mocked<T>;
+
+    for (const method of methods) {
+        (mockService[method] as jest.Mock) = jest.fn();
+    }
+
+    return mockService;
+}
+
+/**
+ * Creates a mock reports service
+ */
+export function createMockReportsService() {
+    return {
+        findAll: jest.fn(),
+        findById: jest.fn(),
+        findHistoryByReportId: jest.fn(),
+        createReport: jest.fn(),
+        updateState: jest.fn(),
+    };
+}
+
+/**
+ * Creates a mock upload service
+ */
+export function createMockUploadService() {
+    return {
+        uploadFile: jest.fn(),
+    };
+}
+
+/**
+ * Creates a mock user service
+ */
+export function createMockUserService() {
+    return {
+        findByPhoneNumberWithPassword: jest.fn(),
+        findById: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+    };
 }
 
 /**
