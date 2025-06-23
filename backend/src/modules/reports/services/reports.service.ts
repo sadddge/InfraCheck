@@ -76,10 +76,7 @@ export class ReportsService implements IReportsService {
             })),
         }));
 
-        return {
-            items,
-            meta: paginated.meta,
-        };
+        return new Pagination(items, paginated.meta, paginated.links);
     }
 
     /** @inheritDoc */
