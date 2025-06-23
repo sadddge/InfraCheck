@@ -3,20 +3,27 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppException } from '../../../common/exceptions/app.exception';
 
-import { Readable } from 'node:stream';
-import { ReportCategory } from 'src/common/enums/report-category.enums';
-import { ReportChangeType } from 'src/common/enums/report-change-type.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
-import { Role } from 'src/common/enums/roles.enums';
-import { UserStatus } from 'src/common/enums/user-status.enums';
 import { ReportChange } from 'src/database/entities/report-change.entity';
-import { ReportImage } from 'src/database/entities/report-image.entity';
 import { Report } from 'src/database/entities/report.entity';
-import { User } from 'src/database/entities/user.entity';
 import {
     IUploadService,
     UPLOAD_SERVICE,
 } from 'src/modules/upload/interfaces/upload-service.interface';
+import {
+    DEFAULT_PAGINATION_DTO,
+    TEST_COORDINATES,
+    TEST_DATES,
+    TEST_IDS,
+    TEST_REPORT_DATA,
+    createMockFiles,
+    createMockPaginationResponse,
+    createMockReport,
+    createMockReportChange,
+    createMockReportImage,
+    createMockRepository,
+    resetMocks,
+} from '../../../common/test-helpers';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportsService } from './reports.service';
 
@@ -39,120 +46,33 @@ describe('ReportsService', () => {
     let changeRepository: jest.Mocked<Repository<ReportChange>>;
     let uploadService: jest.Mocked<IUploadService>;
 
-    // Mock data
-    const mockUser: User = {
-        id: 1,
-        name: 'Test User',
-        lastName: 'Test Last',
-        phoneNumber: '+1234567890',
-        password: 'hashedPassword',
-        role: Role.NEIGHBOR,
-        status: UserStatus.ACTIVE,
-        createdAt: new Date(),
-        passwordUpdatedAt: null,
-        refreshTokens: [],
-        reports: [],
-        comments: [],
-        votes: [],
-        reportChanges: [],
-        messages: [],
-        reportsFollowed: [],
-    };
-
-    const mockReportImage: ReportImage = {
-        id: 1,
-        imageUrl: 'https://example.com/image1.jpg',
-        takenAt: new Date('2024-01-01T10:00:00Z'),
-        latitude: -33.4489,
-        longitude: -70.6693,
-        createdAt: new Date('2024-01-01T10:00:00Z'),
-        report: {} as Report,
-    };
-
-    const mockReport: Report = {
-        id: 1,
-        title: 'Test Report',
-        description: 'Test description',
-        category: ReportCategory.INFRASTRUCTURE,
-        state: ReportState.PENDING,
-        isVisible: true,
-        latitude: -33.4489,
-        longitude: -70.6693,
-        createdAt: new Date('2024-01-01T10:00:00Z'),
-        creator: mockUser,
-        images: [mockReportImage],
-        changes: [],
-        comments: [],
-        votes: [],
-        followers: [],
-    };
-
-    const mockReportChange: ReportChange = {
-        id: 1,
-        changeType: ReportChangeType.STATE,
-        from: ReportState.PENDING,
-        to: ReportState.IN_PROGRESS,
-        createdAt: new Date('2024-01-02T10:00:00Z'),
-        creator: mockUser,
-        report: mockReport,
-    };
+    // Mock data using test fixtures
+    const mockReportImage = createMockReportImage();
+    const mockReport = createMockReport({ images: [mockReportImage] });
+    const mockReportChange = createMockReportChange();
 
     const mockCreateReportDto: CreateReportDto = {
-        title: 'New Report',
-        description: 'New report description',
-        category: ReportCategory.INFRASTRUCTURE,
+        title: TEST_REPORT_DATA.TITLE,
+        description: TEST_REPORT_DATA.DESCRIPTION,
+        category: TEST_REPORT_DATA.CATEGORY,
         images: [
             {
-                takenAt: '2024-01-01T10:00:00Z',
-                latitude: -33.4489,
-                longitude: -70.6693,
+                takenAt: TEST_DATES.CREATED_AT.toISOString(),
+                latitude: TEST_COORDINATES.LATITUDE,
+                longitude: TEST_COORDINATES.LONGITUDE,
             },
             {
-                takenAt: '2024-01-01T10:05:00Z',
-                latitude: -33.449,
-                longitude: -70.6694,
+                takenAt: TEST_DATES.UPDATED_AT.toISOString(),
+                latitude: TEST_COORDINATES.LATITUDE + 0.001,
+                longitude: TEST_COORDINATES.LONGITUDE + 0.001,
             },
         ],
     };
 
-    const mockFiles: Express.Multer.File[] = [
-        {
-            fieldname: 'images',
-            originalname: 'image1.jpg',
-            encoding: '7bit',
-            mimetype: 'image/jpeg',
-            size: 1024,
-            buffer: Buffer.from('fake-image-data'),
-            destination: '',
-            filename: '',
-            path: '',
-            stream: new Readable(),
-        },
-        {
-            fieldname: 'images',
-            originalname: 'image2.jpg',
-            encoding: '7bit',
-            mimetype: 'image/jpeg',
-            size: 2048,
-            buffer: Buffer.from('fake-image-data-2'),
-            destination: '',
-            filename: '',
-            path: '',
-            stream: new Readable(),
-        },
-    ];
+    const mockFiles = createMockFiles(2);
     beforeEach(async () => {
-        const mockReportRepository = {
-            find: jest.fn(),
-            findOne: jest.fn(),
-            create: jest.fn(),
-            save: jest.fn(),
-        };
-        const mockChangeRepository = {
-            createQueryBuilder: jest.fn(),
-            create: jest.fn(),
-            save: jest.fn(),
-        };
+        const mockReportRepository = createMockRepository<Repository<Report>>();
+        const mockChangeRepository = createMockRepository<Repository<ReportChange>>();
 
         const mockUploadService = {
             uploadFile: jest.fn(),
@@ -182,39 +102,26 @@ describe('ReportsService', () => {
         uploadService = module.get(UPLOAD_SERVICE);
     });
 
+    afterEach(() => {
+        resetMocks();
+    });
+
     it('should be defined', () => {
         expect(service).toBeDefined();
     });
     describe('findAll', () => {
         it('should return all reports with mapped DTOs', async () => {
             // Arrange
-            const options = { page: 1, limit: 10 };
             const reports = [mockReport];
-
-            const mockPaginatedResponse = {
-                items: reports,
-                meta: {
-                    totalItems: 1,
-                    itemCount: 1,
-                    itemsPerPage: 10,
-                    totalPages: 1,
-                    currentPage: 1,
-                },
-                links: {
-                    first: 'http://localhost:3000/reports?page=1',
-                    previous: '',
-                    next: '',
-                    last: 'http://localhost:3000/reports?page=1',
-                },
-            };
+            const mockPaginatedResponse = createMockPaginationResponse(reports);
 
             mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAll(options);
+            const result = await service.findAll(DEFAULT_PAGINATION_DTO);
 
             // Assert
-            expect(mockPaginate).toHaveBeenCalledWith(reportRepository, options, {
+            expect(mockPaginate).toHaveBeenCalledWith(reportRepository, DEFAULT_PAGINATION_DTO, {
                 relations: ['creator', 'images'],
                 order: { createdAt: 'DESC' },
             });
@@ -243,41 +150,24 @@ describe('ReportsService', () => {
         });
         it('should return empty array when no reports exist', async () => {
             // Arrange
-            const options = { page: 1, limit: 10 };
-            const mockPaginatedResponse = {
-                items: [],
-                meta: {
-                    totalItems: 0,
-                    itemCount: 0,
-                    itemsPerPage: 10,
-                    totalPages: 0,
-                    currentPage: 1,
-                },
-                links: {
-                    first: '',
-                    previous: '',
-                    next: '',
-                    last: '',
-                },
-            };
+            const mockPaginatedResponse = createMockPaginationResponse([]);
 
             mockPaginate.mockResolvedValue(mockPaginatedResponse);
 
             // Act
-            const result = await service.findAll(options);
+            const result = await service.findAll(DEFAULT_PAGINATION_DTO);
 
             // Assert
             expect(result.items).toEqual([]);
         });
     });
-
     describe('findById', () => {
         it('should return a report by ID', async () => {
             // Arrange
             reportRepository.findOne.mockResolvedValue(mockReport);
 
             // Act
-            const result = await service.findById(1);
+            const result = await service.findById(TEST_IDS.USER_ID);
 
             // Assert
             expect(reportRepository.findOne).toHaveBeenCalledWith({
@@ -435,8 +325,8 @@ describe('ReportsService', () => {
                 title: mockCreateReportDto.title,
                 description: mockCreateReportDto.description,
                 category: mockCreateReportDto.category,
-                latitude: -33.44895, // Average of latitudes
-                longitude: -70.66935, // Average of longitudes
+                latitude: -33.4484, // Average of latitudes
+                longitude: -70.6688, // Average of longitudes
                 images: [
                     {
                         imageUrl: uploadedUrls[0],
@@ -485,12 +375,10 @@ describe('ReportsService', () => {
                     ],
                     creator: { id: 1 },
                 }),
-            );
-
-            // Check latitude and longitude separately with precision tolerance
+            ); // Check latitude and longitude separately with precision tolerance
             const createCall = reportRepository.create.mock.calls[0][0];
-            expect(createCall.latitude).toBeCloseTo(-33.44895, 4);
-            expect(createCall.longitude).toBeCloseTo(-70.66935, 4);
+            expect(createCall.latitude).toBeCloseTo(-33.4484, 4);
+            expect(createCall.longitude).toBeCloseTo(-70.6688, 4);
 
             expect(reportRepository.save).toHaveBeenCalledWith(createdReport);
 

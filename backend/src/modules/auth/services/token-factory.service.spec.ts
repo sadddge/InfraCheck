@@ -1,34 +1,27 @@
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Role } from 'src/common/enums/roles.enums';
-import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
+import {
+    TEST_AUTH_DATA,
+    TEST_IDS,
+    TEST_PHONE_NUMBERS,
+    TEST_USER_DATA,
+    createMockUser,
+} from '../../../common/test-helpers';
 import { TokenFactoryService } from './token-factory.service';
 
 describe('TokenFactoryService', () => {
     let service: TokenFactoryService;
     let jwtService: jest.Mocked<JwtService>;
     let configService: jest.Mocked<ConfigService>;
-
-    const mockUser: User = {
-        id: 1,
-        phoneNumber: '+1234567890',
-        password: 'hashedPassword',
-        name: 'John',
-        lastName: 'Doe',
-        status: UserStatus.ACTIVE,
-        role: Role.NEIGHBOR,
-        createdAt: new Date(),
-        passwordUpdatedAt: new Date(),
-        reports: [],
-        votes: [],
-        comments: [],
-        refreshTokens: [],
-        messages: [],
-        reportChanges: [],
-        reportsFollowed: [],
-    };
+    const mockUser: User = createMockUser({
+        id: TEST_IDS.USER_ID,
+        phoneNumber: TEST_PHONE_NUMBERS.VALID,
+        password: TEST_AUTH_DATA.HASHED_PASSWORD,
+        name: TEST_USER_DATA.NAME.split(' ')[0],
+        lastName: TEST_USER_DATA.LAST_NAME,
+    });
 
     const mockJwtConfig = {
         secret: 'test-secret',
@@ -95,8 +88,8 @@ describe('TokenFactoryService', () => {
     describe('generateTokenPair', () => {
         it('should generate both access and refresh tokens', async () => {
             // Arrange
-            const mockAccessToken = 'mock-access-token';
-            const mockRefreshToken = 'mock-refresh-token';
+            const mockAccessToken = TEST_AUTH_DATA.ACCESS_TOKEN;
+            const mockRefreshToken = TEST_AUTH_DATA.REFRESH_TOKEN;
 
             jwtService.signAsync
                 .mockResolvedValueOnce(mockAccessToken)
@@ -112,11 +105,10 @@ describe('TokenFactoryService', () => {
             });
             expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
         });
-
         it('should generate access token with correct payload and options', async () => {
             // Arrange
-            const mockAccessToken = 'mock-access-token';
-            const mockRefreshToken = 'mock-refresh-token';
+            const mockAccessToken = TEST_AUTH_DATA.ACCESS_TOKEN;
+            const mockRefreshToken = TEST_AUTH_DATA.REFRESH_TOKEN;
 
             jwtService.signAsync
                 .mockResolvedValueOnce(mockAccessToken)
@@ -137,11 +129,10 @@ describe('TokenFactoryService', () => {
                 secret: mockJwtConfig.secret,
             });
         });
-
         it('should generate refresh token with correct payload and options', async () => {
             // Arrange
-            const mockAccessToken = 'mock-access-token';
-            const mockRefreshToken = 'mock-refresh-token';
+            const mockAccessToken = TEST_AUTH_DATA.ACCESS_TOKEN;
+            const mockRefreshToken = TEST_AUTH_DATA.REFRESH_TOKEN;
 
             jwtService.signAsync
                 .mockResolvedValueOnce(mockAccessToken)

@@ -1,12 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { User } from 'src/database/entities/user.entity';
 import { Repository } from 'typeorm';
 import { ERROR_CODES } from '../../../common/constants/error-codes.constants';
 import { AppException } from '../../../common/exceptions/app.exception';
+import {
+    TEST_AUTH_DATA,
+    TEST_IDS,
+    TEST_PHONE_NUMBERS,
+    createMockRepository,
+    createMockUser,
+} from '../../../common/test-helpers';
 import { IUserService, USER_SERVICE } from '../../users/interfaces/user-service.interface';
 import { LoginDto } from '../dto/login.dto';
 import { AuthService } from './auth.service';
@@ -24,36 +30,22 @@ describe('AuthService', () => {
     let userService: jest.Mocked<IUserService>;
     let refreshTokenRepository: jest.Mocked<Repository<RefreshToken>>;
     let tokenFactory: jest.Mocked<TokenFactoryService>;
-
-    const mockUser: User = {
-        id: 1,
-        phoneNumber: '+1234567890',
-        password: 'hashedPassword',
-        name: 'John',
-        lastName: 'Doe',
-        status: UserStatus.ACTIVE,
-        role: Role.NEIGHBOR,
-        createdAt: new Date(),
-        passwordUpdatedAt: new Date(),
-        reports: [],
-        votes: [],
-        comments: [],
-        refreshTokens: [],
-        messages: [],
-        reportChanges: [],
-        reportsFollowed: [],
-    };
+    const mockUser: User = createMockUser({
+        id: TEST_IDS.USER_ID,
+        phoneNumber: TEST_PHONE_NUMBERS.VALID,
+        password: TEST_AUTH_DATA.HASHED_PASSWORD,
+    });
 
     const mockTokens = {
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
+        accessToken: TEST_AUTH_DATA.ACCESS_TOKEN,
+        refreshToken: TEST_AUTH_DATA.REFRESH_TOKEN,
     };
 
     const mockRefreshTokenEntity: RefreshToken = {
         id: 1,
-        token: 'mock-refresh-token',
+        token: TEST_AUTH_DATA.REFRESH_TOKEN,
         user: mockUser,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        expiresAt: new Date(Date.now() + TEST_AUTH_DATA.TOKEN_EXPIRY_MS),
         createdAt: new Date(),
     };
 
@@ -61,13 +53,7 @@ describe('AuthService', () => {
         const mockUserService = {
             findByPhoneNumberWithPassword: jest.fn(),
         };
-
-        const mockRefreshTokenRepository = {
-            findOne: jest.fn(),
-            save: jest.fn(),
-            create: jest.fn(),
-            delete: jest.fn(),
-        };
+        const mockRefreshTokenRepository = createMockRepository<RefreshToken>();
 
         const mockTokenFactory = {
             generateTokenPair: jest.fn(),
@@ -106,8 +92,8 @@ describe('AuthService', () => {
 
     describe('login', () => {
         const loginDto: LoginDto = {
-            phoneNumber: '+1234567890',
-            password: 'password123',
+            phoneNumber: TEST_PHONE_NUMBERS.VALID,
+            password: TEST_AUTH_DATA.PASSWORD,
         };
 
         it('should successfully login a user with valid credentials', async () => {
@@ -161,10 +147,9 @@ describe('AuthService', () => {
             await expect(service.login(loginDto)).rejects.toThrow(AppException);
         });
     });
-
     describe('refreshToken', () => {
-        const refreshToken = 'mock-refresh-token';
-        const userId = 1;
+        const refreshToken = TEST_AUTH_DATA.REFRESH_TOKEN;
+        const userId = TEST_IDS.USER_ID;
 
         it('should successfully refresh tokens with valid refresh token', async () => {
             // Arrange
@@ -202,10 +187,9 @@ describe('AuthService', () => {
             await expect(service.refreshToken(refreshToken, userId)).rejects.toThrow(AppException);
         });
     });
-
     describe('getUserIfRefreshTokenMatches', () => {
-        const refreshToken = 'mock-refresh-token';
-        const userId = 1;
+        const refreshToken = TEST_AUTH_DATA.REFRESH_TOKEN;
+        const userId = TEST_IDS.USER_ID;
 
         it('should return user when refresh token is valid and not expired', async () => {
             // Arrange

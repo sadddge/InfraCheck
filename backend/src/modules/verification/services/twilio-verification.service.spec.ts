@@ -1,7 +1,8 @@
-﻿import { AppException } from '../../../common/exceptions/app.exception';
-import { ConfigService } from '@nestjs/config';
+﻿import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Twilio } from 'twilio';
+import { AppException } from '../../../common/exceptions/app.exception';
+import { TEST_PHONE_NUMBERS, TEST_VERIFICATION_DATA } from '../../../common/test-helpers';
 
 import { TwilioVerificationService } from './twilio-verification.service';
 
@@ -48,9 +49,9 @@ describe('TwilioVerificationService', () => {
     let mockVerifications: MockVerifications;
     let mockVerificationChecks: MockVerificationChecks;
 
-    const TEST_SERVICE_SID = 'VAtest-service-sid-123';
-    const TEST_PHONE_NUMBER = '+1234567890';
-    const TEST_CODE = '123456';
+    const TEST_SERVICE_SID = 'VAtest-service-sid-123'; // Test constants using shared helpers
+    const TEST_PHONE_NUMBER = TEST_PHONE_NUMBERS.VALID;
+    const TEST_CODE = TEST_VERIFICATION_DATA.CODE;
 
     beforeEach(async () => {
         // Create mocks for nested Twilio objects
@@ -172,7 +173,9 @@ describe('TwilioVerificationService', () => {
             mockVerifications.create.mockResolvedValue(mockResponse);
 
             // Act & Assert
-            await expect(service.sendVerificationCode(TEST_PHONE_NUMBER)).rejects.toThrow(AppException);
+            await expect(service.sendVerificationCode(TEST_PHONE_NUMBER)).rejects.toThrow(
+                AppException,
+            );
 
             expect(mockVerifications.create).toHaveBeenCalledWith({
                 to: TEST_PHONE_NUMBER,
@@ -258,7 +261,9 @@ describe('TwilioVerificationService', () => {
             mockVerificationChecks.create.mockResolvedValue(mockResponse);
 
             // Act & Assert
-            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(AppException);
+            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(
+                AppException,
+            );
 
             expect(mockVerificationChecks.create).toHaveBeenCalledWith({
                 to: TEST_PHONE_NUMBER,
@@ -278,7 +283,9 @@ describe('TwilioVerificationService', () => {
             mockVerificationChecks.create.mockResolvedValue(mockResponse);
 
             // Act & Assert
-            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(AppException);
+            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(
+                AppException,
+            );
         });
 
         it('should handle invalid verification code', async () => {
@@ -293,7 +300,9 @@ describe('TwilioVerificationService', () => {
             mockVerificationChecks.create.mockResolvedValue(mockResponse);
 
             // Act & Assert
-            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(AppException);
+            await expect(service.verifyCode(TEST_PHONE_NUMBER, TEST_CODE)).rejects.toThrow(
+                AppException,
+            );
         });
 
         it('should handle Twilio API errors during verification', async () => {
@@ -346,14 +355,13 @@ describe('TwilioVerificationService', () => {
                 twilioError,
             );
         });
-
         it('should handle international phone numbers', async () => {
             // Arrange
             const internationalPhones = [
-                '+44123456789', // UK
-                '+33123456789', // France
-                '+56912345678', // Chile
-                '+81123456789', // Japan
+                TEST_VERIFICATION_DATA.PHONE_NUMBERS.UK,
+                TEST_VERIFICATION_DATA.PHONE_NUMBERS.FRANCE,
+                TEST_VERIFICATION_DATA.PHONE_NUMBERS.CHILE,
+                TEST_VERIFICATION_DATA.PHONE_NUMBERS.JAPAN,
             ];
 
             const mockResponse = {
@@ -377,7 +385,7 @@ describe('TwilioVerificationService', () => {
 
         it('should handle different verification code formats', async () => {
             // Arrange
-            const codes = ['123456', '000000', '999999', '111111'];
+            const codes = TEST_VERIFICATION_DATA.TEST_CODES;
             const mockResponse = {
                 status: 'approved',
                 sid: 'VCtest-verification-check-sid',
@@ -471,4 +479,3 @@ describe('TwilioVerificationService', () => {
         });
     });
 });
-

@@ -1,5 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
+    DEFAULT_PAGINATION_DTO,
+    TEST_ERROR_MESSAGES,
+    TEST_IDS,
+    createEmptyPaginationResponse,
+    createMockPaginationResponse,
+    createMockRequest,
+    resetMocks,
+} from '../../../common/test-helpers';
+import {
     FOLLOWS_SERVICE,
     IFollowsService,
 } from '../../reports/follows/interfaces/follows-service.interface';
@@ -29,80 +38,57 @@ describe('UserFollowsController', () => {
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        resetMocks();
     });
 
     describe('getCurrentUserFollowedReports', () => {
         it('should call followsService.getUserFollowedReports with current user ID and return followed reports', async () => {
-            const mockRequest = { user: { id: 123 } };
-            const paginationDto = { page: 1, limit: 10 };
-            const expectedResponse = {
-                items: [1, 2],
-                meta: {
-                    totalItems: 2,
-                    itemCount: 2,
-                    itemsPerPage: 10,
-                    totalPages: 1,
-                    currentPage: 1,
-                },
-                links: {
-                    first: 'http://localhost:3000/follows?page=1',
-                    previous: '',
-                    next: '',
-                    last: 'http://localhost:3000/follows?page=1',
-                },
-            };
+            const mockRequest = createMockRequest(TEST_IDS.USER_ID);
+            const expectedResponse = createMockPaginationResponse([1, 2]);
 
             mockFollowsService.getUserFollowedReports.mockResolvedValue(expectedResponse);
 
             const result = await controller.getCurrentUserFollowedReports(
                 mockRequest,
-                paginationDto,
+                DEFAULT_PAGINATION_DTO,
             );
 
-            expect(followsService.getUserFollowedReports).toHaveBeenCalledWith(123, paginationDto);
+            expect(followsService.getUserFollowedReports).toHaveBeenCalledWith(
+                TEST_IDS.USER_ID,
+                DEFAULT_PAGINATION_DTO,
+            );
             expect(result).toEqual(expectedResponse);
         });
+
         it('should propagate errors from followsService.getUserFollowedReports', async () => {
-            const mockRequest = { user: { id: 999 } };
-            const paginationDto = { page: 1, limit: 10 };
-            const error = new Error('User not found');
+            const mockRequest = createMockRequest(999);
+            const error = new Error(TEST_ERROR_MESSAGES.USER_NOT_FOUND);
 
             mockFollowsService.getUserFollowedReports.mockRejectedValue(error);
 
             await expect(
-                controller.getCurrentUserFollowedReports(mockRequest, paginationDto),
-            ).rejects.toThrow('User not found');
-            expect(followsService.getUserFollowedReports).toHaveBeenCalledWith(999, paginationDto);
+                controller.getCurrentUserFollowedReports(mockRequest, DEFAULT_PAGINATION_DTO),
+            ).rejects.toThrow(TEST_ERROR_MESSAGES.USER_NOT_FOUND);
+            expect(followsService.getUserFollowedReports).toHaveBeenCalledWith(
+                999,
+                DEFAULT_PAGINATION_DTO,
+            );
         });
         it('should return empty followed reports when user follows no reports', async () => {
-            const mockRequest = { user: { id: 123 } };
-            const paginationDto = { page: 1, limit: 10 };
-            const expectedResponse = {
-                items: [],
-                meta: {
-                    totalItems: 0,
-                    itemCount: 0,
-                    itemsPerPage: 10,
-                    totalPages: 0,
-                    currentPage: 1,
-                },
-                links: {
-                    first: '',
-                    previous: '',
-                    next: '',
-                    last: '',
-                },
-            };
+            const mockRequest = createMockRequest(TEST_IDS.USER_ID);
+            const expectedResponse = createEmptyPaginationResponse();
 
             mockFollowsService.getUserFollowedReports.mockResolvedValue(expectedResponse);
 
             const result = await controller.getCurrentUserFollowedReports(
                 mockRequest,
-                paginationDto,
+                DEFAULT_PAGINATION_DTO,
             );
 
-            expect(followsService.getUserFollowedReports).toHaveBeenCalledWith(123, paginationDto);
+            expect(followsService.getUserFollowedReports).toHaveBeenCalledWith(
+                TEST_IDS.USER_ID,
+                DEFAULT_PAGINATION_DTO,
+            );
             expect(result).toEqual(expectedResponse);
             expect(result.items).toEqual([]);
             expect(result.meta.totalItems).toBe(0);
