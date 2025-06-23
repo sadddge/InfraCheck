@@ -11,7 +11,7 @@ import {
 } from '@nestjs/swagger';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { UserFollowedReportsResponseDto } from '../../reports/follows/dto';
+import { UserFollowedReportsDto } from '../../reports/follows/dto';
 import {
     FOLLOWS_SERVICE,
     IFollowsService,
@@ -82,7 +82,7 @@ export class UserFollowsController {
     @ApiResponse({
         status: 200,
         description: 'List of reports followed by the current user',
-        type: UserFollowedReportsResponseDto,
+        type: UserFollowedReportsDto,
     })
     @ApiUnauthorizedResponse({
         description: 'Unauthorized - Authentication required',
@@ -95,7 +95,7 @@ export class UserFollowsController {
     async getCurrentUserFollowedReports(
         @Req() req,
         @Query() { page, limit }: PaginationDto,
-    ): Promise<Pagination<UserFollowedReportsResponseDto>> {
+    ): Promise<Pagination<UserFollowedReportsDto>> {
         const userId = req.user.id;
         return await this.followsService.getUserFollowedReports(userId, { page, limit });
     }
@@ -135,7 +135,7 @@ export class UserFollowsController {
     @ApiResponse({
         status: 200,
         description: 'List of reports followed by the specified user',
-        type: UserFollowedReportsResponseDto,
+        type: UserFollowedReportsDto,
     })
     @ApiResponse({
         status: 400,
@@ -152,7 +152,7 @@ export class UserFollowsController {
     async getUserFollowedReports(
         @Param('userId', ParseIntPipe) userId: number,
         @Query() { page, limit }: PaginationDto,
-    ): Promise<Pagination<UserFollowedReportsResponseDto>> {
+    ): Promise<Pagination<UserFollowedReportsDto>> {
         return await this.followsService.getUserFollowedReports(userId, { page, limit });
     }
 }

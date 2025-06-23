@@ -3,7 +3,7 @@ import {
     FollowActionResponseDto,
     FollowStatusResponseDto,
     ReportFollowerDto,
-    UserFollowedReportsResponseDto,
+    UserFollowedReportsDto,
 } from '../dto';
 
 /**
@@ -135,5 +135,5 @@ export interface IFollowsService {
     getUserFollowedReports(
         userId: number,
         options: IPaginationOptions,
-    ): Promise<Pagination<UserFollowedReportsResponseDto>>;
+    ): Promise<Pagination<UserFollowedReportsDto>>;
 }

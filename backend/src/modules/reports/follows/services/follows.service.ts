@@ -15,7 +15,7 @@ import {
     FollowActionResponseDto,
     FollowStatusResponseDto,
     ReportFollowerDto,
-    UserFollowedReportsResponseDto,
+    UserFollowedReportsDto,
 } from '../dto';
 import { IFollowsService } from '../interfaces/follows-service.interface';
 
@@ -129,25 +129,22 @@ export class FollowsService implements IFollowsService {
     async getUserFollowedReports(
         userId: number,
         options: IPaginationOptions,
-    ): Promise<Pagination<UserFollowedReportsResponseDto>> {
+    ): Promise<Pagination<UserFollowedReportsDto>> {
         await this.validateUser(userId);
 
         const qb = this.reportRepository
             .createQueryBuilder('report')
             .innerJoin('report.followers', 'follower', 'follower.id = :userId', { userId })
-            .select(['report.id']);
+            .select(['report.id', 'report.title']);
 
         const paginated = await paginate<Report>(qb, options);
 
         const items = paginated.items.map(report => ({
             reportId: report.id,
+            reportTitle: report.title,
         }));
 
-        return new Pagination<UserFollowedReportsResponseDto>(
-            items,
-            paginated.meta,
-            paginated.links,
-        );
+        return new Pagination<UserFollowedReportsDto>(items, paginated.meta, paginated.links);
     }
 
     /**
