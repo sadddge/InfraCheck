@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { reportNotFound } from 'src/common/helpers/exception.helper';
+import { ReportChange } from 'src/database/entities/report-change.entity';
 import { Report } from 'src/database/entities/report.entity';
 import {
     IUploadService,
@@ -40,6 +41,8 @@ export class ReportsService implements IReportsService {
      * @param uploadService Service for handling image uploads and processing
      */
     constructor(
+        @InjectRepository(ReportChange)
+        private readonly changeRepository: Repository<ReportChange>,
         @InjectRepository(Report)
         private readonly reportRepository: Repository<Report>,
         @Inject(UPLOAD_SERVICE)
@@ -110,21 +113,40 @@ export class ReportsService implements IReportsService {
     }
 
     /** @inheritDoc */
-    async findHistoryByReportId(reportId: number): Promise<ReportChangeDto[]> {
-        const report = await this.reportRepository.findOne({
+    async findHistoryByReportId(
+        reportId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<ReportChangeDto>> {
+        const exists = await this.reportRepository.findOne({
             where: { id: Equal(reportId) },
-            relations: ['changes', 'changes.creator'],
         });
-        if (!report) {
+        if (!exists) {
             reportNotFound();
         }
-        return report.changes.map(change => ({
-            creatorId: change.creator.id,
+
+        const qb = this.changeRepository
+            .createQueryBuilder('change')
+            .innerJoin('change.report', 'report', 'report.id = :reportId', { reportId })
+            .innerJoinAndSelect('change.creator', 'creator')
+            .select([
+                'change.id',
+                'change.changeType',
+                'change.from',
+                'change.to',
+                'change.createdAt',
+            ])
+            .orderBy('change.createdAt', 'DESC');
+
+        const paginated = await paginate<ReportChange>(qb, options);
+        const items: ReportChangeDto[] = paginated.items.map(change => ({
+            id: change.id,
             changeType: change.changeType,
             from: change.from,
             to: change.to,
             createdAt: change.createdAt,
+            creatorId: change.creator.id,
         }));
+        return new Pagination<ReportChangeDto>(items, paginated.meta, paginated.links);
     }
 
     /** @inheritDoc */

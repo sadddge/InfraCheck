@@ -76,7 +76,10 @@ export interface IReportsService {
      * history.forEach(change => console.log(`${change.fromState} -> ${change.toState}`));
      * ```
      */
-    findHistoryByReportId(reportId: number): Promise<ReportChangeDto[]>;
+    findHistoryByReportId(
+        reportId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<ReportChangeDto>>;
 
     /**
      * Creates a new infrastructure report with image uploads.

@@ -318,8 +318,11 @@ export class ReportsController {
         status: 401,
         description: 'Unauthorized - Authentication required',
     })
-    async getReportHistory(@Param('id') id: string): Promise<ReportChangeDto[]> {
-        return await this.reportsService.findHistoryByReportId(+id);
+    async getReportHistory(
+        @Param('id') id: string,
+        @Query() { page, limit }: PaginationDto,
+    ): Promise<Pagination<ReportChangeDto>> {
+        return await this.reportsService.findHistoryByReportId(+id, { page, limit });
     }
 
     /**
