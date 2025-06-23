@@ -47,7 +47,7 @@ class CameraProvider extends ChangeNotifier {
     } catch (e) {
       _hasLocationPermission = false;
       if (kDebugMode) {
-        print('Error verificando permisos de ubicación: $e');
+        debugPrint('Error verificando permisos de ubicación: $e');
       }
     }
   }
@@ -101,7 +101,7 @@ class CameraProvider extends ChangeNotifier {
         notifyListeners();
       } catch (e) {
         if (kDebugMode) {
-          print('Error eliminando foto: $e');
+          debugPrint('Error eliminando foto: $e');
         }
       }
     }

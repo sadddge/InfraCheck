@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// Índice de la pestaña actualmente seleccionada en la barra de navegación
   /// 0: Mapa, 1: Reportar, 2: Cuenta
   int _currentIndex = 0; // Iniciamos en la pestaña de mapa  @override  @override
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
@@ -75,21 +76,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       try {
         final cameraProvider = context.read<CameraProvider>();
         cameraProvider.releaseCameraResources().catchError((e) {
-          print('Error liberando recursos de cámara en resume: $e');
+          debugPrint('Error liberando recursos de cámara en resume: $e');
         });
       } catch (e) {
         // Provider podría no estar disponible
-        print('Provider no disponible: $e');
+        debugPrint('Provider no disponible: $e');
       }
     } else if (state == AppLifecycleState.paused) {
       // Liberar recursos cuando la app se pausa
       try {
         final cameraProvider = context.read<CameraProvider>();
         cameraProvider.releaseCameraResources().catchError((e) {
-          print('Error liberando recursos de cámara en pause: $e');
+          debugPrint('Error liberando recursos de cámara en pause: $e');
         });
       } catch (e) {
-        print('Provider no disponible en pause: $e');
+        debugPrint('Provider no disponible en pause: $e');
       }
     }
   }
@@ -107,18 +108,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // Manejar navegación según el índice
     switch (index) {
       case 0:
-        // Ya estamos en mapa, no hacer nada
-        break;      
+        // Ya estamos en mapa, no hacer nada        break;
       case 1:
         // Navegar a cámara para reportar
         context.go('/camera');
         break;
       case 2:
         // Navegar a página de cuenta
-        context.go('/account');
-        break;
-    }  
-  }    @override
+        context.go('/account');        break;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -135,19 +136,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               showMyLocationButton: true,
               onMapTap: (LatLng position) {
                 // TODO: Manejar toque en el mapa para futuras funcionalidades
-                print('Tocado en: ${position.latitude}, ${position.longitude}');
+                debugPrint('Tocado en: ${position.latitude}, ${position.longitude}');
               },
               // Sin marcadores por defecto, solo el círculo de ubicación actual
-              markers: const {},
-            ),
-          ),          // Botones flotantes arriba de la barra de navegación
+              markers: const {},            ),
+          ),
+          // Botones flotantes arriba de la barra de navegación
           Positioned(
             bottom: MediaQuery.of(context).padding.bottom + 84 + 24, // Altura de navbar (84) + padding del sistema + espacio (24)
             left: 24,
             right: 24,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [// Botón de notificaciones
+              children: [
+                // Botón de notificaciones
                   GestureDetector(
                     onTap: () {
                       // TODO: Implementar notificaciones de reportes seguidos
@@ -194,13 +196,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         Icons.chat_bubble_outline,
                         color: AppColors.primary,
                         size: 24,
-                      ),
-                    ),
-                  ),                ],
+                      ),                    ),
+                  ),
+                ],
               ),
             ),
           ],
-        ),      bottomNavigationBar: Container(
+        ),
+        bottomNavigationBar: Container(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
         color: const Color(0xFFFCFDFA), // Mismo color que la navbar
         child: InfraNavigationBar(

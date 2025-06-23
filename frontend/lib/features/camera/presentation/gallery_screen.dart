@@ -51,8 +51,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancelar'),
             ),
-            TextButton(
-              onPressed: () async {
+            TextButton(              onPressed: () async {
                 final provider = context.read<CameraProvider>();
                 final photosToDelete = _selectedPhotos.toList()..sort((a, b) => b.compareTo(a));
                 
@@ -63,7 +62,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 }
                 
                 _clearSelection();
-                Navigator.of(context).pop();
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
               },
               child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
             ),
@@ -77,7 +78,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
     // Aquí implementarías la navegación a la creación del reporte
     // con las fotos seleccionadas
     final selectedPhotosList = _selectedPhotos.toList();
-    print('Crear reporte con fotos en índices: $selectedPhotosList');
+    debugPrint('Crear reporte con fotos en índices: $selectedPhotosList');
     
     // Por ahora solo mostramos un SnackBar
     ScaffoldMessenger.of(context).showSnackBar(

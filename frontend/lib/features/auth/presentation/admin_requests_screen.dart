@@ -213,12 +213,11 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
                         'Solicitudes de Ingreso',
                         style: AppTextStyles.heading,
                       ),
-                    ),
-                    IconButton(
+                    ),                    IconButton(
                       onPressed: _isLoading ? null : _loadPendingUsers,
                       icon: Icon(
                         Icons.refresh,
-                        color: _isLoading ? Colors.white.withOpacity(0.5) : Colors.white,
+                        color: _isLoading ? Colors.white.withValues(alpha: 0.5) : Colors.white,
                         size: 24,
                       ),
                       tooltip: 'Actualizar solicitudes',
@@ -239,7 +238,7 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -344,7 +343,7 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -361,7 +360,7 @@ class _AdminRequestsScreenState extends State<AdminRequestsScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.2),
+                    color: AppColors.accent.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Icon(

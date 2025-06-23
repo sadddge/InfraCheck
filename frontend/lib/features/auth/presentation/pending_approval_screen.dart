@@ -42,7 +42,7 @@ class PendingApprovalScreen extends StatelessWidget {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
           ),
           // Blur effect
           BackdropFilter(
@@ -82,7 +82,7 @@ class PendingApprovalScreen extends StatelessWidget {
                               Shadow(
                                 offset: const Offset(0, 2),
                                 blurRadius: 4,
-                                color: const Color(0xFF000000).withOpacity(0.25),
+                                color: const Color(0xFF000000).withValues(alpha: 0.25),
                               ),
                             ],
                           ),
@@ -160,7 +160,7 @@ class PendingApprovalScreen extends StatelessWidget {
                           Text(
                             'Un administrador revisará tu solicitud.',
                             style: TextStyle(
-                              color: const Color(0xFF104641).withOpacity(0.8),
+                              color: const Color(0xFF104641).withValues(alpha: 0.8),
                               fontSize: 14,
                               fontFamily: 'Work Sans',
                               fontWeight: FontWeight.w400,

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:camera/camera.dart';
 import 'package:frontend/features/camera/domain/models/photo_entry.dart';
 import 'package:geolocator/geolocator.dart';
@@ -43,7 +44,7 @@ class PhotoService {
       }
     } catch (e) {
       // En caso de error, usar coordenadas por defecto
-      print('Error obteniendo ubicación: $e');
+      debugPrint('Error obteniendo ubicación: $e');
       return null;
     }
     return null;

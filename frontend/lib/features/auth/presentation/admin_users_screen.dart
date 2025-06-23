@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/auth/presentation/account_menu.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
@@ -335,7 +334,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       onPressed: _isLoading ? null : _loadUsers,
                       icon: Icon(
                         Icons.refresh,
-                        color: _isLoading ? Colors.white.withOpacity(0.5) : Colors.white,
+                        color: _isLoading ? Colors.white.withValues(alpha: 0.5) : Colors.white,
                         size: 24,
                       ),
                       tooltip: 'Actualizar usuarios',
@@ -356,7 +355,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -481,7 +480,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -498,7 +497,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppColors.accent.withOpacity(0.2),
+                    color: AppColors.accent.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Icon(

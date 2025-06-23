@@ -52,29 +52,34 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
       final success = await authProvider.verifyRegisterCode(
         widget.phoneNumber,
         _codeController.text.trim(),
-      );
-
-      setState(() {
+      );      setState(() {
         _isLoading = false;
-      });      if (success) {
-        // Mostrar mensaje de éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Código verificado exitosamente'),
-            backgroundColor: Colors.green,
-          ),
-        );        // Navegar a la pantalla de pending approval
-        context.go('/pending-approval');
+      });
+
+      if (success) {
+        if (mounted) {
+          // Mostrar mensaje de éxito
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Código verificado exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navegar a la pantalla de pending approval
+          context.go('/pending-approval');
+        }
       } else {
         // Mostrar mensaje de error del provider
         final errorMessage = authProvider.errorMessage ?? 'Error al verificar el código';
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
+          if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -103,7 +108,7 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
           ),
           // Blur effect
           BackdropFilter(
@@ -158,7 +163,7 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                               Shadow(
                                 offset: const Offset(0, 2),
                                 blurRadius: 4,
-                                color: const Color(0xFF000000).withOpacity(0.25),
+                                color: const Color(0xFF000000).withValues(alpha: 0.25),
                               ),
                             ],
                           ),
