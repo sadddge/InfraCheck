@@ -2,8 +2,7 @@ import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import {
     FollowActionResponseDto,
     FollowStatusResponseDto,
-    ReportFollowersIdsResponseDto,
-    ReportFollowersResponseDto,
+    ReportFollowerDto,
     UserFollowedReportsResponseDto,
 } from '../dto';
 
@@ -100,17 +99,22 @@ export interface IFollowsService {
      * Includes pagination support for reports with many followers.
      *
      * @param reportId The unique identifier of the report
-     * @returns Complete follower information including user profiles and follow dates
+     * @param options Pagination configuration including page number and limit
+     * @returns Paginated follower information including user profiles and follow dates
      * @throws {AppException} REP001 - When report does not exist
      *
      * @example
      * ```typescript
-     * const followers = await followsService.getReportFollowers(456);
-     * console.log(`Report has ${followers.count} followers`);
-     * followers.users.forEach(user => console.log(user.name));
+     * const paginationOptions = { page: 1, limit: 10 };
+     * const followers = await followsService.getReportFollowers(456, paginationOptions);
+     * console.log(`Report has ${followers.meta.totalItems} followers`);
+     * followers.items.forEach(user => console.log(user.name));
      * ```
      */
-    getReportFollowers(reportId: number): Promise<ReportFollowersResponseDto>;
+    getReportFollowers(
+        reportId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<ReportFollowerDto>>;
 
     /**
      * Retrieves all reports followed by a specific user with report details.
@@ -132,23 +136,4 @@ export interface IFollowsService {
         userId: number,
         oprtions: IPaginationOptions,
     ): Promise<Pagination<UserFollowedReportsResponseDto>>;
-
-    /**
-     * Retrieves only the user IDs of all followers for a specific report.
-     * Optimized query for bulk operations and notification systems.
-     * Used for efficient notification dispatching and analytics.
-     *
-     * @param reportId The unique identifier of the report
-     * @returns Array of follower user IDs for efficient processing
-     * @throws {AppException} REP001 - When report does not exist
-     *
-     * @example
-     * ```typescript
-     * const followerIds = await followsService.getFollowersIds(456);
-     * console.log(`Sending notifications to ${followerIds.userIds.length} users`);
-     * // Use IDs for bulk notification sending
-     * notificationService.sendBulkNotifications(followerIds.userIds, message);
-     * ```
-     */
-    getFollowersIds(reportId: number): Promise<ReportFollowersIdsResponseDto>;
 }

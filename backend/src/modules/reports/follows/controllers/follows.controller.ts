@@ -1,11 +1,18 @@
-import { Controller, Delete, Get, Inject, Param, ParseIntPipe, Post, Req } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
-    FollowActionResponseDto,
-    FollowStatusResponseDto,
-    ReportFollowersIdsResponseDto,
-    ReportFollowersResponseDto,
-} from '../dto';
+    Controller,
+    Delete,
+    Get,
+    Inject,
+    Param,
+    ParseIntPipe,
+    Post,
+    Query,
+    Req,
+} from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Pagination } from 'nestjs-typeorm-paginate';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { FollowActionResponseDto, FollowStatusResponseDto, ReportFollowerDto } from '../dto';
 import { FOLLOWS_SERVICE, IFollowsService } from '../interfaces/follows-service.interface';
 
 /**
@@ -149,50 +156,15 @@ export class FollowsController {
     @ApiResponse({
         status: 200,
         description: 'List of follower names',
-        type: ReportFollowersResponseDto,
+        type: ReportFollowerDto,
     })
     @ApiResponse({ status: 400, description: 'Invalid request parameters' })
     @ApiResponse({ status: 404, description: 'Report not found' })
     async getReportFollowers(
         @Param('reportId', ParseIntPipe) reportId: number,
-    ): Promise<ReportFollowersResponseDto> {
-        return await this.followsService.getReportFollowers(reportId);
-    }
-
-    /**
-     * Retrieves only the user IDs of all followers for a specific report.
-     * Optimized endpoint for bulk operations and notification systems.
-     * Returns minimal data for efficient processing.
-     *
-     * @param reportId Unique identifier of the report
-     * @returns Array of follower user IDs
-     *
-     * @example
-     * ```typescript
-     * // Get report follower IDs
-     * GET /api/v1/reports/123/followers-ids
-     * Authorization: Bearer <token>
-     *
-     * // Response
-     * {
-     *   "userIds": [123, 456, 789]
-     * }
-     * ```
-     */
-    @Get('followers-ids')
-    @ApiOperation({ summary: 'Get report followers IDs' })
-    @ApiParam({ name: 'reportId', description: 'ID of the report', type: 'number' })
-    @ApiResponse({
-        status: 200,
-        description: 'List of follower IDs',
-        type: ReportFollowersIdsResponseDto,
-    })
-    @ApiResponse({ status: 400, description: 'Invalid request parameters' })
-    @ApiResponse({ status: 404, description: 'Report not found' })
-    async getReportFollowersIds(
-        @Param('reportId', ParseIntPipe) reportId: number,
-    ): Promise<ReportFollowersIdsResponseDto> {
-        return await this.followsService.getFollowersIds(reportId);
+        @Query() { page, limit }: PaginationDto,
+    ): Promise<Pagination<ReportFollowerDto>> {
+        return await this.followsService.getReportFollowers(reportId, { page, limit });
     }
 
     /**

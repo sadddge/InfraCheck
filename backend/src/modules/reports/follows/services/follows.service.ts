@@ -14,8 +14,7 @@ import { Equal, Repository } from 'typeorm';
 import {
     FollowActionResponseDto,
     FollowStatusResponseDto,
-    ReportFollowersIdsResponseDto,
-    ReportFollowersResponseDto,
+    ReportFollowerDto,
     UserFollowedReportsResponseDto,
 } from '../dto';
 import { IFollowsService } from '../interfaces/follows-service.interface';
@@ -109,18 +108,21 @@ export class FollowsService implements IFollowsService {
     }
 
     /** @inheritDoc */
-    async getReportFollowers(reportId: number): Promise<ReportFollowersResponseDto> {
+    async getReportFollowers(
+        reportId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<ReportFollowerDto>> {
         await this.validateReport(reportId);
-
-        const report = await this.reportRepository
-            .createQueryBuilder('report')
-            .leftJoinAndSelect('report.followers', 'follower')
-            .where('report.id = :reportId', { reportId })
-            .getOne();
-
-        return {
-            followers: report?.followers.map(follower => follower.name) ?? [],
-        };
+        const qb = this.userRepository
+            .createQueryBuilder('user')
+            .innerJoin('user.reportsFollowed', 'report', 'report.id = :reportId', { reportId })
+            .select(['user.id', 'user.name']);
+        const paginated = await paginate<User>(qb, options);
+        const items = paginated.items.map(user => ({
+            userId: user.id,
+            username: user.name,
+        }));
+        return new Pagination<ReportFollowerDto>(items, paginated.meta, paginated.links);
     }
 
     /** @inheritDoc */
@@ -146,20 +148,6 @@ export class FollowsService implements IFollowsService {
             paginated.meta,
             paginated.links,
         );
-    }
-
-    /** @inheritDoc */
-    async getFollowersIds(reportId: number): Promise<ReportFollowersIdsResponseDto> {
-        await this.validateReport(reportId);
-
-        const report = await this.reportRepository
-            .createQueryBuilder('report')
-            .leftJoinAndSelect('report.followers', 'follower')
-            .where('report.id = :reportId', { reportId })
-            .getOne();
-        return {
-            userIds: report?.followers.map(follower => follower.id) ?? [],
-        };
     }
 
     /**
