@@ -221,11 +221,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 16),
-                            CustomTextField(
+                            const SizedBox(height: 16),                            CustomTextField(
                               label: 'Número de telefono',
                               controller: _phoneNumberController,
                               hintText: '+56912345678',
+                              keyboardType: TextInputType.phone,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Por favor ingresa tu número de telefono';

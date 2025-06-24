@@ -213,11 +213,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         key: _formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            CustomTextField(
+                          children: [                            CustomTextField(
                               label: 'Número de telefono',
                               controller: _phoneNumberController,
                               hintText: '+56912345678',
+                              keyboardType: TextInputType.phone,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Por favor ingresa tu número de telefono';
