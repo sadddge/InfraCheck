@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from './database/config/database.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -8,6 +8,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { ReportModule } from './modules/reports/reports.module';
 import { UsersModule } from './modules/users/users.module';
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 
 /**
  * Root application module that configures and imports all feature modules.
@@ -41,6 +42,11 @@ import { UsersModule } from './modules/users/users.module';
                 },
             ],
         }),
+        CacheModule.register({
+            isGlobal: true,
+            ttl: 5000,
+            max: 100,
+        }),
         DatabaseModule,
         UsersModule,
         AuthModule,
@@ -59,6 +65,10 @@ import { UsersModule } from './modules/users/users.module';
             provide: APP_GUARD,
             useClass: RolesGuard,
         },
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: CacheInterceptor,
+        }
     ],
 })
-export class AppModule {}
+export class AppModule { }
