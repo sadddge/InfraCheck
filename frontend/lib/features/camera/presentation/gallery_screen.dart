@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/theme/colors.dart';
 import '../domain/camera_provider.dart';
+import '../../reports/presentation/create_report_screen.dart';
 
 /// Pantalla de galería para visualizar y gestionar fotografías capturadas.
 /// 
@@ -57,8 +58,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
         _isSelectionMode = true;
       }
     });
-  }
-  /// Limpia toda la selección y sale del modo de selección múltiple.
+  }  /// Limpia toda la selección y sale del modo de selección múltiple.
   void _clearSelection() {
     setState(() {
       _selectedPhotos.clear();
@@ -102,21 +102,39 @@ class _GalleryScreenState extends State<GalleryScreen> {
         );
       },
     );
-  }
-
-  void _goToReportCreation() {
-    // Aquí implementarías la navegación a la creación del reporte
-    // con las fotos seleccionadas
-    final selectedPhotosList = _selectedPhotos.toList();
-    debugPrint('Crear reporte con fotos en índices: $selectedPhotosList');
+  }  void _goToReportCreation() {
+    if (_selectedPhotos.isEmpty) return;
     
-    // Por ahora solo mostramos un SnackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Crear reporte con ${_selectedPhotos.length} fotos'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
+    final provider = context.read<CameraProvider>();
+    final selectedPhotosList = _selectedPhotos.toList()..sort();
+    
+    // Obtener las fotos seleccionadas
+    final selectedPhotos = selectedPhotosList
+        .where((index) => index < provider.photos.length)
+        .map((index) => provider.photos[index])
+        .toList();
+        
+    debugPrint('Navegando a crear reporte con ${selectedPhotos.length} fotos');
+    
+    // Navegar a la pantalla de crear reporte usando GoRouter
+    try {
+      context.pushNamed('create-report', extra: selectedPhotos);
+    } catch (e) {
+      debugPrint('Error al navegar con GoRouter: $e');
+      // Fallback a navegación manual si GoRouter falla
+      try {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => CreateReportScreen(selectedPhotos: selectedPhotos),
+          ),
+        );
+      } catch (e2) {
+        debugPrint('Error en navegación manual: $e2');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al navegar: $e2')),
+        );
+      }
+    }
   }
   Future<bool> _onWillPop() async {
     // Si está en modo selección, primero limpiar selección

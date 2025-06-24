@@ -22,7 +22,7 @@ enum ReportCategory {
 /// 
 /// Representa el flujo de trabajo desde la creación hasta la resolución
 /// de un reporte de infraestructura.
-enum ReportState {
+enum ReportStatus {
   /// Reporte recién creado, pendiente de revisión
   pending,
   
@@ -58,6 +58,7 @@ class ReportImage extends Equatable {
   
   /// URL donde está almacenada la imagen (servidor/CDN)
   final String url;
+
   /// Crea una nueva instancia de ReportImage.
   /// 
   /// [takenAt] Timestamp de cuando se capturó la imagen
@@ -94,6 +95,7 @@ class ReportImage extends Equatable {
     'longitude': longitude,
     'url': url,
   };
+
   @override
   List<Object?> get props => [takenAt, latitude, longitude, url];
 }
@@ -130,7 +132,7 @@ class Report extends Equatable {
   final ReportCategory category;
   
   /// Estado actual del reporte en el flujo de trabajo
-  final ReportState state;
+  final ReportStatus status;
   
   /// Si el reporte es visible para otros usuarios
   final bool isVisible;
@@ -149,6 +151,7 @@ class Report extends Equatable {
   
   /// Lista de imágenes que evidencian el problema
   final List<ReportImage> images;
+
   /// Crea una nueva instancia de Report.
   /// 
   /// Todos los parámetros son requeridos para asegurar integridad de datos.
@@ -158,7 +161,7 @@ class Report extends Equatable {
     required this.title,
     required this.description,
     required this.category,
-    required this.state,
+    required this.status,
     required this.isVisible,
     required this.latitude,
     required this.longitude,
@@ -180,7 +183,7 @@ class Report extends Equatable {
       title: json['title'] as String,
       description: json['description'] as String,
       category: _parseCategory(json['category'] as String),
-      state: _parseState(json['state'] as String),
+      status: _parseStatus(json['status'] as String),
       isVisible: json['isVisible'] as bool? ?? true,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
@@ -197,50 +200,52 @@ class Report extends Equatable {
   /// [category] String recibido del backend (case-insensitive)
   /// Returns: ReportCategory correspondiente o infrastructure por defecto
   static ReportCategory _parseCategory(String category) {
-    switch (category.toUpperCase()) {
-      case 'SECURITY':
+    switch (category.toLowerCase()) {
+      case 'security':
         return ReportCategory.security;
-      case 'INFRASTRUCTURE':
+      case 'infrastructure':
         return ReportCategory.infrastructure;
-      case 'TRANSIT':
+      case 'transit':
         return ReportCategory.transit;
-      case 'GARBAGE':
+      case 'garbage':
         return ReportCategory.garbage;
       default:
         return ReportCategory.infrastructure;
     }
   }
-  /// Convierte un string de estado del backend a enum ReportState.
+
+  /// Convierte un string de estado del backend a enum ReportStatus.
   /// 
-  /// [state] String recibido del backend (case-insensitive)
-  /// Returns: ReportState correspondiente o pending por defecto
-  static ReportState _parseState(String state) {
-    switch (state.toUpperCase()) {
-      case 'PENDING':
-        return ReportState.pending;
-      case 'IN_PROGRESS':
-        return ReportState.inProgress;
-      case 'RESOLVED':
-        return ReportState.resolved;
-      case 'REJECTED':
-        return ReportState.rejected;
+  /// [status] String recibido del backend (case-insensitive)
+  /// Returns: ReportStatus correspondiente o pending por defecto
+  static ReportStatus _parseStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return ReportStatus.pending;
+      case 'in_progress':
+      case 'inprogress':
+        return ReportStatus.inProgress;
+      case 'resolved':
+        return ReportStatus.resolved;
+      case 'rejected':
+        return ReportStatus.rejected;
       default:
-        return ReportState.pending;
+        return ReportStatus.pending;
     }
   }
 
   /// Convierte la instancia a un mapa JSON.
   /// 
   /// Serializa todos los campos para envío al backend:
-  /// - Enums se convierten a strings en UPPERCASE
+  /// - Enums se convierten a strings en snake_case
   /// - Timestamps en formato ISO 8601
   /// - Lista de imágenes serializada recursivamente
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,
     'description': description,
-    'category': category.name.toUpperCase(),
-    'state': state.name.toUpperCase(),
+    'category': category.name,
+    'status': status.name,
     'isVisible': isVisible,
     'latitude': latitude,
     'longitude': longitude,
@@ -258,7 +263,7 @@ class Report extends Equatable {
   /// Ejemplo:
   /// ```dart
   /// final updatedReport = originalReport.copyWith(
-  ///   state: ReportState.resolved,
+  ///   status: ReportStatus.resolved,
   ///   isVisible: true,
   /// );
   /// ```
@@ -267,7 +272,7 @@ class Report extends Equatable {
     String? title,
     String? description,
     ReportCategory? category,
-    ReportState? state,
+    ReportStatus? status,
     bool? isVisible,
     double? latitude,
     double? longitude,
@@ -280,7 +285,7 @@ class Report extends Equatable {
       title: title ?? this.title,
       description: description ?? this.description,
       category: category ?? this.category,
-      state: state ?? this.state,
+      status: status ?? this.status,
       isVisible: isVisible ?? this.isVisible,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
@@ -292,7 +297,7 @@ class Report extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, title, description, category, state, isVisible,
+    id, title, description, category, status, isVisible,
     latitude, longitude, createdAt, creatorId, images
   ];
 }

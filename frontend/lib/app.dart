@@ -13,6 +13,8 @@ import 'features/auth/presentation/pending_approval_screen.dart';
 import 'features/auth/presentation/account_menu.dart';
 import 'features/auth/presentation/admin_requests_screen.dart';
 import 'features/auth/presentation/admin_users_screen.dart';
+import 'features/reports/presentation/create_report_screen.dart';
+import 'features/camera/domain/models/photo_entry.dart';
 
 /// Crea una transición suave sin animación extraña para navegación de navbar
 Page<dynamic> _createPage(Widget child, GoRouterState state) {
@@ -103,13 +105,22 @@ final GoRouter router = GoRouter(
       path: '/camera',
       name: 'camera',
       pageBuilder: (context, state) => _createPage(const CameraScreen(), state),
-    ),
-      // RUTA: Galería de fotos
+    ),    // RUTA: Galería de fotos
     GoRoute(
       path: '/photo-gallery',
       name: 'photo-gallery',
       builder: (context, state) => const GalleryScreen(),
-    ),    // RUTA: Pantalla de aprobación pendiente
+    ),
+    
+    // RUTA: Crear reporte
+    GoRoute(
+      path: '/create-report',
+      name: 'create-report',
+      builder: (context, state) {
+        final photos = state.extra as List<PhotoEntry>? ?? [];
+        return CreateReportScreen(selectedPhotos: photos);
+      },
+    ),// RUTA: Pantalla de aprobación pendiente
     GoRoute(
       path: '/pending-approval',
       name: 'pending-approval',

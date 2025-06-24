@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/api_config.dart';
@@ -300,7 +301,55 @@ class ApiService {  /// Instancia de almacenamiento seguro para tokens y credenc
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException('Error de conexión: ${e.toString()}');
-    }  }
+    }
+  }
+
+  /// Sube un archivo usando multipart/form-data.
+  /// 
+  /// [endpoint] es la ruta del endpoint a consultar (sin la URL base).
+  /// [formData] es un mapa con los datos del formulario donde las claves son los nombres
+  /// de los campos y los valores pueden ser String, int o File.
+  /// [includeAuth] determina si incluir el token de autorización (por defecto true).
+  /// 
+  /// Retorna los datos de la respuesta o lanza [ApiException] en caso de error.
+  static Future<dynamic> uploadFile(String endpoint, Map<String, dynamic> formData, {bool includeAuth = true}) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+    
+    try {
+      final request = http.MultipartRequest('POST', uri);
+      
+      // Añadir headers de autenticación si es necesario
+      if (includeAuth) {
+        final token = await getAccessToken();
+        if (token != null) {
+          request.headers['Authorization'] = 'Bearer $token';
+        }
+      }
+      
+      // Añadir campos del formulario
+      for (final entry in formData.entries) {
+        if (entry.value is File) {
+          final file = entry.value as File;
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              entry.key,
+              file.path,
+            ),
+          );
+        } else {
+          request.fields[entry.key] = entry.value.toString();
+        }
+      }
+      
+      final streamedResponse = await request.send().timeout(ApiConfig.receiveTimeout);
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('Error de conexión: ${e.toString()}');
+    }
+  }
 
   // ==========================================
   // UTILIDADES DE AUTENTICACIÓN

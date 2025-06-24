@@ -6,6 +6,7 @@ import 'app.dart';
 import 'core/providers/auth_provider.dart';
 import 'features/camera/domain/camera_provider.dart';
 import 'features/camera/domain/models/photo_entry.dart';
+import 'features/reports/domain/reports_provider.dart';
 
 
 /// Punto de entrada principal de la aplicación InfraCheck.
@@ -54,12 +55,13 @@ void main() async {
 /// - Título de la aplicación
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
-  Widget build(BuildContext context) {    return MultiProvider(
+  Widget build(BuildContext context) {
+    return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CameraProvider()),
+        ChangeNotifierProvider(create: (_) => ReportsProvider()),
       ],
       child: MaterialApp.router(
         title: 'InfraCheck',
