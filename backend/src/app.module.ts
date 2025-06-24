@@ -38,14 +38,14 @@ import { VotesModule } from './modules/votes/votes.module';
         ThrottlerModule.forRoot({
             throttlers: [
                 {
-                    ttl: 60000,
+                    ttl: 60000, // 1 minute
                     limit: 10,
                 },
             ],
         }),
         CacheModule.register({
             isGlobal: true,
-            ttl: 60000,
+            ttl: 60000, // 1 minute
             max: 100,
         }),
         DatabaseModule,
