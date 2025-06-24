@@ -99,13 +99,13 @@ export class VotesService implements IVotesService {
 
         const upvotes = await this.voteRepository.count({
             where: {
-                report: { id: reportId },
+                report: { id: Equal(reportId) },
                 type: VoteType.UPVOTE,
             },
         });
         const downvotes = await this.voteRepository.count({
             where: {
-                report: { id: reportId },
+                report: { id: Equal(reportId) },
                 type: VoteType.DOWNVOTE,
             },
         });
