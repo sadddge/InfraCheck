@@ -65,6 +65,14 @@ export const ERROR_CODES = {
         VALIDATION_SERVICE_ERROR: 'UPL007',
     },
 
+    // Vote errors (VOT001-VOT999)
+    VOTES: {
+        VOTE_NOT_FOUND: 'VOT001',
+        INVALID_VOTE_TYPE: 'VOT002',
+        DUPLICATE_VOTE: 'VOT003',
+        VOTE_PERMISSION_DENIED: 'VOT004',
+    },
+
     // General errors (GEN001-GEN999)
     GENERAL: {
         UNKNOWN_ERROR: 'GEN000',
@@ -147,6 +155,11 @@ export const ERROR_MESSAGES: ErrorMessagesMap = {
     UPL006: 'Inappropriate content detected',
     UPL007: 'Validation service error',
 
+    VOT001: 'Vote not found',
+    VOT002: 'Invalid vote type',
+    VOT003: 'Vote already exists',
+    VOT004: 'Permission denied to vote on this report',
+
     GEN000: 'Unknown error',
     GEN001: 'Unhandled exception',
     GEN002: 'Invalid request',
@@ -197,6 +210,11 @@ export const ERROR_HTTP_STATUS: ErrorHttpStatusMap = {
     UPL005: 400,
     UPL006: 406,
     UPL007: 500,
+
+    VOT001: 404,
+    VOT002: 400,
+    VOT003: 409,
+    VOT004: 403,
 
     GEN000: 500,
     GEN001: 500,

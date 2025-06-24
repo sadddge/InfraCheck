@@ -73,6 +73,20 @@ export interface UploadErrorDetail {
 }
 
 /**
+ * Detail for vote-related errors (VOT001–VOT999)
+ */
+export interface VoteErrorDetail {
+    /** Identifier of the vote involved */
+    voteId?: string;
+    /** Identifier of the user who voted */
+    userId?: string;
+    /** Identifier of the report that was voted on */
+    reportId?: string;
+    /** Type of vote attempted */
+    voteType?: string;
+}
+
+/**
  * Detail for general or unhandled errors (GEN000–GEN999)
  */
 export interface GeneralErrorDetail {
@@ -90,4 +104,5 @@ export type ErrorDetail =
     | ({ type: 'server' } & ServerErrorDetail)
     | ({ type: 'user' } & UserErrorDetail)
     | ({ type: 'upload' } & UploadErrorDetail)
+    | ({ type: 'vote' } & VoteErrorDetail)
     | ({ type: 'general' } & GeneralErrorDetail);

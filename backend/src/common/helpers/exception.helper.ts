@@ -8,6 +8,7 @@ import type {
     UploadErrorDetail,
     UserErrorDetail,
     ValidationErrorDetail,
+    VoteErrorDetail,
 } from '../exceptions/error-details';
 
 /**
@@ -236,6 +237,35 @@ export function validationServiceError(details?: UploadErrorDetail): never {
 export function invalidRequest(details?: GeneralErrorDetail): never {
     throw new AppException(ERROR_CODES.GENERAL.INVALID_REQUEST, undefined, {
         type: 'general',
+        ...details,
+    });
+}
+
+// Vote exceptions
+export function voteNotFound(details?: VoteErrorDetail): never {
+    throw new AppException(ERROR_CODES.VOTES.VOTE_NOT_FOUND, undefined, {
+        type: 'vote',
+        ...details,
+    });
+}
+
+export function invalidVoteType(details?: VoteErrorDetail): never {
+    throw new AppException(ERROR_CODES.VOTES.INVALID_VOTE_TYPE, undefined, {
+        type: 'vote',
+        ...details,
+    });
+}
+
+export function duplicateVote(details?: VoteErrorDetail): never {
+    throw new AppException(ERROR_CODES.VOTES.DUPLICATE_VOTE, undefined, {
+        type: 'vote',
+        ...details,
+    });
+}
+
+export function votePermissionDenied(details?: VoteErrorDetail): never {
+    throw new AppException(ERROR_CODES.VOTES.VOTE_PERMISSION_DENIED, undefined, {
+        type: 'vote',
         ...details,
     });
 }
