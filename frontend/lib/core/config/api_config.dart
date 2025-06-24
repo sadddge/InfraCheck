@@ -33,12 +33,11 @@ class ApiConfig {
   /// ```bash
   /// flutter run --dart-define=API_BASE_URL=http://localhost:3000/api
   /// ```
-  /// 
-  /// **URLs por entorno:**
+  ///   /// **URLs por entorno:**
   /// - Development: `http://localhost:3000/api`
   /// - Staging: `https://api-staging.infracheck.com/api`
   /// - Production: `https://api.infracheck.com/api`
-  static const String baseUrl = 'http://192.168.50.209:3000/api';
+  static const String baseUrl = 'http://192.168.1.89:3000/api';
 
   // === ENDPOINTS DE AUTENTICACIÓN ===
   /// Endpoint para iniciar sesión
@@ -74,8 +73,61 @@ class ApiConfig {
   
   /// Endpoint para eliminar un usuario por ID
   static const String deleteUserByIdEndpoint = '/v1/users/:id';
-    /// Endpoint para cambiar estado de un usuario
+  
+  /// Endpoint para cambiar estado de un usuario
   static const String updateUserStatusByIdEndpoint = '/v1/users/:id/status';
+
+  // === ENDPOINTS DE REPORTES ===
+  /// Endpoint para obtener categorías de reportes
+  static const String getReportCategoriesEndpoint = '/v1/reports/categories';
+  
+  /// Endpoint para obtener lista de reportes
+  static const String getReportsEndpoint = '/v1/reports';
+  
+  /// Endpoint para crear un nuevo reporte
+  static const String createReportEndpoint = '/v1/reports';
+  
+  /// Endpoint para obtener un reporte por ID
+  static const String getReportByIdEndpoint = '/v1/reports/:id';
+  
+  /// Endpoint para obtener historial de un reporte
+  static const String getReportHistoryEndpoint = '/v1/reports/:id/history';
+  
+  /// Endpoint para actualizar estado de un reporte
+  static const String updateReportStateEndpoint = '/v1/reports/:id/state';
+
+  // === ENDPOINTS DE SEGUIMIENTO DE USUARIOS ===
+  /// Endpoint para obtener reportes seguidos por el usuario actual
+  static const String getMyFollowedReportsEndpoint = '/v1/users/me/followed-reports';
+  
+  /// Endpoint para obtener reportes seguidos por un usuario específico
+  static const String getUserFollowedReportsEndpoint = '/v1/users/:userId/followed-reports';
+
+  // === ENDPOINTS DE SEGUIMIENTO DE REPORTES ===
+  /// Endpoint para seguir un reporte
+  static const String followReportEndpoint = '/v1/reports/:reportId/follow';
+  
+  /// Endpoint para dejar de seguir un reporte
+  static const String unfollowReportEndpoint = '/v1/reports/:reportId/unfollow';
+  
+  /// Endpoint para obtener nombres de seguidores del reporte
+  static const String getReportFollowersEndpoint = '/v1/reports/:reportId/followers';
+  
+  /// Endpoint para obtener IDs de seguidores del reporte
+  static const String getReportFollowersIdsEndpoint = '/v1/reports/:reportId/followers-ids';
+  
+  /// Endpoint para verificar si el usuario sigue el reporte
+  static const String getReportFollowStatusEndpoint = '/v1/reports/:reportId/follow-status';
+
+  // === ENDPOINTS DE COMENTARIOS ===
+  /// Endpoint para obtener comentarios de un reporte
+  static const String getReportCommentsEndpoint = '/v1/reports/:reportId/comments';
+  
+  /// Endpoint para crear un comentario en un reporte
+  static const String createReportCommentEndpoint = '/v1/reports/:reportId/comments';
+  
+  /// Endpoint para eliminar un comentario
+  static const String deleteReportCommentEndpoint = '/v1/reports/:reportId/comments/:id';
 
   // === CONFIGURACIÓN DE HEADERS Y TIMEOUTS ===
   /// Headers por defecto para todas las peticiones HTTP
