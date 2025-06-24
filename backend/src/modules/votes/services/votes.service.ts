@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VoteType } from 'src/common/enums/vote-type.enums';
 import {
@@ -95,11 +95,7 @@ export class VotesService implements IVotesService {
      * Retrieves vote statistics for a specific report.
      */
     async getVoteStats(reportId: number): Promise<VoteStatsDto> {
-        // Verify that the report exists
-        const report = await this.reportRepository.findOne({ where: { id: reportId } });
-        if (!report) {
-            throw new NotFoundException(`Report with ID ${reportId} not found`);
-        }
+        await this.validateReport(reportId);
 
         const upvotes = await this.voteRepository.count({
             where: {
