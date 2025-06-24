@@ -95,10 +95,6 @@ export class VotesController {
         status: 204,
         description: 'Vote removed successfully',
     })
-    @ApiResponse({
-        status: 404,
-        description: 'Vote not found',
-    })
     async removeVote(@Param('reportId', ParseIntPipe) reportId: number, @Req() req): Promise<void> {
         const userId = Number(req.user.id);
         await this.votesService.removeVote(userId, reportId);
