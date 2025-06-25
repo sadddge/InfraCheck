@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../../../core/models/report_model.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/config/api_config.dart';
 import '../../../features/camera/domain/models/photo_entry.dart';
 
 /// Provider para manejar el estado y operaciones de reportes
@@ -29,32 +31,90 @@ class ReportsProvider with ChangeNotifier {
       // Obtener ubicación actual
       final position = await _getCurrentLocation();
       
-      // Preparar datos del reporte
-      final reportData = {
+      // Preparar metadata del reporte según el formato esperado por el backend
+      final metadata = {
         'title': title,
         'description': description,
-        'category': category.name,
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'status': 'pending',
+        'category': category.name.toUpperCase(),
+        'images': photos.map((photo) => {
+          'takenAt': photo.timestamp.toIso8601String(),
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        }).toList(),
       };
 
-      // Crear reporte en el backend
-      final response = await ApiService.post('/reports', data: reportData);
+      // Crear request multipart manualmente para manejar múltiples archivos
+      final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.createReportEndpoint}');
+      final request = http.MultipartRequest('POST', uri);
       
-      // Si hay fotos, subirlas
-      if (photos.isNotEmpty) {
-        await _uploadPhotos(response['id'], photos);
+      // Añadir autenticación
+      final token = await ApiService.getAccessToken();
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
       }
-
-      // Crear objeto Report local
-      final report = Report.fromJson(response);
       
-      // Añadir a la lista local
-      _reports.insert(0, report);
-      notifyListeners();
-
-      return report;
+      // Añadir metadata
+      request.fields['metadata'] = jsonEncode(metadata);
+      
+      // Añadir las imágenes
+      for (final photo in photos) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'images',
+            photo.filePath,
+          ),
+        );
+      }
+      
+      // Enviar request
+      try {
+        final streamedResponse = await request.send().timeout(
+          const Duration(seconds: 60), // Aumentar timeout para procesamiento de IA
+          onTimeout: () {
+            throw Exception('Request timeout - el servidor no respondió en 60 segundos');
+          },
+        );
+        
+        final response = await http.Response.fromStream(streamedResponse);
+        
+        // Procesar respuesta
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          if (response.body.isEmpty) {
+            throw Exception('Respuesta vacía del servidor');
+          }
+          
+          final responseData = jsonDecode(response.body);
+          
+          // Extraer los datos del reporte desde la estructura del backend
+          final reportData = responseData['data'];
+          if (reportData == null) {
+            throw Exception('No se encontraron datos del reporte en la respuesta');
+          }
+          
+          final report = Report.fromJson(reportData);
+          
+          // Añadir a la lista local
+          _reports.insert(0, report);
+          notifyListeners();
+          
+          return report;
+        } else {
+          // Error del servidor
+          String errorMessage = 'Error del servidor';
+          
+          try {
+            final errorData = jsonDecode(response.body);
+            errorMessage = errorData['message'] ?? errorMessage;
+          } catch (e) {
+            // Si no se puede parsear el error, usar el mensaje por defecto
+          }
+          
+          throw Exception('Error ${response.statusCode}: $errorMessage');
+        }
+        
+      } catch (e) {
+        rethrow;
+      }
     } catch (e) {
       _setError('Error al crear reporte: $e');
       rethrow;
@@ -91,29 +151,13 @@ class ReportsProvider with ChangeNotifier {
     );
   }
 
-  /// Sube las fotos asociadas al reporte
-  Future<void> _uploadPhotos(int reportId, List<PhotoEntry> photos) async {
-    for (int i = 0; i < photos.length; i++) {
-      final photo = photos[i];
-      
-      // Crear FormData para la foto
-      final formData = {
-        'file': File(photo.filePath),
-        'reportId': reportId,
-        'order': i,
-      };
-
-      await ApiService.uploadFile('/reports/$reportId/photos', formData);
-    }
-  }
-
   /// Obtiene todos los reportes del usuario actual
   Future<void> fetchMyReports() async {
     _setLoading(true);
     _setError(null);
 
     try {
-      final response = await ApiService.get('/reports/my');
+      final response = await ApiService.get(ApiConfig.getReportsEndpoint);
       final List<dynamic> reportsJson = response is List ? response : response['data'] ?? [];
       
       _reports = reportsJson.map((json) => Report.fromJson(json)).toList();
@@ -128,7 +172,7 @@ class ReportsProvider with ChangeNotifier {
   /// Obtiene todos los reportes públicos para el mapa
   Future<List<Report>> fetchPublicReports() async {
     try {
-      final response = await ApiService.get('/reports');
+      final response = await ApiService.get(ApiConfig.getReportsEndpoint);
       final List<dynamic> reportsJson = response is List ? response : response['data'] ?? [];
       
       return reportsJson.map((json) => Report.fromJson(json)).toList();
@@ -140,7 +184,8 @@ class ReportsProvider with ChangeNotifier {
   /// Actualiza el estado de un reporte
   Future<void> updateReportStatus(int reportId, ReportStatus status) async {
     try {
-      await ApiService.patch('/reports/$reportId', data: {'status': status.name});
+      final endpoint = ApiConfig.updateReportStateEndpoint.replaceAll(':id', reportId.toString());
+      await ApiService.patch(endpoint, data: {'status': status.name});
       
       // Actualizar localmente
       final index = _reports.indexWhere((r) => r.id == reportId);
@@ -156,7 +201,8 @@ class ReportsProvider with ChangeNotifier {
   /// Elimina un reporte
   Future<void> deleteReport(int reportId) async {
     try {
-      await ApiService.delete('/reports/$reportId');
+      final endpoint = ApiConfig.getReportByIdEndpoint.replaceAll(':id', reportId.toString());
+      await ApiService.delete(endpoint);
       
       // Eliminar localmente
       _reports.removeWhere((r) => r.id == reportId);

@@ -234,8 +234,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                                     if (value == null || value.trim().isEmpty) {
                                       return 'El título es requerido';
                                     }
-                                    if (value.trim().length < 3) {
-                                      return 'El título debe tener al menos 3 caracteres';
+                                    if (value.trim().length < 5) {
+                                      return 'El título debe tener al menos 5 caracteres';
+                                    }
+                                    if (value.trim().length > 100) {
+                                      return 'El título no puede exceder 100 caracteres';
                                     }
                                     return null;
                                   },
@@ -327,8 +330,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                                     if (value == null || value.trim().isEmpty) {
                                       return 'La descripción es requerida';
                                     }
-                                    if (value.trim().length < 10) {
-                                      return 'La descripción debe tener al menos 10 caracteres';
+                                    if (value.trim().length < 20) {
+                                      return 'La descripción debe tener al menos 20 caracteres';
+                                    }
+                                    if (value.trim().length > 1000) {
+                                      return 'La descripción no puede exceder 1000 caracteres';
                                     }
                                     return null;
                                   },

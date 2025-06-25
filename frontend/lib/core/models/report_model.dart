@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 
 /// Categorías disponibles para clasificar reportes de infraestructura.
 /// 
@@ -178,21 +179,48 @@ class Report extends Equatable {
   /// - Lista anidada de imágenes  
   /// - Valores por defecto para campos opcionales
   factory Report.fromJson(Map<String, dynamic> json) {
-    return Report(
-      id: json['id'] as int,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      category: _parseCategory(json['category'] as String),
-      status: _parseStatus(json['status'] as String),
-      isVisible: json['isVisible'] as bool? ?? true,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      creatorId: json['creatorId'] as int,
-      images: (json['images'] as List?)
-          ?.map((img) => ReportImage.fromJson(img))
-          .toList() ?? [],
-    );
+    try {
+      // Parse ID con validación
+      final id = json['id'];
+      if (id == null) {
+        throw Exception('Campo id es null en la respuesta del servidor');
+      }
+      final parsedId = id is int ? id : int.parse(id.toString());
+      
+      // Parse creatorId con validación
+      final creatorId = json['creatorId'];
+      if (creatorId == null) {
+        throw Exception('Campo creatorId es null en la respuesta del servidor');
+      }
+      final parsedCreatorId = creatorId is int ? creatorId : int.parse(creatorId.toString());
+      
+      // Parse coordinates con validación
+      final lat = json['latitude'];
+      final lng = json['longitude'];
+      if (lat == null || lng == null) {
+        throw Exception('Coordenadas latitude/longitude son null en la respuesta del servidor');
+      }
+      
+      return Report(
+        id: parsedId,
+        title: json['title'] as String? ?? '',
+        description: json['description'] as String? ?? '',
+        category: _parseCategory((json['category'] as String?) ?? 'infrastructure'),
+        status: _parseStatus((json['state'] as String?) ?? 'pending'), // Cambio: usar 'state' en lugar de 'status'
+        isVisible: json['isVisible'] as bool? ?? true,
+        latitude: (lat as num).toDouble(),
+        longitude: (lng as num).toDouble(),
+        createdAt: DateTime.parse((json['createdAt'] as String?) ?? DateTime.now().toIso8601String()),
+        creatorId: parsedCreatorId,
+        images: (json['images'] as List?)
+            ?.map((img) => ReportImage.fromJson(img))
+            .toList() ?? [],
+      );
+    } catch (e) {
+      debugPrint('Error en Report.fromJson: $e');
+      debugPrint('JSON que causó el error: $json');
+      rethrow;
+    }
   }
 
   /// Convierte un string de categoría del backend a enum ReportCategory.
@@ -230,6 +258,7 @@ class Report extends Equatable {
       case 'rejected':
         return ReportStatus.rejected;
       default:
+        debugPrint('Estado desconocido: $status, usando pending por defecto');
         return ReportStatus.pending;
     }
   }
