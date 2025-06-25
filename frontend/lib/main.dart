@@ -50,7 +50,7 @@ void main() async {
 /// 
 /// Características principales:
 /// - Configuración de proveedores de estado (AuthProvider)
-/// - Configuración del router para navegación
+/// - Configuración del router para navegación con guards de autenticación
 /// - Tema global de la aplicación
 /// - Título de la aplicación
 class MyApp extends StatelessWidget {
@@ -63,13 +63,17 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CameraProvider()),
         ChangeNotifierProvider(create: (_) => ReportsProvider()),
       ],
-      child: MaterialApp.router(
-        title: 'InfraCheck',
-        routerConfig: router,
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
+      child: Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          return MaterialApp.router(
+            title: 'InfraCheck',
+            routerConfig: createRouter(authProvider),
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+              visualDensity: VisualDensity.adaptivePlatformDensity,
+            ),
+          );
+        },
       ),
     );
   }

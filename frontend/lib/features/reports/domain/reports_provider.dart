@@ -181,11 +181,43 @@ class ReportsProvider with ChangeNotifier {
     }
   }
 
+  /// Obtiene todos los reportes para administradores
+  Future<void> fetchAllReports() async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      // Solicitar una cantidad grande de reportes para obtener todos
+      final response = await ApiService.get('${ApiConfig.getReportsEndpoint}?page=1&limit=1000');
+      
+      // El backend devuelve una estructura paginada: { items: [...], meta: {...}, links: {...} }
+      final reportsData = response['items'] ?? response['data'] ?? [];
+      final List<dynamic> reportsJson = reportsData is List ? reportsData : [reportsData];
+      
+      _reports = reportsJson.map((json) => Report.fromJson(json)).toList();
+      notifyListeners();
+    } catch (e) {
+      _setError('Error al cargar todos los reportes: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   /// Actualiza el estado de un reporte
   Future<void> updateReportStatus(int reportId, ReportStatus status) async {
     try {
       final endpoint = ApiConfig.updateReportStateEndpoint.replaceAll(':id', reportId.toString());
-      await ApiService.patch(endpoint, data: {'status': status.name});
+      final backendValue = _mapStatusToBackend(status);
+      
+      // Log temporal para debug
+      debugPrint('=== DEBUG UPDATE STATUS ===');
+      debugPrint('Frontend status: $status');
+      debugPrint('Backend value: $backendValue');
+      debugPrint('Endpoint: $endpoint');
+      debugPrint('Payload: {state: $backendValue}');
+      debugPrint('===========================');
+      
+      await ApiService.patch(endpoint, data: {'state': backendValue});
       
       // Actualizar localmente
       final index = _reports.indexWhere((r) => r.id == reportId);
@@ -195,6 +227,20 @@ class ReportsProvider with ChangeNotifier {
       }
     } catch (e) {
       throw Exception('Error al actualizar estado del reporte: $e');
+    }
+  }
+
+  /// Mapea el enum ReportStatus del frontend al formato esperado por el backend
+  String _mapStatusToBackend(ReportStatus status) {
+    switch (status) {
+      case ReportStatus.pending:
+        return 'PENDING';
+      case ReportStatus.inProgress:
+        return 'IN_PROGRESS';
+      case ReportStatus.resolved:
+        return 'RESOLVED';
+      case ReportStatus.rejected:
+        return 'REJECTED';
     }
   }
 

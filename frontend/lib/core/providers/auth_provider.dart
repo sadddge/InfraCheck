@@ -64,6 +64,9 @@ class AuthProvider extends ChangeNotifier {  /// Estado actual de autenticación
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
 
+  /// Verifica si el usuario actual tiene rol de administrador
+  bool get isAdmin => _user?.role.toUpperCase() == 'ADMIN';
+
   /// Constructor que verifica automáticamente el estado de autenticación
   AuthProvider() {
     _checkAuthStatus();

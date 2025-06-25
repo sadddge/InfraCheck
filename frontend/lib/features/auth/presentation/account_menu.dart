@@ -354,6 +354,17 @@ class AccountMenuScreen extends StatelessWidget {
             context.go('/admin/users');
           },
         ),
+        
+        // Administración de reportes
+        _buildMenuItem(
+          context,
+          icon: Icons.assignment,
+          title: 'Gestión de Reportes',
+          subtitle: 'Administrar estados y seguimiento de reportes',
+          onTap: () {
+            context.go('/admin/reports');
+          },
+        ),
       ],
     );  }
 
