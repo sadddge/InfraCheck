@@ -170,13 +170,35 @@ class ReportsProvider with ChangeNotifier {
   }
 
   /// Obtiene todos los reportes públicos para el mapa
-  Future<List<Report>> fetchPublicReports() async {
+  Future<void> fetchPublicReports() async {
     try {
-      final response = await ApiService.get(ApiConfig.getReportsEndpoint);
-      final List<dynamic> reportsJson = response is List ? response : response['data'] ?? [];
+      // Usar paginación para obtener hasta 100 reportes (máximo del backend)
+      final endpoint = '${ApiConfig.getReportsEndpoint}?page=1&limit=100';
+      debugPrint('🔗 Haciendo llamada a: $endpoint');
+      final response = await ApiService.get(endpoint);
+      debugPrint('📦 Respuesta del servidor: $response');
       
-      return reportsJson.map((json) => Report.fromJson(json)).toList();
+      // El backend devuelve una estructura de paginación: { items: [], meta: {}, links: {} }
+      if (response is Map<String, dynamic> && response.containsKey('items')) {
+        final List<dynamic> reportsJson = response['items'] ?? [];
+        debugPrint('📋 Items encontrados: ${reportsJson.length}');
+        
+        final publicReports = reportsJson.map((json) {
+          debugPrint('🔄 Procesando reporte: $json');
+          return Report.fromJson(json);
+        }).toList();
+        
+        // Actualizar la lista local con los reportes públicos
+        _reports = publicReports;
+        debugPrint('✅ Reportes públicos cargados correctamente: ${_reports.length} reportes');
+      } else {
+        debugPrint('⚠️ Estructura de respuesta inesperada: $response');
+        _reports = [];
+      }
+      
+      notifyListeners();
     } catch (e) {
+      debugPrint('❌ Error al cargar reportes públicos: $e');
       throw Exception('Error al cargar reportes públicos: $e');
     }
   }
@@ -187,8 +209,8 @@ class ReportsProvider with ChangeNotifier {
     _setError(null);
 
     try {
-      // Solicitar una cantidad grande de reportes para obtener todos
-      final response = await ApiService.get('${ApiConfig.getReportsEndpoint}?page=1&limit=1000');
+      // Usar el límite máximo permitido por el backend (100)
+      final response = await ApiService.get('${ApiConfig.getReportsEndpoint}?page=1&limit=100');
       
       // El backend devuelve una estructura paginada: { items: [...], meta: {...}, links: {...} }
       final reportsData = response['items'] ?? response['data'] ?? [];

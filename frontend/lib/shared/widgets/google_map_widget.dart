@@ -22,6 +22,9 @@ class GoogleMapWidget extends StatefulWidget {
   /// Callback cuando se toca el mapa
   final Function(LatLng)? onMapTap;
   
+  /// Callback cuando se toca un marcador
+  final Function(String markerId)? onMarkerTap;
+  
   /// Marcadores a mostrar en el mapa
   final Set<Marker> markers;
   
@@ -33,6 +36,7 @@ class GoogleMapWidget extends StatefulWidget {
     this.initialLocation = const LatLng(-33.4489, -70.6693), // Santiago, Chile
     this.initialZoom = 14.0,
     this.onMapTap,
+    this.onMarkerTap,
     this.markers = const {},
     this.showMyLocationButton = true,
   }) : super(key: key);
@@ -65,7 +69,7 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
   @override
   void initState() {
     super.initState();
-    _markers = widget.markers;
+    _updateMarkers();
     // Obtener ubicación actual automáticamente al iniciar
     _getCurrentLocation();
   }
@@ -281,6 +285,30 @@ class _GoogleMapWidgetState extends State<GoogleMapWidget> {
     if (_isLoadingLocation) return;
     _getCurrentLocation();
   }
+  @override
+  void didUpdateWidget(GoogleMapWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.markers != widget.markers) {
+      _updateMarkers();
+    }
+  }
+
+  /// Actualiza los marcadores con el callback de toque incluido
+  void _updateMarkers() {
+    _markers = widget.markers.map((marker) {
+      return marker.copyWith(
+        onTapParam: () {
+          if (widget.onMarkerTap != null) {
+            widget.onMarkerTap!(marker.markerId.value);
+          }
+        },
+      );
+    }).toSet();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(

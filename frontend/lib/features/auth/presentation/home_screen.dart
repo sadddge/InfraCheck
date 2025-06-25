@@ -6,7 +6,10 @@ import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/widgets/navigation_bar.dart';
 import '../../../shared/widgets/google_map_widget.dart';
+import '../../../shared/utils/map_helpers.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../../camera/domain/camera_provider.dart';
+import '../../reports/domain/reports_provider.dart';
 
 /// Pantalla principal de la aplicación InfraCheck.
 /// 
@@ -34,11 +37,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// Índice de la pestaña actualmente seleccionada en la barra de navegación
   /// 0: Mapa, 1: Reportar, 2: Cuenta
-  int _currentIndex = 0; // Iniciamos en la pestaña de mapa  @override  @override
+  int _currentIndex = 0; // Iniciamos en la pestaña de mapa
+
+  @override
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    
+    // Cargar reportes públicos para mostrar en el mapa
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPublicReports();
+    });
     
     // Configurar las barras del sistema con estilo transparente
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -53,6 +63,33 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
+  /// Carga los reportes públicos para mostrar en el mapa
+  Future<void> _loadPublicReports() async {
+    if (!mounted) return;
+    
+    try {
+      debugPrint('🗺️ Cargando reportes públicos para el mapa...');
+      
+      // Verificar si el usuario está autenticado
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.user == null) {
+        debugPrint('⚠️ Usuario no autenticado, no se pueden cargar reportes');
+        return;
+      }
+      
+      final reportsProvider = Provider.of<ReportsProvider>(context, listen: false);
+      await reportsProvider.fetchPublicReports();
+      debugPrint('✅ Reportes públicos cargados: ${reportsProvider.reports.length} reportes');
+      
+      // Log de los reportes para debugging
+      for (final report in reportsProvider.reports) {
+        debugPrint('📍 Reporte ${report.id}: ${report.title} en (${report.latitude}, ${report.longitude})');
+      }
+    } catch (e) {
+      debugPrint('❌ Error cargando reportes públicos: $e');
+    }
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -60,7 +97,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);    // Cuando la app se resume (regresa del background o de otra pantalla)
+    super.didChangeAppLifecycleState(state);
+    
+    // Cuando la app se resume (regresa del background o de otra pantalla)
     if (state == AppLifecycleState.resumed) {
       // Restaurar el estilo transparente de las barras del sistema
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -108,15 +147,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // Manejar navegación según el índice
     switch (index) {
       case 0:
-        // Ya estamos en mapa, no hacer nada        break;
+        // Ya estamos en mapa, no hacer nada
+        break;
       case 1:
         // Navegar a cámara para reportar
         context.go('/camera');
         break;
       case 2:
         // Navegar a página de cuenta
-        context.go('/account');        break;
+        context.go('/account');
+        break;
     }
+  }
+
+  /// Maneja el toque en un marcador de reporte
+  void _onReportMarkerTapped(int reportId) {
+    // TODO: Fase 2 - Navegar a la pantalla de detalles del reporte
+    debugPrint('Tocado reporte ID: $reportId');
+    
+    // Por ahora solo mostramos un snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Tocaste el reporte #$reportId'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -125,85 +180,111 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       extendBody: true,
-      body: Stack(
-        children: [
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            child: GoogleMapWidget(
-              initialLocation: const LatLng(-33.4489, -70.6693), // Santiago, Chile
-              initialZoom: 14.0,
-              showMyLocationButton: true,
-              onMapTap: (LatLng position) {
-                // TODO: Manejar toque en el mapa para futuras funcionalidades
-                debugPrint('Tocado en: ${position.latitude}, ${position.longitude}');
-              },
-              // Sin marcadores por defecto, solo el círculo de ubicación actual
-              markers: const {},            ),
-          ),
-          // Botones flotantes arriba de la barra de navegación
-          Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 84 + 24, // Altura de navbar (84) + padding del sistema + espacio (24)
-            left: 24,
-            right: 24,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Botón de notificaciones
-                  GestureDetector(
-                    onTap: () {
-                      // TODO: Implementar notificaciones de reportes seguidos
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Notificaciones de reportes en desarrollo'),
-                          duration: Duration(seconds: 2),
+      body: Consumer<ReportsProvider>(
+        builder: (context, reportsProvider, child) {
+          debugPrint('🏗️ Construyendo mapa con ${reportsProvider.reports.length} reportes');
+          
+          // Crear marcadores para los reportes
+          final reportMarkers = MapHelpers.createReportMarkers(
+            reportsProvider.reports,
+            onMarkerTap: (reportId) {
+              _onReportMarkerTapped(reportId);
+            },
+          );
+          
+          debugPrint('📍 Marcadores creados: ${reportMarkers.length}');
+
+          return Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                height: double.infinity,
+                child: GoogleMapWidget(
+                  initialLocation: const LatLng(-33.4489, -70.6693), // Santiago, Chile
+                  initialZoom: 14.0,
+                  showMyLocationButton: true,
+                  onMapTap: (LatLng position) {
+                    // TODO: Manejar toque en el mapa para futuras funcionalidades
+                    debugPrint('Tocado en: ${position.latitude}, ${position.longitude}');
+                  },
+                  onMarkerTap: (markerId) {
+                    // Este callback se llamará cuando se toque un marcador
+                    if (markerId.startsWith('report_')) {
+                      final reportId = int.tryParse(markerId.replaceFirst('report_', ''));
+                      if (reportId != null) {
+                        _onReportMarkerTapped(reportId);
+                      }
+                    }
+                  },
+                  markers: reportMarkers,
+                ),
+              ),
+              // Botones flotantes arriba de la barra de navegación
+              Positioned(
+                bottom: MediaQuery.of(context).padding.bottom + 84 + 24, // Altura de navbar (84) + padding del sistema + espacio (24)
+                left: 24,
+                right: 24,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Botón de notificaciones
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: Implementar notificaciones de reportes seguidos
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Notificaciones de reportes en desarrollo'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFBCE3E0),
+                          borderRadius: BorderRadius.circular(28),
                         ),
-                      );
-                    },
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFBCE3E0),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      child: const Icon(
-                        Icons.notifications_outlined,
-                        color: AppColors.primary,
-                        size: 24,
+                        child: const Icon(
+                          Icons.notifications_outlined,
+                          color: AppColors.primary,
+                          size: 24,
+                        ),
                       ),
                     ),
-                  ),
-                  // Botón de chat
-                  GestureDetector(
-                    onTap: () {
-                      // TODO: Navegar al chat en desarrollo
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Chat en desarrollo'),
-                          duration: Duration(seconds: 2),
+                    // Botón de chat
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: Navegar al chat en desarrollo
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Chat en desarrollo'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFBCE3E0),
+                          borderRadius: BorderRadius.circular(28),
                         ),
-                      );
-                    },
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFBCE3E0),
-                        borderRadius: BorderRadius.circular(28),
+                        child: const Icon(
+                          Icons.chat_bubble_outline,
+                          color: AppColors.primary,
+                          size: 24,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.chat_bubble_outline,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),                    ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-        bottomNavigationBar: Container(
+            ],
+          );
+        },
+      ),
+      bottomNavigationBar: Container(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
         color: const Color(0xFFFCFDFA), // Mismo color que la navbar
         child: InfraNavigationBar(
