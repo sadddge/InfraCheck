@@ -169,7 +169,9 @@ class ReportsProvider with ChangeNotifier {
     }
   }
 
-  /// Obtiene todos los reportes públicos para el mapa
+  /// Obtiene solo los reportes públicos relevantes para el mapa
+  /// Solo muestra reportes EN PROGRESO y RESUELTOS
+  /// (Los pendientes necesitan aprobación y los rechazados no son útiles)
   Future<void> fetchPublicReports() async {
     try {
       // Usar paginación para obtener hasta 100 reportes (máximo del backend)
@@ -178,17 +180,56 @@ class ReportsProvider with ChangeNotifier {
       final response = await ApiService.get(endpoint);
       debugPrint('📦 Respuesta del servidor: $response');
       
-      // El backend devuelve una estructura de paginación: { items: [], meta: {}, links: {} }
-      if (response is Map<String, dynamic> && response.containsKey('items')) {
-        final List<dynamic> reportsJson = response['items'] ?? [];
+      // Verificar todas las posibles estructuras de respuesta
+      debugPrint('🔍 Tipo de respuesta: ${response.runtimeType}');
+      debugPrint('🔍 Claves en respuesta: ${response is Map ? response.keys.toList() : 'No es Map'}');
+      
+      List<dynamic> reportsJson = [];
+      
+      if (response is Map<String, dynamic>) {
+        // Opción 1: { data: { items: [] } }
+        if (response.containsKey('data') && 
+            response['data'] is Map<String, dynamic> &&
+            response['data'].containsKey('items')) {
+          reportsJson = response['data']['items'] ?? [];
+          debugPrint('📦 Usando estructura: response[data][items] - ${reportsJson.length} items');
+        }
+        // Opción 2: { items: [] }
+        else if (response.containsKey('items')) {
+          reportsJson = response['items'] ?? [];
+          debugPrint('📦 Usando estructura: response[items] - ${reportsJson.length} items');
+        }
+        // Opción 3: Array directo
+        else if (response.containsKey('data') && response['data'] is List) {
+          reportsJson = response['data'] ?? [];
+          debugPrint('📦 Usando estructura: response[data] como array - ${reportsJson.length} items');
+        }
+      } else if (response is List) {
+        reportsJson = response;
+        debugPrint('📦 Respuesta es array directo - ${reportsJson.length} items');
+      }
+      
+      if (reportsJson.isNotEmpty) {
         debugPrint('📋 Items encontrados: ${reportsJson.length}');
         
-        final publicReports = reportsJson.map((json) {
+        final allReports = reportsJson.map((json) {
           debugPrint('🔄 Procesando reporte: $json');
           return Report.fromJson(json);
         }).toList();
         
-        // Actualizar la lista local con los reportes públicos
+        // Filtrar solo reportes EN PROGRESO y RESUELTOS para el mapa público
+        final publicReports = allReports.where((report) {
+          final isValidForMap = report.status == ReportStatus.inProgress || 
+                               report.status == ReportStatus.resolved;
+          debugPrint('📍 Reporte ${report.id} (${report.status}): ${isValidForMap ? 'INCLUIDO' : 'FILTRADO'}');
+          return isValidForMap;
+        }).toList();
+        
+        debugPrint('🔍 Resultados del filtrado:');
+        debugPrint('   - Total recibidos: ${allReports.length}');
+        debugPrint('   - En progreso/Resueltos: ${publicReports.length}');
+        
+        // Actualizar la lista local con los reportes públicos filtrados
         _reports = publicReports;
         debugPrint('✅ Reportes públicos cargados correctamente: ${_reports.length} reportes');
       } else {
