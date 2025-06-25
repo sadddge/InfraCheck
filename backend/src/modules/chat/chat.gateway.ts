@@ -8,6 +8,11 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { PinMessageDto } from './dto/pin-message.dto';
 import { TypingDto } from './dto/typing.dto';
 
+/**
+ * WebSocket gateway for real-time chat communication
+ * Handles authentication, message broadcasting, and typing indicators
+ * Uses '/chat' namespace to isolate chat connections from other WebSocket traffic
+ */
 @WebSocketGateway({
   namespace: 'chat',
   cors: {
@@ -23,7 +28,10 @@ export class ChatGateway implements OnGatewayConnection {
     private readonly tokenFactory: TokenFactoryService,
   ) { }
 
-
+  /**
+   * Validates JWT token on WebSocket connection and stores user data in socket context
+   * Automatically disconnects clients with invalid authentication
+   */
   async handleConnection(client: Socket) {
     const token = client.handshake.auth.token;
     this.logger.log(`Client connected: ${client.id} with token: ${token}`);
@@ -41,6 +49,10 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  /**
+   * Handles new message creation and broadcasts to all connected clients
+   * @emits message:new - Notifies all clients about the new message
+   */
   @SubscribeMessage('message:new')
   async handleMessageNew(@ConnectedSocket() client: Socket, @MessageBody() dto: CreateMessageDto) {
     const userId = client.data.user.id;
@@ -50,6 +62,10 @@ export class ChatGateway implements OnGatewayConnection {
     this.server.emit('message:new', message);
   }
 
+  /**
+   * Broadcasts typing indicator status to all connected clients
+   * @emits typing - Notifies all clients about user typing status
+   */
   @SubscribeMessage('typing')
   handleTyping(@ConnectedSocket() client: Socket, @MessageBody() dto: TypingDto) {
     const { userId, name } = client.data.user;
@@ -60,6 +76,11 @@ export class ChatGateway implements OnGatewayConnection {
     });
   }
 
+  /**
+   * Handles message pinning/unpinning with admin role verification
+   * @emits message:updated - Broadcasts updated message to all clients
+   * @throws AccessDenied when user lacks ADMIN role
+   */
   @SubscribeMessage('message:pin')
   async handlePin(@ConnectedSocket() client: Socket, @MessageBody() dto: PinMessageDto) {
     if (client.data.user.role !== 'ADMIN') accessDenied({
