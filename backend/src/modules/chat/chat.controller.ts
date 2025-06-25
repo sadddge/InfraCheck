@@ -39,11 +39,19 @@ export class ChatController {
         type: [MessageDto]
     })
     async getMessages(
-        @Query('limit') limit: string,
-        @Query('before') before: string
+        @Query('limit') limit?: string,
+        @Query('before') before?: string
     ): Promise<MessageDto[]> {
-        const limitNumber = Number.parseInt(limit, 10) || 20;
-        const beforeDate = before ? new Date(before) : undefined;
+        let limitNumber = 20;
+        if (limit) {
+            const parsed = Number.parseInt(limit, 10);
+            limitNumber = Number.isNaN(parsed) ? 20 : parsed;
+        }
+        let beforeDate: Date | undefined = undefined;
+        if (before) {
+            const date = new Date(before);
+            beforeDate = Number.isNaN(date.getTime()) ? undefined : date;
+        }
         return this.chatService.findAll(limitNumber, beforeDate);
     }
 }
