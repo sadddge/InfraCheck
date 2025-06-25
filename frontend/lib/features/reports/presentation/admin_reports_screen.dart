@@ -163,7 +163,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         backgroundColor: const Color(0xFFFCFDFA),
         elevation: 0,
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/account'),
           icon: const Icon(
             Icons.arrow_back,
             color: Color(0xFF104641),

@@ -62,6 +62,9 @@ class ApiConfig {
   static const String resetPasswordEndpoint = '/v1/auth/reset-password';
   
   // === ENDPOINTS DE GESTIÓN DE USUARIOS ===
+  /// Endpoint para obtener el perfil del usuario actual
+  static const String getMyProfileEndpoint = '/v1/users/me';
+  
   /// Endpoint para obtener lista de usuarios
   static const String getUsersEndpoint = '/v1/users';
   

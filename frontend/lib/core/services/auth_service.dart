@@ -1,4 +1,5 @@
 import '../models/auth_models.dart';
+import '../models/user_model.dart';
 import '../config/api_config.dart';
 import 'api_service.dart';
 
@@ -151,5 +152,21 @@ class AuthService {  // ==========================================
   /// los tokens almacenados.
   static Future<bool> refreshToken() async {
     return await ApiService.refreshToken();
+  }
+
+  /// Obtiene la información del usuario autenticado actual.
+  /// 
+  /// Retorna los datos del usuario si hay una sesión activa válida.
+  /// Lanza [ApiException] si no hay sesión o el token ha expirado.
+  static Future<User> getCurrentUser() async {
+    final response = await ApiService.get(ApiConfig.getMyProfileEndpoint);
+    return User.fromJson(response);
+  }
+
+  /// Cierra la sesión del usuario actual.
+  /// 
+  /// Elimina todos los tokens almacenados y limpia el estado de autenticación.
+  static Future<void> logout() async {
+    await ApiService.clearTokens();
   }
 }
