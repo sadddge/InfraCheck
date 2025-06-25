@@ -122,3 +122,16 @@ export const expectVerificationErrorAsync = {
         expectAppExceptionWithCode(ERROR_CODES.VERIFICATION.INVALID_VERIFICATION_CODE),
     invalidPhone: () => expectAppExceptionWithCode(ERROR_CODES.VERIFICATION.PHONE_NUMBER_INVALID),
 };
+
+export const expectChatErrorAsync = {
+    messageNotFound: () => expectAppExceptionWithCode(ERROR_CODES.CHAT.MESSAGE_NOT_FOUND),
+    messageCreationFailed: () => expectAppExceptionWithCode(ERROR_CODES.CHAT.MESSAGE_CREATION_FAILED),
+    invalidMessageContent: () => expectAppExceptionWithCode(ERROR_CODES.CHAT.INVALID_MESSAGE_CONTENT),
+    messageUpdateFailed: () => expectAppExceptionWithCode(ERROR_CODES.CHAT.MESSAGE_UPDATE_FAILED),
+};
+
+export const expectServerErrorAsync = {
+    databaseError: () => expectAppExceptionWithCode(ERROR_CODES.SERVER.DATABASE_ERROR),
+    internalError: () => expectAppExceptionWithCode(ERROR_CODES.SERVER.INTERNAL_ERROR),
+    externalServiceError: () => expectAppExceptionWithCode(ERROR_CODES.SERVER.EXTERNAL_SERVICE_ERROR),
+};
