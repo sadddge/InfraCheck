@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/models/report_model.dart';
@@ -28,8 +27,12 @@ class ReportsProvider with ChangeNotifier {
     _setError(null);
 
     try {
-      // Obtener ubicación actual
-      final position = await _getCurrentLocation();
+      // Verificar que todas las fotos tengan coordenadas válidas
+      for (final photo in photos) {
+        if (photo.latitude == 0.0 && photo.longitude == 0.0) {
+          throw Exception('La foto ${photo.filePath} no tiene datos de ubicación válidos');
+        }
+      }
       
       // Preparar metadata del reporte según el formato esperado por el backend
       final metadata = {
@@ -38,8 +41,8 @@ class ReportsProvider with ChangeNotifier {
         'category': category.name.toUpperCase(),
         'images': photos.map((photo) => {
           'takenAt': photo.timestamp.toIso8601String(),
-          'latitude': position.latitude,
-          'longitude': position.longitude,
+          'latitude': photo.latitude,  // ✅ Usar coordenadas de la foto
+          'longitude': photo.longitude, // ✅ Usar coordenadas de la foto
         }).toList(),
       };
 
@@ -124,33 +127,6 @@ class ReportsProvider with ChangeNotifier {
   }
 
   /// Obtiene la ubicación actual del usuario
-  Future<Position> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Verificar si el servicio de ubicación está habilitado
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw Exception('Los servicios de ubicación están deshabilitados');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        throw Exception('Los permisos de ubicación fueron denegados');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      throw Exception('Los permisos de ubicación están permanentemente denegados');
-    }
-
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-  }
-
   /// Obtiene todos los reportes del usuario actual
   Future<void> fetchMyReports() async {
     _setLoading(true);
