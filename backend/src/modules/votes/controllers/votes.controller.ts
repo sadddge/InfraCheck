@@ -36,7 +36,7 @@ export class VotesController {
     constructor(
         @Inject(VOTES_SERVICE)
         private readonly votesService: IVotesService,
-    ) {}
+    ) { }
 
     /**
      * Cast or update a vote on a report.
@@ -129,7 +129,7 @@ export class VotesController {
     /**
      * Get current user's vote for a report.
      */
-    @Get('user')
+    @Get('me')
     @ApiOperation({
         summary: "Get current user's vote for a report",
         description: "Retrieves the current user's vote for the specified report.",
