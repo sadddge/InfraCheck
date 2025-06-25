@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { AuthErrorDetail } from 'src/common/exceptions/error-details';
+import { accessDenied, tokenExpired, tokenMalformed } from 'src/common/helpers/exception.helper';
+import { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 import { User } from 'src/database/entities/user.entity';
 import { JwtConfig, jwtConfig } from '../config/jwt.config';
 
@@ -117,6 +120,51 @@ export class TokenFactoryService {
     }
 
     /**
+     * Verifies and decodes an access token.
+     * Validates token signature, expiration, and format.
+     * Throws specific exceptions for different error types.
+     *
+     * @param token The JWT access token to verify
+     * @returns Decoded JWT payload containing user information
+     * @throws {TokenExpiredError} When token has expired
+     * @throws {TokenMalformedError} When token format or signature is invalid
+     * @throws {AccessDeniedError} For any other verification errors
+     *
+     * @example
+     * ```typescript
+     * try {
+     *   const payload = await tokenFactory.verifyAccessToken(token);
+     *   console.log('User ID:', payload.sub);
+     *   console.log('User role:', payload.role);
+     * } catch (error) {
+     *   // Handle authentication error
+     * }     * ```
+     */
+    async verifyAccessToken(token: string): Promise<JwtPayload> {
+        try {
+            return await this.jwtService.verifyAsync(token, {
+                secret: this.jwtConfig.secret,
+            });
+        } catch (error) {
+            const details: AuthErrorDetail = {
+                attemptedAction: 'verifyAccessToken',
+                resource: 'JWT access token',
+            };
+
+            if (error?.name === 'TokenExpiredError') {
+                tokenExpired(details);
+            }
+
+            if (error?.name === 'JsonWebTokenError') {
+                tokenMalformed(details);
+            }
+
+            // Fallback for any other JWT verification errors
+            accessDenied(details);
+        }
+    }
+
+    /**
      * Generates short-lived access token for API authentication.
      * Contains user identity, role, and permissions for authorization.
      * Used for accessing protected endpoints and role-based access control.
@@ -140,6 +188,8 @@ export class TokenFactoryService {
         return this.jwtService.signAsync(
             {
                 sub: user.id,
+                name: user.name,
+                lastName: user.lastName,
                 phoneNumber: user.phoneNumber,
                 role: user.role,
             },
