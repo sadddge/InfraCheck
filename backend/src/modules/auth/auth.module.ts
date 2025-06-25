@@ -84,5 +84,12 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         JwtRefreshStrategy,
         JwtResetStrategy,
     ],
+    exports: [
+        AUTH_SERVICE,
+        USER_REGISTRATION_SERVICE,
+        PASSWORD_RECOVERY_SERVICE,
+        TokenFactoryService,
+        JwtModule,
+    ],
 })
-export class AuthModule {}
+export class AuthModule { }
