@@ -7,6 +7,18 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/spec/v2.0.0
 
 ## [Sin lanzar]
 
+### 🔒 Corrección de Seguridad - 2025-06-24
+
+#### ✅ Seguridad Crítica Corregida
+- **🚨 API Keys Removidas**: Eliminadas todas las API keys de Google Maps del código fuente
+- **🛡️ Placeholders Seguros**: Reemplazadas con `YOUR_GOOGLE_MAPS_API_KEY_HERE`
+- **📁 Gitignore Mejorado**: Agregadas reglas para archivos sensibles (`local.properties`, etc.)
+- **📝 Documentación de Seguridad**: Agregadas mejores prácticas para API keys
+
+#### Agregado
+- **🔐 Configuración Segura**: Archivo `local.properties.example` como plantilla
+- **📋 Guías de Seguridad**: Instrucciones detalladas para manejo seguro de credenciales
+
 ### 🎯 Configuración de Google Maps - 2025-06-24
 
 #### ✅ Corregido

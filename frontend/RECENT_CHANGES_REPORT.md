@@ -20,13 +20,13 @@ La configuración de Google Maps ha sido completada para todas las plataformas:
 import GoogleMaps
 
 // Agregado: Configuración de API Key
-GMSServices.provideAPIKey("AIzaSyBOE-zb6sWQk0Sx9I52-F62Ikt9onEPOKo")
+GMSServices.provideAPIKey("YOUR_GOOGLE_MAPS_API_KEY_HERE")
 ```
 
 #### 🌐 Web (index.html)
 ```html
 <!-- Agregado: Script de Google Maps JavaScript API -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBOE-zb6sWQk0Sx9I52-F62Ikt9onEPOKo"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY_HERE"></script>
 ```
 
 #### 🤖 Android (strings.xml)
@@ -65,7 +65,40 @@ El archivo `pubspec.lock` ha sido actualizado automáticamente con las últimas 
 
 ---
 
-## 🔍 Impacto de los Cambios
+## � **IMPORTANTE - Configuración de Seguridad**
+
+### ⚠️ **API Keys Sensibles**
+
+**NUNCA commits API keys reales en el repositorio. Las siguientes configuraciones requieren claves reales:**
+
+#### Para iOS (AppDelegate.swift):
+```swift
+// Reemplazar YOUR_GOOGLE_MAPS_API_KEY_HERE con la clave real
+GMSServices.provideAPIKey("YOUR_GOOGLE_MAPS_API_KEY_HERE")
+```
+
+#### Para Web (index.html):
+```html
+<!-- Reemplazar YOUR_GOOGLE_MAPS_API_KEY_HERE con la clave real -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY_HERE"></script>
+```
+
+#### Para Android (AndroidManifest.xml):
+```xml
+<!-- Agregar en android/app/src/main/AndroidManifest.xml -->
+<meta-data android:name="com.google.android.geo.API_KEY"
+           android:value="YOUR_GOOGLE_MAPS_API_KEY_HERE"/>
+```
+
+### 🛡️ **Mejores Prácticas de Seguridad**
+- Usar variables de entorno para API keys
+- Configurar restricciones de API en Google Cloud Console
+- Nunca commitear credenciales en el código fuente
+- Usar archivos `.env` locales (incluidos en .gitignore)
+
+---
+
+## �🔍 Impacto de los Cambios
 
 ### ✅ **Funcionalidad Mejorada**
 

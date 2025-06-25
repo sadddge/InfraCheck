@@ -107,16 +107,18 @@ dependencies:
 
 4. **Configurar Google Maps** (Multiplataforma):
 
+   ⚠️ **IMPORTANTE**: Reemplaza `YOUR_GOOGLE_MAPS_API_KEY_HERE` con tu API key real
+
    **Android**:
    - Agregar API Key en `android/app/src/main/AndroidManifest.xml`
    
    **iOS**:
-   - ✅ Ya configurado en `ios/Runner/AppDelegate.swift`
+   - ✅ Configurar API Key real en `ios/Runner/AppDelegate.swift`
    
    **Web**:
-   - ✅ Ya configurado en `web/index.html`
+   - ✅ Configurar API Key real en `web/index.html`
 
-   > **Nota**: Las configuraciones de iOS y Web ya están incluidas en el proyecto.
+   > **Seguridad**: NUNCA commits API keys reales en el repositorio
    - Obtener API Key de Google Maps
    - Agregar key en `android/app/src/main/AndroidManifest.xml`
 
