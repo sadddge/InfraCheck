@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/config/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
+import { ChatModule } from './modules/chat/chat.module';
 import { ReportModule } from './modules/reports/reports.module';
 import { UsersModule } from './modules/users/users.module';
 import { VotesModule } from './modules/votes/votes.module';
@@ -39,7 +40,7 @@ import { VotesModule } from './modules/votes/votes.module';
             throttlers: [
                 {
                     ttl: 60000, // 1 minute
-                    limit: 10,
+                    limit: 100,
                 },
             ],
         }),
@@ -53,6 +54,7 @@ import { VotesModule } from './modules/votes/votes.module';
         AuthModule,
         ReportModule,
         VotesModule,
+        ChatModule,
     ],
     providers: [
         {
@@ -73,4 +75,4 @@ import { VotesModule } from './modules/votes/votes.module';
         },
     ],
 })
-export class AppModule {}
+export class AppModule { }

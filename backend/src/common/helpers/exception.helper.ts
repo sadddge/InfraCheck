@@ -2,6 +2,7 @@ import { ERROR_CODES, type ErrorCode } from '../constants/error-codes.constants'
 import { AppException } from '../exceptions/app.exception';
 import type {
     AuthErrorDetail,
+    ChatErrorDetail,
     GeneralErrorDetail,
     ReportErrorDetail,
     ServerErrorDetail,
@@ -266,6 +267,28 @@ export function duplicateVote(details?: VoteErrorDetail): never {
 export function votePermissionDenied(details?: VoteErrorDetail): never {
     throw new AppException(ERROR_CODES.VOTES.VOTE_PERMISSION_DENIED, undefined, {
         type: 'vote',
+        ...details,
+    });
+}
+
+// Chat exceptions
+export function messageNotFound(details?: ChatErrorDetail): never {
+    throw new AppException(ERROR_CODES.CHAT.MESSAGE_NOT_FOUND, undefined, {
+        type: 'chat',
+        ...details,
+    });
+}
+
+export function messageCreationFailed(details?: ChatErrorDetail): never {
+    throw new AppException(ERROR_CODES.CHAT.MESSAGE_CREATION_FAILED, undefined, {
+        type: 'chat',
+        ...details,
+    });
+}
+
+export function messageUpdateFailed(details?: ChatErrorDetail): never {
+    throw new AppException(ERROR_CODES.CHAT.MESSAGE_UPDATE_FAILED, undefined, {
+        type: 'chat',
         ...details,
     });
 }

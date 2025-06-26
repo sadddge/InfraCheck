@@ -1,5 +1,6 @@
 import { Readable } from 'node:stream';
 import { Comment } from '../../database/entities/comment.entity';
+import { Message } from '../../database/entities/message.entity';
 import { ReportChange } from '../../database/entities/report-change.entity';
 import { ReportImage } from '../../database/entities/report-image.entity';
 import { Report } from '../../database/entities/report.entity';
@@ -162,6 +163,23 @@ export function createMockVote(overrides: Partial<Vote> = {}): Vote {
     };
 
     return { ...defaultVote, ...overrides };
+}
+
+/**
+ * Creates a mock Message entity
+ */
+export function createMockMessage(overrides: Partial<Message> = {}): Message {
+    const mockUser = createMockUser();
+
+    const defaultMessage: Message = {
+        id: 1,
+        content: 'Test message',
+        createdAt: new Date('2024-01-01T10:00:00Z'),
+        sender: mockUser,
+        pinned: false,
+    };
+
+    return { ...defaultMessage, ...overrides };
 }
 
 /**

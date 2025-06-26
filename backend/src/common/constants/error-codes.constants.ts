@@ -73,6 +73,14 @@ export const ERROR_CODES = {
         VOTE_PERMISSION_DENIED: 'VOT004',
     },
 
+    // Chat errors (CHT001-CHT999)
+    CHAT: {
+        MESSAGE_NOT_FOUND: 'CHT001',
+        MESSAGE_CREATION_FAILED: 'CHT002',
+        INVALID_MESSAGE_CONTENT: 'CHT003',
+        MESSAGE_UPDATE_FAILED: 'CHT004',
+    },
+
     // General errors (GEN001-GEN999)
     GENERAL: {
         UNKNOWN_ERROR: 'GEN000',
@@ -160,6 +168,11 @@ export const ERROR_MESSAGES: ErrorMessagesMap = {
     VOT003: 'Vote already exists',
     VOT004: 'Permission denied to vote on this report',
 
+    CHT001: 'Message not found',
+    CHT002: 'Failed to create message',
+    CHT003: 'Invalid message content',
+    CHT004: 'Failed to update message',
+
     GEN000: 'Unknown error',
     GEN001: 'Unhandled exception',
     GEN002: 'Invalid request',
@@ -215,6 +228,11 @@ export const ERROR_HTTP_STATUS: ErrorHttpStatusMap = {
     VOT002: 400,
     VOT003: 409,
     VOT004: 403,
+
+    CHT001: 404,
+    CHT002: 500,
+    CHT003: 400,
+    CHT004: 500,
 
     GEN000: 500,
     GEN001: 500,

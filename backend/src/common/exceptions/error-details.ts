@@ -87,6 +87,22 @@ export interface VoteErrorDetail {
 }
 
 /**
+ * Detail for chat-related errors (CHT001–CHT999)
+ */
+export interface ChatErrorDetail {
+    /** Identifier of the message involved */
+    messageId?: string;
+    /** Identifier of the user who sent the message */
+    userId?: string;
+    /** Identifier of the report in the chat context */
+    reportId?: string;
+    /** Content of the message (truncated if too long) */
+    messageContent?: string;
+    /** Action attempted on the message */
+    attemptedAction?: string;
+}
+
+/**
  * Detail for general or unhandled errors (GEN000–GEN999)
  */
 export interface GeneralErrorDetail {
@@ -105,4 +121,5 @@ export type ErrorDetail =
     | ({ type: 'user' } & UserErrorDetail)
     | ({ type: 'upload' } & UploadErrorDetail)
     | ({ type: 'vote' } & VoteErrorDetail)
+    | ({ type: 'chat' } & ChatErrorDetail)
     | ({ type: 'general' } & GeneralErrorDetail);
