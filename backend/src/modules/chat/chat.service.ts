@@ -40,14 +40,7 @@ export class ChatService {
 
             this.logger.log(`Retrieved ${messages.length} messages with limit ${limit}`);
 
-            return messages.map(message => ({
-                id: message.id,
-                content: message.content,
-                authorName: message.sender.name,
-                authorLastName: message.sender.lastName,
-                pinned: message.pinned,
-                createdAt: message.createdAt,
-            }));
+            return messages.map(message => this.toMessageDto(message));
         } catch (error) {
             this.logger.error(`Failed to retrieve messages: ${error.message}`, error.stack);
             databaseError({ serviceName: 'ChatService' });
@@ -84,14 +77,7 @@ export class ChatService {
 
             this.logger.log(`Message created successfully with ID: ${savedMessage.id}`);
 
-            return {
-                id: messageWithSender.id,
-                content: messageWithSender.content,
-                authorName: messageWithSender.sender.name,
-                authorLastName: messageWithSender.sender.lastName,
-                pinned: messageWithSender.pinned,
-                createdAt: messageWithSender.createdAt,
-            };
+            return this.toMessageDto(messageWithSender);
         } catch (error) {
             if (error instanceof AppException) {
                 throw error;
@@ -134,14 +120,7 @@ export class ChatService {
                 `Message ${messageId} pin status changed from ${previousPinStatus} to ${pinned}`
             );
 
-            return {
-                id: message.id,
-                content: message.content,
-                authorName: message.sender.name,
-                authorLastName: message.sender.lastName,
-                createdAt: message.createdAt,
-                pinned: message.pinned,
-            };
+            return this.toMessageDto(message);
         } catch (error) {
             if (error instanceof AppException) {
                 throw error;
@@ -153,5 +132,16 @@ export class ChatService {
                 attemptedAction: 'pin'
             });
         }
+    }
+
+    private toMessageDto(message: Message): MessageDto {
+        return {
+            id: message.id,
+            content: message.content,
+            authorName: message.sender.name,
+            authorLastName: message.sender.lastName,
+            pinned: message.pinned,
+            createdAt: message.createdAt,
+        };
     }
 }
