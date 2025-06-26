@@ -40,7 +40,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _currentIndex = 0; // Iniciamos en la pestaña de mapa
 
   @override
-  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
@@ -184,14 +183,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         builder: (context, reportsProvider, child) {
           debugPrint('🏗️ Construyendo mapa con ${reportsProvider.reports.length} reportes');
           
-          // Crear marcadores para los reportes
+          // Crear marcadores directamente (síncrono)
           final reportMarkers = MapHelpers.createReportMarkers(
             reportsProvider.reports,
             onMarkerTap: (reportId) {
               _onReportMarkerTapped(reportId);
             },
           );
-          
           debugPrint('📍 Marcadores creados: ${reportMarkers.length}');
 
           return Stack(

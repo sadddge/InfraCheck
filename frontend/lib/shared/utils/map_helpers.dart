@@ -14,9 +14,9 @@ class MapHelpers {
       position: LatLng(report.latitude, report.longitude),
       infoWindow: InfoWindow(
         title: report.title,
-        snippet: _getStatusText(report.status),
+        snippet: '${_getCategoryText(report.category)} • ${_getStatusText(report.status)}',
       ),
-      icon: _getMarkerIcon(report.status),
+      icon: _getMarkerIcon(report.category, report.status),
       onTap: onTap,
     );
   }
@@ -37,19 +37,37 @@ class MapHelpers {
     }).toSet();
   }
 
-  /// Obtiene el icono del marcador según el estado del reporte
-  static BitmapDescriptor _getMarkerIcon(ReportStatus status) {
-    // Por ahora usamos colores por defecto de Google Maps
-    // TODO: En el futuro podemos crear iconos personalizados
+  /// Obtiene el icono del marcador según la categoría y estado del reporte
+  static BitmapDescriptor _getMarkerIcon(ReportCategory category, ReportStatus status) {
+    // Usar pines nativos de Google Maps con colores de la paleta de la app
+    // Solo se muestran reportes "En Progreso" y "Resueltos"
     switch (status) {
       case ReportStatus.pending:
-        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+        // Naranja para pendientes (aunque no se muestren normalmente)
+        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
       case ReportStatus.inProgress:
+        // Amarillo de acento de la app para reportes en progreso
         return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow);
       case ReportStatus.resolved:
+        // Verde de la app para reportes resueltos
         return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
       case ReportStatus.rejected:
-        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet);
+        // Rojo para rechazados (aunque no se muestren normalmente)  
+        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+    }
+  }
+
+  /// Obtiene el texto descriptivo de la categoría
+  static String _getCategoryText(ReportCategory category) {
+    switch (category) {
+      case ReportCategory.infrastructure:
+        return 'Infraestructura';
+      case ReportCategory.security:
+        return 'Seguridad';
+      case ReportCategory.transit:
+        return 'Tránsito';
+      case ReportCategory.garbage:
+        return 'Basura';
     }
   }
 
