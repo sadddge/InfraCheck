@@ -206,8 +206,12 @@ class ReportsProvider with ChangeNotifier {
         debugPrint('   - Total recibidos: ${allReports.length}');
         debugPrint('   - En progreso/Resueltos: ${publicReports.length}');
         
-        // Actualizar la lista local con los reportes públicos filtrados
-        _reports = publicReports;
+        // Enriquecer reportes con datos de usuario
+        debugPrint('🔄 Enriqueciendo reportes con datos de usuario...');
+        final enrichedReports = await _enrichReportsWithUserData(publicReports);
+        
+        // Actualizar la lista local con los reportes públicos filtrados y enriquecidos
+        _reports = enrichedReports;
         debugPrint('✅ Reportes públicos cargados correctamente: ${_reports.length} reportes');
       } else {
         debugPrint('⚠️ Estructura de respuesta inesperada: $response');
@@ -234,13 +238,48 @@ class ReportsProvider with ChangeNotifier {
       final reportsData = response['items'] ?? response['data'] ?? [];
       final List<dynamic> reportsJson = reportsData is List ? reportsData : [reportsData];
       
-      _reports = reportsJson.map((json) => Report.fromJson(json)).toList();
+      final allReports = reportsJson.map((json) => Report.fromJson(json)).toList();
+      
+      // Enriquecer reportes con datos de usuario
+      final enrichedReports = await _enrichReportsWithUserData(allReports);
+      
+      _reports = enrichedReports;
       notifyListeners();
     } catch (e) {
       _setError('Error al cargar todos los reportes: $e');
     } finally {
       _setLoading(false);
     }
+  }
+
+  /// Enriquece los reportes con información completa del usuario
+  Future<List<Report>> _enrichReportsWithUserData(List<Report> reports) async {
+    final enrichedReports = <Report>[];
+    
+    for (final report in reports) {
+      try {
+        // Obtener información del usuario
+        final userData = await getUserById(report.creatorId);
+        
+        if (userData != null) {
+          // Crear reporte enriquecido con datos del usuario
+          final enrichedReport = report.copyWith(
+            creatorFirstName: userData['name'] as String?,
+            creatorLastName: userData['lastName'] as String?,
+          );
+          enrichedReports.add(enrichedReport);
+        } else {
+          // Si no se pudo obtener el usuario, usar el reporte original
+          enrichedReports.add(report);
+        }
+      } catch (e) {
+        debugPrint('❌ Error al enriquecer reporte ${report.id}: $e');
+        // En caso de error, usar el reporte original
+        enrichedReports.add(report);
+      }
+    }
+    
+    return enrichedReports;
   }
 
   /// Actualiza el estado de un reporte
@@ -306,7 +345,11 @@ class ReportsProvider with ChangeNotifier {
       
       // Extraer los datos del reporte desde la estructura del backend
       final reportData = response['data'] ?? response;
-      return Report.fromJson(reportData);
+      final report = Report.fromJson(reportData);
+      
+      // Enriquecer con datos del usuario
+      final enrichedReports = await _enrichReportsWithUserData([report]);
+      return enrichedReports.first;
     } catch (e) {
       throw Exception('Error al obtener reporte: $e');
     }
@@ -371,6 +414,22 @@ class ReportsProvider with ChangeNotifier {
       return [];
     } catch (e) {
       throw Exception('Error al obtener historial: $e');
+    }
+  }
+
+  /// Obtiene la información de un usuario por su ID
+  Future<Map<String, dynamic>?> getUserById(int userId) async {
+    try {
+      final endpoint = ApiConfig.getUserByIdEndpoint.replaceAll(':id', userId.toString());
+      debugPrint('🔍 Obteniendo usuario: $endpoint');
+      
+      final response = await ApiService.get(endpoint);
+      debugPrint('🔍 Respuesta usuario: $response');
+      
+      return response is Map<String, dynamic> ? response : null;
+    } catch (e) {
+      debugPrint('❌ Error al obtener usuario $userId: $e');
+      return null;
     }
   }
 

@@ -217,7 +217,7 @@ class ReportInfoCard extends StatelessWidget {
               radius: 16,
               backgroundColor: AppColors.primary.withOpacity(0.1),
               child: Text(
-                _getInitials(),
+                report.creatorInitials,
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -234,7 +234,7 @@ class ReportInfoCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _getUserDisplayName(),
+                    report.creatorFullName,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -283,18 +283,6 @@ class ReportInfoCard extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _getInitials() {
-    // Por ahora usamos el ID del creador, pero eventualmente
-    // se podría obtener el nombre real del usuario
-    return 'U${report.creatorId}';
-  }
-
-  String _getUserDisplayName() {
-    // Por ahora usamos un nombre genérico, pero eventualmente
-    // se podría obtener el nombre real del usuario
-    return 'Usuario ${report.creatorId}';
   }
 
   void _openInMaps() {

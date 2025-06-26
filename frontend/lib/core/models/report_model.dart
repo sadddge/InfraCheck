@@ -150,6 +150,14 @@ class Report extends Equatable {
   /// ID del usuario que creó el reporte
   final int creatorId;
   
+  /// Nombre del usuario que creó el reporte
+  final String? creatorFirstName;
+  
+  /// Apellido del usuario que creó el reporte
+  final String? creatorLastName;
+  
+
+  
   /// Lista de imágenes que evidencian el problema
   final List<ReportImage> images;
   
@@ -183,6 +191,8 @@ class Report extends Equatable {
     required this.longitude,
     required this.createdAt,
     required this.creatorId,
+    this.creatorFirstName,
+    this.creatorLastName,
     required this.images,
     this.upvotes = 0,
     this.downvotes = 0,
@@ -232,6 +242,14 @@ class Report extends Equatable {
         longitude: (lng as num).toDouble(),
         createdAt: DateTime.parse((json['createdAt'] as String?) ?? DateTime.now().toIso8601String()),
         creatorId: parsedCreatorId,
+        creatorFirstName: json['creator']?['name'] as String? ?? 
+                         json['creator']?['firstName'] as String? ??
+                         json['creatorFirstName'] as String? ??
+                         'Usuario',
+        creatorLastName: json['creator']?['lastName'] as String? ?? 
+                        json['creator']?['last_name'] as String? ??
+                        json['creatorLastName'] as String? ??
+                        '$parsedCreatorId',
         images: (json['images'] as List?)
             ?.map((img) => ReportImage.fromJson(img))
             .toList() ?? [],
@@ -332,6 +350,8 @@ class Report extends Equatable {
     double? longitude,
     DateTime? createdAt,
     int? creatorId,
+    String? creatorFirstName,
+    String? creatorLastName,
     List<ReportImage>? images,
     int? upvotes,
     int? downvotes,
@@ -350,6 +370,8 @@ class Report extends Equatable {
       longitude: longitude ?? this.longitude,
       createdAt: createdAt ?? this.createdAt,
       creatorId: creatorId ?? this.creatorId,
+      creatorFirstName: creatorFirstName ?? this.creatorFirstName,
+      creatorLastName: creatorLastName ?? this.creatorLastName,
       images: images ?? this.images,
       upvotes: upvotes ?? this.upvotes,
       downvotes: downvotes ?? this.downvotes,
@@ -357,6 +379,42 @@ class Report extends Equatable {
       isFollowing: isFollowing ?? this.isFollowing,
       comments: comments ?? this.comments,
     );
+  }
+
+  /// Obtiene el nombre completo del usuario que creó el reporte
+  String get creatorFullName {
+    final firstName = creatorFirstName?.trim() ?? '';
+    final lastName = creatorLastName?.trim() ?? '';
+    
+    if (firstName.isNotEmpty && lastName.isNotEmpty) {
+      return '$firstName $lastName';
+    } else if (firstName.isNotEmpty) {
+      return firstName;
+    } else if (lastName.isNotEmpty) {
+      return lastName;
+    } else {
+      return 'Usuario $creatorId';
+    }
+  }
+
+  /// Obtiene las iniciales del usuario que creó el reporte
+  String get creatorInitials {
+    final firstName = creatorFirstName?.trim() ?? '';
+    final lastName = creatorLastName?.trim() ?? '';
+    
+    String initials = '';
+    if (firstName.isNotEmpty) {
+      initials += firstName[0].toUpperCase();
+    }
+    if (lastName.isNotEmpty) {
+      initials += lastName[0].toUpperCase();
+    }
+    
+    if (initials.isEmpty) {
+      return 'U$creatorId';
+    }
+    
+    return initials;
   }
 
   @override

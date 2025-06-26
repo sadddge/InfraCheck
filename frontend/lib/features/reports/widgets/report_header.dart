@@ -180,7 +180,7 @@ class ReportHeader extends StatelessWidget {
         
         const SizedBox(height: 8),
         
-        // Segunda fila: Categoría y ID
+        // Segunda fila: Solo categoría (sin ID)
         Row(
           children: [
             // Categoría
@@ -200,18 +200,6 @@ class ReportHeader extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-            
-            const Spacer(),
-            
-            // ID del reporte
-            Text(
-              'ID: ${report.id}',
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
             ),
           ],
         ),
