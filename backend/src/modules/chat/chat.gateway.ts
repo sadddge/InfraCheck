@@ -16,6 +16,8 @@ import { TypingDto } from './dto/typing.dto';
 @WebSocketGateway({
   namespace: 'chat',
   cors: {
+    //TODO: Replace with actual origin in production
+    // For development, allow all origins
     origin: '*',
   },
 })
