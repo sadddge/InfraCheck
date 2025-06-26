@@ -3,6 +3,7 @@ import { UserStatus } from 'src/common/enums/user-status.enums';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Comment } from './comment.entity';
 import { Message } from './message.entity';
+import { Notification } from './notification.entity';
 import { RefreshToken } from './refresh-token.entity';
 import { ReportChange } from './report-change.entity';
 import { Report } from './report.entity';
@@ -120,6 +121,12 @@ export class User {
         vote => vote.user,
     )
     votes: Vote[];
+
+    @OneToMany(
+        () => Notification,
+        notification => notification.user,
+    )
+    notifications: Notification[];
 
     @OneToMany(
         () => RefreshToken,
