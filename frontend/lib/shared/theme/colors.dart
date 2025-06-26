@@ -26,6 +26,12 @@ class AppColors {
   /// Color blanco para texto sobre fondos oscuros
   static const Color textWhite = Color(0xFFFAFAFA);
   
+  /// Color de texto primario - oscuro
+  static const Color textPrimary = Color(0xFF1F2937);
+  
+  /// Color de texto secundario - gris
+  static const Color textSecondary = Color(0xFF6B7280);
+  
   // Colores principales de la aplicación
   /// Color primario - verde azulado oscuro
   static const Color primary = Color(0xFF115E59);     

@@ -5,6 +5,7 @@ import '../../../core/models/report_model.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/config/api_config.dart';
 import '../../../features/camera/domain/models/photo_entry.dart';
+import '../presentation/report_detail_screen.dart';
 
 /// Provider para manejar el estado y operaciones de reportes
 class ReportsProvider with ChangeNotifier {
@@ -294,6 +295,82 @@ class ReportsProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       throw Exception('Error al eliminar reporte: $e');
+    }
+  }
+
+  /// Obtiene un reporte específico por su ID
+  Future<Report> getReportById(int reportId) async {
+    try {
+      final endpoint = ApiConfig.getReportByIdEndpoint.replaceAll(':id', reportId.toString());
+      final response = await ApiService.get(endpoint);
+      
+      // Extraer los datos del reporte desde la estructura del backend
+      final reportData = response['data'] ?? response;
+      return Report.fromJson(reportData);
+    } catch (e) {
+      throw Exception('Error al obtener reporte: $e');
+    }
+  }
+
+  /// Vota en un reporte (upvote o downvote)
+  Future<void> voteOnReport(int reportId, VoteType voteType) async {
+    try {
+      // TODO: Implementar endpoint de votación cuando esté disponible en el backend
+      // final endpoint = '/v1/reports/$reportId/vote';
+      // final voteValue = voteType == VoteType.upvote ? 'upvote' : 'downvote';
+      // await ApiService.post(endpoint, data: {'vote': voteValue});
+      
+      // Por ahora simulamos la votación
+      await Future.delayed(const Duration(milliseconds: 500));
+      debugPrint('🗳️ Voto enviado: $voteType para reporte $reportId');
+    } catch (e) {
+      throw Exception('Error al votar en reporte: $e');
+    }
+  }
+
+  /// Agrega un comentario a un reporte
+  Future<void> addComment(int reportId, String content) async {
+    try {
+      // TODO: Implementar endpoint de comentarios cuando esté disponible en el backend
+      // final endpoint = '/v1/reports/$reportId/comments';
+      // await ApiService.post(endpoint, data: {'content': content});
+      
+      // Por ahora simulamos el envío del comentario
+      await Future.delayed(const Duration(milliseconds: 800));
+      debugPrint('💬 Comentario enviado para reporte $reportId: $content');
+    } catch (e) {
+      throw Exception('Error al enviar comentario: $e');
+    }
+  }
+
+  /// Alterna el seguimiento de un reporte
+  Future<void> toggleFollowReport(int reportId) async {
+    try {
+      // TODO: Implementar endpoints de seguimiento cuando estén disponibles en el backend
+      // final endpoint = '/v1/reports/$reportId/follow';
+      // await ApiService.post(endpoint);
+      
+      // Por ahora simulamos el seguimiento
+      await Future.delayed(const Duration(milliseconds: 300));
+      debugPrint('🔔 Seguimiento alternado para reporte $reportId');
+    } catch (e) {
+      throw Exception('Error al actualizar seguimiento: $e');
+    }
+  }
+
+  /// Obtiene el historial de cambios de un reporte
+  Future<List<dynamic>> getReportHistory(int reportId) async {
+    try {
+      // TODO: Implementar endpoint de historial cuando esté disponible en el backend
+      // final endpoint = '/v1/reports/$reportId/history';
+      // final response = await ApiService.get(endpoint);
+      // return response['data'] ?? [];
+      
+      // Por ahora simulamos el historial
+      await Future.delayed(const Duration(milliseconds: 500));
+      return [];
+    } catch (e) {
+      throw Exception('Error al obtener historial: $e');
     }
   }
 

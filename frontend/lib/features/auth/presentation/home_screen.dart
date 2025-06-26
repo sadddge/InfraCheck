@@ -10,6 +10,7 @@ import '../../../shared/utils/map_helpers.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../camera/domain/camera_provider.dart';
 import '../../reports/domain/reports_provider.dart';
+import '../../reports/presentation/report_detail_screen.dart';
 
 /// Pantalla principal de la aplicación InfraCheck.
 /// 
@@ -161,14 +162,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   /// Maneja el toque en un marcador de reporte
   void _onReportMarkerTapped(int reportId) {
-    // TODO: Fase 2 - Navegar a la pantalla de detalles del reporte
-    debugPrint('Tocado reporte ID: $reportId');
+    debugPrint('🔍 Navegando a detalles del reporte ID: $reportId');
     
-    // Por ahora solo mostramos un snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Tocaste el reporte #$reportId'),
-        duration: const Duration(seconds: 2),
+    // Navegar a la pantalla de detalles del reporte
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ReportDetailScreen(
+          reportId: reportId,
+          // Opcional: pasar el reporte si ya lo tenemos cargado
+          initialReport: context.read<ReportsProvider>().reports
+              .where((r) => r.id == reportId)
+              .firstOrNull,
+        ),
       ),
     );
   }

@@ -152,6 +152,21 @@ class Report extends Equatable {
   
   /// Lista de imágenes que evidencian el problema
   final List<ReportImage> images;
+  
+  /// Número de votos positivos
+  final int upvotes;
+  
+  /// Número de votos negativos
+  final int downvotes;
+  
+  /// Voto actual del usuario autenticado ('upvote', 'downvote', o null)
+  final String? userVote;
+  
+  /// Si el usuario autenticado está siguiendo el reporte
+  final bool isFollowing;
+  
+  /// Lista de comentarios del reporte
+  final List<dynamic>? comments;
 
   /// Crea una nueva instancia de Report.
   /// 
@@ -169,6 +184,11 @@ class Report extends Equatable {
     required this.createdAt,
     required this.creatorId,
     required this.images,
+    this.upvotes = 0,
+    this.downvotes = 0,
+    this.userVote,
+    this.isFollowing = false,
+    this.comments,
   });
 
   /// Crea una instancia de Report desde un mapa JSON.
@@ -215,6 +235,11 @@ class Report extends Equatable {
         images: (json['images'] as List?)
             ?.map((img) => ReportImage.fromJson(img))
             .toList() ?? [],
+        upvotes: json['upvotes'] as int? ?? 0,
+        downvotes: json['downvotes'] as int? ?? 0,
+        userVote: json['userVote'] as String?,
+        isFollowing: json['isFollowing'] as bool? ?? false,
+        comments: json['comments'] as List?,
       );
     } catch (e) {
       debugPrint('Error en Report.fromJson: $e');
@@ -308,6 +333,11 @@ class Report extends Equatable {
     DateTime? createdAt,
     int? creatorId,
     List<ReportImage>? images,
+    int? upvotes,
+    int? downvotes,
+    String? userVote,
+    bool? isFollowing,
+    List<dynamic>? comments,
   }) {
     return Report(
       id: id ?? this.id,
@@ -321,12 +351,18 @@ class Report extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       creatorId: creatorId ?? this.creatorId,
       images: images ?? this.images,
+      upvotes: upvotes ?? this.upvotes,
+      downvotes: downvotes ?? this.downvotes,
+      userVote: userVote ?? this.userVote,
+      isFollowing: isFollowing ?? this.isFollowing,
+      comments: comments ?? this.comments,
     );
   }
 
   @override
   List<Object?> get props => [
     id, title, description, category, status, isVisible,
-    latitude, longitude, createdAt, creatorId, images
+    latitude, longitude, createdAt, creatorId, images,
+    upvotes, downvotes, userVote, isFollowing, comments
   ];
 }
