@@ -286,13 +286,6 @@ export function messageCreationFailed(details?: ChatErrorDetail): never {
     });
 }
 
-export function invalidMessageContent(details?: ChatErrorDetail): never {
-    throw new AppException(ERROR_CODES.CHAT.INVALID_MESSAGE_CONTENT, undefined, {
-        type: 'chat',
-        ...details,
-    });
-}
-
 export function messageUpdateFailed(details?: ChatErrorDetail): never {
     throw new AppException(ERROR_CODES.CHAT.MESSAGE_UPDATE_FAILED, undefined, {
         type: 'chat',
