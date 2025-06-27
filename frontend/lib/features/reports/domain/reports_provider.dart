@@ -702,6 +702,96 @@ class ReportsProvider with ChangeNotifier {
     }
   }
 
+  /// Obtiene los reportes que el usuario está siguiendo junto con su último cambio
+  Future<List<Map<String, dynamic>>> getMyFollowedReportsWithUpdates() async {
+    try {
+      debugPrint('🔔 Obteniendo reportes seguidos...');
+      
+      // TODO: Usar endpoint cuando esté disponible en backend
+      // final endpoint = ApiConfig.getMyFollowedReportsEndpoint;
+      // final response = await ApiService.get(endpoint);
+      
+      // Por ahora, simular con reportes que tienen isFollowing = true
+      if (_reports.isEmpty) {
+        await fetchAllReports();
+      }
+      
+      final followedReports = _reports.where((report) => report.isFollowing).toList();
+      debugPrint('🔔 Reportes seguidos encontrados: ${followedReports.length}');
+      
+      List<Map<String, dynamic>> reportsWithUpdates = [];
+      
+      for (Report report in followedReports) {
+        try {
+          // Obtener el historial del reporte para encontrar el último cambio
+          final history = await getReportHistory(report.id);
+          
+          ReportHistory? lastChange;
+          if (history.isNotEmpty) {
+            // Ordenar por fecha más reciente y tomar el primero
+            history.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            lastChange = history.first;
+          }
+          
+          reportsWithUpdates.add({
+            'report': report,
+            'lastChange': lastChange,
+            'hasRecentUpdate': lastChange != null && 
+                _isRecentUpdate(lastChange.createdAt),
+          });
+          
+        } catch (e) {
+          debugPrint('⚠️ Error obteniendo historial para reporte ${report.id}: $e');
+          // Agregar reporte sin información de cambio
+          reportsWithUpdates.add({
+            'report': report,
+            'lastChange': null,
+            'hasRecentUpdate': false,
+          });
+        }
+      }
+      
+      // Ordenar por reportes con cambios recientes primero
+      reportsWithUpdates.sort((a, b) {
+        final aHasRecent = a['hasRecentUpdate'] as bool;
+        final bHasRecent = b['hasRecentUpdate'] as bool;
+        
+        if (aHasRecent && !bHasRecent) return -1;
+        if (!aHasRecent && bHasRecent) return 1;
+        
+        // Si ambos tienen o no tienen cambios recientes, ordenar por fecha del último cambio
+        final aLastChange = a['lastChange'] as ReportHistory?;
+        final bLastChange = b['lastChange'] as ReportHistory?;
+        
+        if (aLastChange != null && bLastChange != null) {
+          return bLastChange.createdAt.compareTo(aLastChange.createdAt);
+        }
+        
+        if (aLastChange != null && bLastChange == null) return -1;
+        if (aLastChange == null && bLastChange != null) return 1;
+        
+        // Si ambos son null, ordenar por fecha de creación del reporte
+        final aReport = a['report'] as Report;
+        final bReport = b['report'] as Report;
+        return bReport.createdAt.compareTo(aReport.createdAt);
+      });
+      
+      debugPrint('🔔 Reportes seguidos con actualizaciones: ${reportsWithUpdates.length}');
+      return reportsWithUpdates;
+      
+    } catch (e) {
+      debugPrint('❌ Error al obtener reportes seguidos: $e');
+      return [];
+    }
+  }
+  
+  /// Determina si un cambio es reciente (últimas 48 horas)
+  bool _isRecentUpdate(DateTime changeDate) {
+    final now = DateTime.now();
+    final difference = now.difference(changeDate);
+    return difference.inHours <= 48;
+  }
+
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();

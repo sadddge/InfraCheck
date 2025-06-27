@@ -8,6 +8,7 @@ import '../../../shared/widgets/navigation_bar.dart';
 import '../../../shared/widgets/google_map_widget.dart';
 import '../../../shared/utils/map_helpers.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../reports/presentation/notifications_screen.dart';
 import '../../camera/domain/camera_provider.dart';
 import '../../reports/domain/reports_provider.dart';
 import '../../reports/presentation/report_detail_screen.dart';
@@ -233,11 +234,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     // Botón de notificaciones
                     GestureDetector(
                       onTap: () {
-                        // TODO: Implementar notificaciones de reportes seguidos
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Notificaciones de reportes en desarrollo'),
-                            duration: Duration(seconds: 2),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationsScreen(),
                           ),
                         );
                       },
