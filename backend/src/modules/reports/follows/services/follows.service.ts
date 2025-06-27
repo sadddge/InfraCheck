@@ -56,7 +56,7 @@ export class FollowsService implements IFollowsService {
         private readonly userRepository: Repository<User>,
         @InjectRepository(Report)
         private readonly reportRepository: Repository<Report>,
-    ) {}
+    ) { }
 
     /** @inheritDoc */
     async followReport(userId: number, reportId: number): Promise<FollowActionResponseDto> {
@@ -123,6 +123,19 @@ export class FollowsService implements IFollowsService {
             username: user.name,
         }));
         return new Pagination<ReportFollowerDto>(items, paginated.meta, paginated.links);
+    }
+
+    /** @inheritDoc */
+    async getReportFollowerIds(reportId: number): Promise<number[]> {
+        await this.validateReport(reportId);
+
+        const followers = await this.userRepository
+            .createQueryBuilder('user')
+            .innerJoin('user.reportsFollowed', 'report', 'report.id = :reportId', { reportId })
+            .select(['user.id'])
+            .getMany();
+
+        return followers.map(user => user.id);
     }
 
     /** @inheritDoc */

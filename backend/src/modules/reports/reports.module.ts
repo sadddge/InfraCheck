@@ -8,6 +8,7 @@ import { ReportsController } from './controllers/reports.controller';
 import { FollowsModule } from './follows/follows.module';
 import { REPORTS_SERVICE } from './interfaces/reports-service.interface';
 import { ReportsService } from './services/reports.service';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
     imports: [
@@ -15,6 +16,7 @@ import { ReportsService } from './services/reports.service';
         UploadModule,
         CommentsModule,
         FollowsModule,
+        NotificationsModule
     ],
     controllers: [ReportsController],
     providers: [
@@ -24,4 +26,4 @@ import { ReportsService } from './services/reports.service';
         },
     ],
 })
-export class ReportModule {}
+export class ReportModule { }

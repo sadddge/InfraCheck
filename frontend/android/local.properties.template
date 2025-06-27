@@ -1,0 +1,15 @@
+# TEMPLATE - Copy this to local.properties and replace with real values
+flutter.sdk=C:\\Users\\marti\\Desktop\\ccs\\flutter
+flutter.buildMode=debug
+flutter.versionName=1.0.0
+flutter.versionCode=1
+sdk.dir=C:\\Users\\marti\\AppData\\Local\\Android\\sdk
+org.gradle.java.home=C:\\Program Files\\Java\\jdk-17
+GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY_HERE
+
+# Firebase Configuration - Replace with your actual values
+firebase.apiKey=YOUR_FIREBASE_API_KEY_HERE
+firebase.appId=YOUR_FIREBASE_APP_ID_HERE
+firebase.messagingSenderId=YOUR_MESSAGING_SENDER_ID_HERE
+firebase.projectId=YOUR_PROJECT_ID_HERE
+firebase.storageBucket=YOUR_STORAGE_BUCKET_HERE

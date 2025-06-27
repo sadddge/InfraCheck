@@ -6,6 +6,7 @@ import { ReportState } from 'src/common/enums/report-state.enums';
 import { reportNotFound } from 'src/common/helpers/exception.helper';
 import { ReportChange } from 'src/database/entities/report-change.entity';
 import { Report } from 'src/database/entities/report.entity';
+import { INotificationService, NOTIFICATION_SERVICE } from 'src/modules/notifications/interfaces/notification-service.interface';
 import {
     IUploadService,
     UPLOAD_SERVICE,
@@ -14,6 +15,7 @@ import { Equal, Repository } from 'typeorm';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportChangeDto } from '../dto/report-change.dto';
 import { ReportDto } from '../dto/report.dto';
+import { FOLLOWS_SERVICE, IFollowsService } from '../follows/interfaces/follows-service.interface';
 import { IReportsService } from '../interfaces/reports-service.interface';
 
 /**
@@ -40,6 +42,8 @@ export class ReportsService implements IReportsService {
      *
      * @param reportRepository TypeORM repository for Report entity operations
      * @param uploadService Service for handling image uploads and processing
+     * @param notificationService Service for handling notifications
+     * @param followsService Service for handling user-report follow relationships
      */
     constructor(
         @InjectRepository(ReportChange)
@@ -48,7 +52,11 @@ export class ReportsService implements IReportsService {
         private readonly reportRepository: Repository<Report>,
         @Inject(UPLOAD_SERVICE)
         private readonly uploadService: IUploadService,
-    ) {}
+        @Inject(NOTIFICATION_SERVICE)
+        private readonly notificationService: INotificationService,
+        @Inject(FOLLOWS_SERVICE)
+        private readonly followsService: IFollowsService,
+    ) { }
 
     /** @inheritDoc */
     async findAll(options: IPaginationOptions): Promise<Pagination<ReportDto>> {
@@ -234,6 +242,43 @@ export class ReportsService implements IReportsService {
         });
 
         await this.changeRepository.save(change);
+
+        // Get all followers of this report
+        const followerIds = await this.followsService.getReportFollowerIds(report.id);
+
+        // Send notification to report creator (if they're not the one making the change)
+        const recipientIds = new Set<number>();
+        if (report.creator.id !== creatorId) {
+            recipientIds.add(report.creator.id);
+        }
+
+        // Add all followers to recipients
+        for (const userId of followerIds) {
+            if (userId !== creatorId) { // Don't notify the person making the change
+                recipientIds.add(userId);
+            }
+        }
+
+        // Send notifications to all recipients
+        const notificationPayload = {
+            reportId: report.id,
+            from: report.state,
+            to: state,
+            title: `Estado del reporte #${report.title}`,
+            message: `El reporte ha cambiado de estado de ${report.state} a ${state}`,
+        };
+
+        // Send notifications in parallel
+        const notificationPromises = Array.from(recipientIds).map(userId =>
+            this.notificationService.sendNotification(userId, notificationPayload)
+        );
+
+        try {
+            await Promise.allSettled(notificationPromises);
+        } catch (error) {
+            // Log error but don't fail the operation
+            console.error('Error sending notifications:', error);
+        }
 
         report.state = state;
         const updatedReport = await this.reportRepository.save(report);

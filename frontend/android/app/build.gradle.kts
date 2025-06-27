@@ -5,6 +5,8 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Firebase
+    id("com.google.gms.google-services")
 }
 
 val localProperties = Properties()
@@ -22,10 +24,15 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     defaultConfig {
@@ -38,6 +45,13 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         resValue("string", "google_maps_api_key", localProperties["GOOGLE_MAPS_API_KEY"] as String)
+        
+        // Firebase configuration from local.properties
+        buildConfigField("String", "FIREBASE_API_KEY", "\"${localProperties["firebase.apiKey"]}\"")
+        buildConfigField("String", "FIREBASE_APP_ID", "\"${localProperties["firebase.appId"]}\"")
+        buildConfigField("String", "FIREBASE_MESSAGING_SENDER_ID", "\"${localProperties["firebase.messagingSenderId"]}\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${localProperties["firebase.projectId"]}\"")
+        buildConfigField("String", "FIREBASE_STORAGE_BUCKET", "\"${localProperties["firebase.storageBucket"]}\"")
     }
 
     buildTypes {
@@ -51,4 +65,11 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation("com.google.firebase:firebase-bom:32.7.0")
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging")
 }
