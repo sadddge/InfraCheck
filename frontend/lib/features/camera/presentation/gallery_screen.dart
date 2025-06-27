@@ -58,7 +58,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
         _isSelectionMode = true;
       }
     });
-  }  /// Limpia toda la selección y sale del modo de selección múltiple.
+  }
+  /// Limpia toda la selección y sale del modo de selección múltiple.
   void _clearSelection() {
     setState(() {
       _selectedPhotos.clear();
