@@ -1,5 +1,6 @@
 import {
     Body,
+    ClassSerializerInterceptor,
     Controller,
     Delete,
     Get,
@@ -9,6 +10,7 @@ import {
     Patch,
     Query,
     UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
 import {
     ApiBearerAuth,
@@ -17,9 +19,12 @@ import {
     ApiOkResponse,
     ApiOperation,
     ApiParam,
+    ApiQuery,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Pagination } from 'nestjs-typeorm-paginate';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { Role } from 'src/common/enums/roles.enums';
 import { UserAccessGuard } from 'src/common/guards/user-access.guard';
 import { UpdateUserStatusDto } from '../dto/update-user-status.dto';
@@ -50,6 +55,7 @@ import { IUserService, USER_SERVICE } from '../interfaces/user-service.interface
     path: 'users',
     version: '1',
 })
+@UseInterceptors(ClassSerializerInterceptor)
 export class UsersController {
     /**
      * Creates a new UsersController instance.
@@ -99,8 +105,13 @@ export class UsersController {
     @ApiForbiddenResponse({
         description: 'Forbidden. You do not have permission to access this resource.',
     })
-    async findAll(@Query() query: UserQueryDto): Promise<UserDto[]> {
-        return this.usersService.findAll(query.status);
+    @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+    @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+    async findAll(
+        @Query() query: UserQueryDto,
+        @Query() { page, limit }: PaginationDto,
+    ): Promise<Pagination<UserDto>> {
+        return this.usersService.findAll({ page, limit }, query.status);
     }
 
     /**

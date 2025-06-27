@@ -1,13 +1,16 @@
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from './database/config/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
+import { ChatModule } from './modules/chat/chat.module';
 import { ReportModule } from './modules/reports/reports.module';
 import { UsersModule } from './modules/users/users.module';
+import { VotesModule } from './modules/votes/votes.module';
 
 /**
  * Root application module that configures and imports all feature modules.
@@ -36,15 +39,22 @@ import { UsersModule } from './modules/users/users.module';
         ThrottlerModule.forRoot({
             throttlers: [
                 {
-                    ttl: 60000,
-                    limit: 10,
+                    ttl: 60000, // 1 minute
+                    limit: 100,
                 },
             ],
+        }),
+        CacheModule.register({
+            isGlobal: true,
+            ttl: 60000, // 1 minute
+            max: 100,
         }),
         DatabaseModule,
         UsersModule,
         AuthModule,
         ReportModule,
+        VotesModule,
+        ChatModule,
     ],
     providers: [
         {
@@ -59,6 +69,10 @@ import { UsersModule } from './modules/users/users.module';
             provide: APP_GUARD,
             useClass: RolesGuard,
         },
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: CacheInterceptor,
+        },
     ],
 })
-export class AppModule {}
+export class AppModule { }

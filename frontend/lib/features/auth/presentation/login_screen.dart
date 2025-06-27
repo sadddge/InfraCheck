@@ -9,6 +9,18 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/enums/user_status.dart';
 import 'widgets/custom_text_field.dart';
 
+/// Pantalla de inicio de sesión para la aplicación InfraCheck.
+/// 
+/// Permite a los usuarios autenticarse usando su número de teléfono y contraseña.
+/// Incluye validación de formularios, manejo de estados de usuario específicos
+/// y navegación automática según el resultado de la autenticación.
+/// 
+/// Características principales:
+/// - Formulario de login con validación
+/// - Manejo de diferentes estados de usuario (pendiente aprobación, rechazado, etc.)
+/// - Integración con el sistema de autenticación
+/// - Interfaz moderna con efectos visuales (blur, degradados)
+/// - Navegación a pantallas de registro y recuperación de contraseña
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -17,9 +29,16 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  /// Controla la visibilidad de la contraseña en el campo de texto
   bool _obscurePassword = true;
+  
+  /// Controlador para el campo de número de teléfono
   final TextEditingController _phoneNumberController = TextEditingController();
+  
+  /// Controlador para el campo de contraseña
   final TextEditingController _passwordController = TextEditingController();
+  
+  /// Clave global para validación del formulario
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -27,7 +46,14 @@ class _LoginScreenState extends State<LoginScreen> {
     _phoneNumberController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }  Future<void> _handleLogin() async {
+  }
+
+  /// Maneja el proceso de inicio de sesión.
+  /// 
+  /// Valida el formulario, realiza la autenticación a través del [AuthProvider]
+  /// y maneja la navegación según el resultado. Si hay errores específicos de
+  /// estado de usuario, muestra el widget correspondiente.
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -50,10 +76,14 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: Colors.red,
           ),
         );
-      }
-    }
+      }    }
   }
 
+  /// Muestra un diálogo modal con información sobre el estado del usuario.
+  /// 
+  /// [userStatus] determina qué tipo de mensaje y acciones mostrar.
+  /// Para usuarios pendientes de verificación, permite navegar a la pantalla
+  /// de verificación. Para usuarios rechazados, permite contactar soporte.
   void _showUserStatusDialog(UserStatus userStatus) {
     showDialog(
       context: context,
@@ -73,9 +103,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   }
                 : null,
             onContactSupport: userStatus == UserStatus.rejected
-                ? () {
+                                ? () {
                     Navigator.of(context).pop();
                     // TODO: Implementar contacto con soporte
+                    // - Integrar con sistema de tickets/helpdesk
+                    // - Opción de email directo o chat en vivo
+                    // - Formulario de contacto con categorías predefinidas
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Funcionalidad de soporte en desarrollo'),
@@ -89,10 +122,12 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
   }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(      body: Stack(
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      body: Stack(
         children: [
           // Background with gradient and blur effect
           Container(
@@ -113,45 +148,54 @@ class _LoginScreenState extends State<LoginScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
           ),
           // Blur effect
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
             child: Container(),
-          ),
-          // Main content
-          SafeArea(
+          ),          // Main content
+          Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top,
+              bottom: MediaQuery.of(context).padding.bottom,
+            ),
             child: SingleChildScrollView(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 393),
-                padding: const EdgeInsets.all(24),
-                margin: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width > 393
-                      ? (MediaQuery.of(context).size.width - 393) / 2
-                      : 0,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - 
+                            MediaQuery.of(context).padding.top - 
+                            MediaQuery.of(context).padding.bottom,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 32),
-                    // Header section
-                    Column(
-                      children: [
-                        Text(
-                          'Inicia sesión en tu cuenta',
-                          style: AppTextStyles.heading,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Ingresa tu email y contraseña para iniciar sesión',
-                          style: AppTextStyles.subtitle,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                child: IntrinsicHeight(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 393),
+                    padding: const EdgeInsets.all(24),
+                    margin: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width > 393
+                          ? (MediaQuery.of(context).size.width - 393) / 2
+                          : 0,
                     ),
-                    const SizedBox(height: 32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Header section
+                        Column(
+                          children: [
+                            Text(
+                              'Inicia sesión en tu cuenta',
+                              style: AppTextStyles.heading,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Ingresa tu telefono y contraseña para iniciar sesión',
+                              style: AppTextStyles.subtitle,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
                     // Form container
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -160,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 4,
                           ),
                         ],
@@ -169,11 +213,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         key: _formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            CustomTextField(
+                          children: [                            CustomTextField(
                               label: 'Número de telefono',
                               controller: _phoneNumberController,
                               hintText: '+56912345678',
+                              keyboardType: TextInputType.phone,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Por favor ingresa tu número de telefono';
@@ -241,10 +285,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                 );
                               },
-                            ),
-                            const SizedBox(height: 24),
+                            ),                            const SizedBox(height: 16), // Reducido de 24 a 16
                             Align(
-                              alignment: Alignment.centerRight,
+                              alignment: Alignment.center, // Centrado en lugar de centerRight
                               child: TextButton(
                                 onPressed: () {
                                   context.go('/recover-password');
@@ -253,17 +296,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                   '¿Has olvidado la contraseña?',
                                   style: AppTextStyles.linkText,
                                 ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),                            Row(
+                              ),                            ),
+                            const SizedBox(height: 8), // Reducido de 16 a 8
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
                                   '¿No tienes una cuenta?',
                                   style: AppTextStyles.smallText,
                                 ),
-                                TextButton(
-                                  onPressed: () {
+                                TextButton(onPressed: () {
                                     context.go('/register');
                                   },
                                   child: Text(
@@ -277,7 +319,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),

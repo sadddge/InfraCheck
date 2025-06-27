@@ -11,6 +11,8 @@ services:
       - ./backend/.env
     depends_on:
       - db
+    volumes:
+      - ./backend/config/infracheck-service-key.json:/usr/src/app/config/infracheck-service-key.json:ro
 
   db:
     image: postgres:15

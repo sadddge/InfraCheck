@@ -1,4 +1,6 @@
+import { Injectable, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { invalidResetToken } from 'src/common/helpers/exception.helper';
 
 /**
  * @class JwtResetGuard
@@ -38,4 +40,25 @@ import { AuthGuard } from '@nestjs/passport';
  *
  * @since 1.0.0
  */
-export class JwtResetGuard extends AuthGuard('jwt-reset') {}
+@Injectable()
+export class JwtResetGuard extends AuthGuard('jwt-reset') {
+    private readonly logger = new Logger(JwtResetGuard.name);
+
+    /**
+     * Handles the authentication result from the JWT reset strategy.
+     * Provides enhanced error handling and logging for reset token validation.
+     *
+     * @param err - Authentication error, if any
+     * @param user - Authenticated user object from reset token
+     * @returns {unknown} Validated user object
+     * @throws {AppException} When reset token validation fails (AUTH008)
+     */
+    handleRequest<TUser = unknown>(err: unknown, user: unknown): TUser {
+        if (err || !user) {
+            const errorMessage = err instanceof Error ? err.message : 'User not found';
+            this.logger.warn(`Reset token validation failed: ${errorMessage}`);
+            throw err ?? invalidResetToken();
+        }
+        return user as TUser;
+    }
+}

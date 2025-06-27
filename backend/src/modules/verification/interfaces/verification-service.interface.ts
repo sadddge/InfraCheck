@@ -40,8 +40,8 @@ export interface IVerificationService {
      * @async
      * @param {string} phoneNumber - Phone number in E.164 format to receive the code
      * @returns {Promise<void>} Resolves when SMS is sent successfully
-     * @throws {BadRequestException} When phone number format is invalid
-     * @throws {InternalServerErrorException} When SMS delivery fails
+     * @throws {AppException} VER001 - When SMS delivery fails
+     * @throws {AppException} VER003 - When phone number format is invalid
      *
      * @example
      * ```typescript
@@ -57,7 +57,7 @@ export interface IVerificationService {
      * @param {string} phoneNumber - Phone number that received the verification code
      * @param {string} code - 6-digit verification code to validate
      * @returns {Promise<void>} Resolves when verification is successful
-     * @throws {BadRequestException} When verification code is invalid or expired
+     * @throws {AppException} AUTH010 - When verification code is invalid or expired
      *
      * @example
      * ```typescript

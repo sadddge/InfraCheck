@@ -6,7 +6,21 @@ import '../../../shared/theme/colors.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
 
+/// Pantalla de verificación de código de registro para InfraCheck.
+/// 
+/// Permite a los nuevos usuarios verificar su número de teléfono ingresando
+/// el código de 6 dígitos enviado por SMS durante el proceso de registro.
+/// Una vez verificado exitosamente, completa el registro del usuario.
+/// 
+/// Características principales:
+/// - Verificación de código SMS de 6 dígitos
+/// - Validación del código con el backend
+/// - Manejo de errores de verificación
+/// - Finalización del proceso de registro
+/// - Interfaz moderna con efectos visuales
+/// - Navegación automática tras verificación exitosa
 class VerifyRegisterCodeScreen extends StatefulWidget {
+  /// Número de teléfono del usuario al que se envió el código
   final String phoneNumber;
 
   const VerifyRegisterCodeScreen({
@@ -38,31 +52,34 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
       final success = await authProvider.verifyRegisterCode(
         widget.phoneNumber,
         _codeController.text.trim(),
-      );
-
-      setState(() {
+      );      setState(() {
         _isLoading = false;
       });
 
       if (success) {
-        // Mostrar mensaje de éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Código verificado exitosamente'),
-            backgroundColor: Colors.green,
-          ),
-        );        // Navegar a la pantalla principal usando Go Router esto modificar
-        context.go('/home');
+        if (mounted) {
+          // Mostrar mensaje de éxito
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Código verificado exitosamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navegar a la pantalla de pending approval
+          context.go('/pending-approval');
+        }
       } else {
         // Mostrar mensaje de error del provider
         final errorMessage = authProvider.errorMessage ?? 'Error al verificar el código';
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
+          if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -91,7 +108,7 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
           ),
           // Blur effect
           BackdropFilter(
@@ -146,7 +163,7 @@ class _VerifyRegisterCodeScreenState extends State<VerifyRegisterCodeScreen> {
                               Shadow(
                                 offset: const Offset(0, 2),
                                 blurRadius: 4,
-                                color: const Color(0xFF000000).withOpacity(0.25),
+                                color: const Color(0xFF000000).withValues(alpha: 0.25),
                               ),
                             ],
                           ),

@@ -1,28 +1,121 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
+# Configuración del analizador estático de Dart para InfraCheck Frontend
 #
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+# Este archivo configura las reglas de linting y análisis estático que se
+# aplican al código Dart/Flutter para mantener la calidad y consistencia.
+#
+# Para ejecutar el análisis: flutter analyze
+# Para ver todas las reglas disponibles: https://dart.dev/lints
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
-  rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+analyzer:
+  # Configuración del analizador
+  strong-mode:
+    # Deshabilitar casts y dynamic implícitos para mayor seguridad de tipos
+    implicit-casts: false
+    implicit-dynamic: false
+  
+  # Excluir archivos generados del análisis
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/generated_plugin_registrant.dart"
+    - "build/**"
+    - "ios/**"
+    - "android/**"
+    - "web/**"
+    - "macos/**"
+    - "windows/**"
+    - "linux/**"
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+linter:
+  rules:
+    # === REGLAS DE ESTILO ===
+    # Preferir comillas simples para strings
+    prefer_single_quotes: true
+    
+    # Usar const constructors cuando sea posible
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    
+    # Usar final para variables que no cambian
+    prefer_final_fields: true
+    prefer_final_locals: true
+    prefer_final_in_for_each: true
+    
+    # === REGLAS DE BUENAS PRÁCTICAS ===
+    # Evitar print() en producción
+    avoid_print: true
+    
+    # Usar tipos explícitos cuando sea beneficioso
+    always_specify_types: false  # Dart infiere tipos bien
+    type_annotate_public_apis: true
+    
+    # Manejo de null safety
+    avoid_null_checks_in_equality_operators: true
+    prefer_null_aware_operators: true
+    
+    # === REGLAS DE LEGIBILIDAD ===
+    # Ordenar imports y exports
+    directives_ordering: true
+    
+    # Usar nombres descriptivos
+    non_constant_identifier_names: true
+    constant_identifier_names: true
+      # Evitar duplicación
+    avoid_redundant_argument_values: true
+    
+    # === REGLAS DE PERFORMANCE ===
+    # Evitar operaciones costosas innecesarias
+    avoid_slow_async_io: true
+    prefer_spread_collections: true
+    prefer_for_elements_to_map_fromIterable: true
+    
+    # === REGLAS ESPECÍFICAS DE FLUTTER ===
+    # Usar key en widgets cuando sea apropiado
+    use_key_in_widget_constructors: true
+    
+    # Evitar widgets innecesarios
+    avoid_unnecessary_containers: true
+    sized_box_for_whitespace: true
+    
+    # Usar build context apropiadamente
+    use_build_context_synchronously: true
+    
+    # === REGLAS DE DOCUMENTACIÓN ===
+    # Documentar APIs públicas
+    public_member_api_docs: false  # Puede ser muy estricto para desarrollo inicial
+    
+    # Usar doc comments apropiados
+    slash_for_doc_comments: true
+    
+    # === REGLAS DE SEGURIDAD ===
+    # Evitar patrones inseguros
+    avoid_web_libraries_in_flutter: true
+    
+    # === REGLAS ADICIONALES RECOMENDADAS ===
+    # Organización de código
+    sort_constructors_first: true
+    sort_unnamed_constructors_first: true
+    
+    # Claridad en condiciones
+    avoid_bool_literals_in_conditional_expressions: true
+    prefer_is_empty: true
+    prefer_is_not_empty: true
+    
+    # Manejo de colecciones
+    prefer_collection_literals: true
+    prefer_iterable_whereType: true
+    
+    # Funciones y métodos
+    prefer_function_declarations_over_variables: true
+    unnecessary_lambdas: true
+    
+    # === REGLAS DESHABILITADAS ===
+    # Estas reglas pueden ser demasiado restrictivas para este proyecto
+    
+    # avoid_classes_with_only_static_members: false
+    # prefer_expression_function_bodies: false  # A veces el cuerpo completo es más claro
+    # lines_longer_than_80_chars: false  # Dart format maneja esto

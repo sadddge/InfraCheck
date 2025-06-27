@@ -1,8 +1,10 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { invalidRefreshToken } from 'src/common/helpers/exception.helper';
+import { jwtConfig } from '../config/jwt.config';
 import { AUTH_SERVICE, type IAuthService } from '../interfaces/auth-service.interface';
 
 /**
@@ -54,13 +56,13 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
      * ```
      */
     constructor(
-        private readonly config: ConfigService,
+        config: ConfigService,
         @Inject(AUTH_SERVICE)
         private readonly authService: IAuthService,
     ) {
         super({
             jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
-            secretOrKey: config.getOrThrow('JWT_REFRESH_SECRET'),
+            secretOrKey: jwtConfig(config).refreshSecret,
             passReqToCallback: true,
         });
     }
@@ -77,7 +79,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
      * @param {Object} payload - Decoded JWT payload containing user information
      * @param {number} payload.sub - User ID from JWT subject claim
      * @returns {Promise<User>} The authenticated user object
-     * @throws {UnauthorizedException} When refresh token is invalid, expired, or user not found
+     * @throws {AppException} When refresh token is invalid, expired, or user not found (AUTH007)
      *
      * @example
      * ```typescript
@@ -98,7 +100,9 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
         const refreshToken: string = req.body.refreshToken;
         const userId: number = payload.sub;
         const user = await this.authService.getUserIfRefreshTokenMatches(refreshToken, userId);
-        if (!user) throw new UnauthorizedException();
+        if (!user) {
+            invalidRefreshToken();
+        }
         return user;
     }
 }

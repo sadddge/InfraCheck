@@ -28,6 +28,14 @@ import { VerifyRecoverPasswordDto } from '../dto/verify-recover-password.dto';
 import { JwtRefreshGuard } from '../guards/jwt-refresh.guard';
 import { JwtResetGuard } from '../guards/jwt-reset.guard';
 import { AUTH_SERVICE, type IAuthService } from '../interfaces/auth-service.interface';
+import {
+    type IPasswordRecoveryService,
+    PASSWORD_RECOVERY_SERVICE,
+} from '../interfaces/password-recovery-service.interface';
+import {
+    type IUserRegistrationService,
+    USER_REGISTRATION_SERVICE,
+} from '../interfaces/user-registration-service.interface';
 
 /**
  * Authentication controller handling user registration, login, password recovery, and token management.
@@ -62,6 +70,10 @@ export class AuthController {
     constructor(
         @Inject(AUTH_SERVICE)
         private readonly authService: IAuthService,
+        @Inject(USER_REGISTRATION_SERVICE)
+        private readonly userRegistrationService: IUserRegistrationService,
+        @Inject(PASSWORD_RECOVERY_SERVICE)
+        private readonly passwordRecoveryService: IPasswordRecoveryService,
     ) {}
 
     /**
@@ -93,7 +105,7 @@ export class AuthController {
         type: LoginResponseDto,
     })
     @ApiUnauthorizedResponse({
-        description: 'Invalid credentials provided.',
+        description: 'Invalid credentials provided (AUTH001).',
     })
     async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
         return await this.authService.login(dto);
@@ -105,11 +117,10 @@ export class AuthController {
      * @description Refreshes an expired access token using a valid refresh token.
      * Validates the refresh token and issues new access and refresh tokens,
      * maintaining user session continuity without requiring re-authentication.
-     *
      * @param {RefreshTokenDto} dto - Refresh token data transfer object
      * @param {string} dto.refreshToken - Valid refresh token for token renewal
      * @returns {Promise<LoginResponseDto>} New authentication tokens and user data
-     * @throws {UnauthorizedException} When refresh token is invalid, expired, or revoked
+     * @throws {AppException} When refresh token is invalid, expired, or revoked (AUTH007)
      *
      * @example
      * ```typescript
@@ -140,10 +151,10 @@ export class AuthController {
         type: LoginResponseDto,
     })
     @ApiUnauthorizedResponse({
-        description: 'Invalid or expired refresh token.',
+        description: 'Invalid or expired refresh token (AUTH007).',
     })
-    async refresh(@Body() dto: RefreshTokenDto): Promise<LoginResponseDto> {
-        return await this.authService.refreshToken(dto.refreshToken);
+    async refresh(@Body() dto: RefreshTokenDto, @Request() req): Promise<LoginResponseDto> {
+        return await this.authService.refreshToken(dto.refreshToken, req.user.id);
     }
 
     /**
@@ -158,7 +169,7 @@ export class AuthController {
      * @param {string} dto.password - User's chosen password
      * @param {string} dto.username - User's chosen username
      * @returns {Promise<RegisterResponseDto>} Registration response with verification instructions
-     * @throws {BadRequestException} When phone number is already registered or validation fails
+     * @throws {AppException} When phone number is already registered or validation fails (USR002, VAL001-VAL003)
      *
      * @example
      * ```typescript
@@ -189,10 +200,10 @@ export class AuthController {
         type: RegisterResponseDto,
     })
     @ApiBadRequestResponse({
-        description: 'Invalid registration data provided.',
+        description: 'Invalid registration data provided (VAL001-VAL003, USR002).',
     })
     async register(@Body() dto: RegisterDto): Promise<RegisterResponseDto> {
-        return await this.authService.register(dto);
+        return await this.userRegistrationService.register(dto);
     }
 
     /**
@@ -202,10 +213,9 @@ export class AuthController {
      * Validates the verification code and activates the user account,
      * completing the registration process and enabling user login.
      *
-     * @param {string} phoneNumber - Phone number that received the verification code
-     * @param {string} code - 6-digit verification code from SMS
+     * @param {string} phoneNumber - Phone number that received the verification code     * @param {string} code - 6-digit verification code from SMS
      * @returns {Promise<void>} Resolves when verification is successful
-     * @throws {BadRequestException} When verification code is invalid or expired
+     * @throws {AppException} When verification code is invalid or expired (VER002)
      *
      * @example
      * ```typescript
@@ -226,16 +236,16 @@ export class AuthController {
         description: 'Registration code verified successfully.',
     })
     @ApiBadRequestResponse({
-        description: 'Invalid or expired registration code.',
+        description: 'Invalid or expired registration code (VER002).',
     })
     @ApiInternalServerErrorResponse({
-        description: 'An error occurred while verifying the registration code.',
+        description: 'An error occurred while verifying the registration code (VER001, SRV001).',
     })
     async verifyRegisterCode(
         @Query('phoneNumber') phoneNumber: string,
         @Query('code') code: string,
     ): Promise<void> {
-        await this.authService.verifyRegisterCode(phoneNumber, code);
+        await this.userRegistrationService.verifyRegisterCode(phoneNumber, code);
     }
 
     /**
@@ -245,10 +255,9 @@ export class AuthController {
      * Validates the phone number exists in the system and sends a verification
      * code that can be used to reset the user's password.
      *
-     * @param {RecoverPasswordDto} recoverPasswordDto - Password recovery request data
-     * @param {string} recoverPasswordDto.phoneNumber - Registered phone number for password reset
+     * @param {RecoverPasswordDto} recoverPasswordDto - Password recovery request data     * @param {string} recoverPasswordDto.phoneNumber - Registered phone number for password reset
      * @returns {Promise<string>} Success message confirming code was sent
-     * @throws {BadRequestException} When phone number is not registered
+     * @throws {AppException} When phone number is not registered (USR001, VER003)
      *
      * @example
      * ```typescript
@@ -273,10 +282,10 @@ export class AuthController {
         description: 'Password recovery code sent successfully.',
     })
     @ApiBadRequestResponse({
-        description: 'Invalid phone number provided.',
+        description: 'Invalid phone number provided (VER003).',
     })
     async sendResetPasswordCode(@Body() recoverPasswordDto: RecoverPasswordDto): Promise<string> {
-        await this.authService.sendResetPasswordCode(recoverPasswordDto.phoneNumber);
+        await this.passwordRecoveryService.sendResetPasswordCode(recoverPasswordDto.phoneNumber);
         return 'Password recovery code sent successfully.';
     }
 
@@ -288,10 +297,9 @@ export class AuthController {
      * can be used to reset the user's password within a limited time window.
      *
      * @param {VerifyRecoverPasswordDto} verifyRecoverPasswordDto - Recovery verification data
-     * @param {string} verifyRecoverPasswordDto.phoneNumber - Phone number for password reset
-     * @param {string} verifyRecoverPasswordDto.code - Verification code from SMS
+     * @param {string} verifyRecoverPasswordDto.phoneNumber - Phone number for password reset     * @param {string} verifyRecoverPasswordDto.code - Verification code from SMS
      * @returns {Promise<unknown>} Reset token for password change authorization
-     * @throws {BadRequestException} When verification code is invalid or expired
+     * @throws {AppException} When verification code is invalid or expired (AUTH009)
      *
      * @example
      * ```typescript
@@ -318,12 +326,12 @@ export class AuthController {
         description: 'Password recovery code verified successfully.',
     })
     @ApiBadRequestResponse({
-        description: 'Invalid or expired recovery code.',
+        description: 'Invalid or expired recovery code (AUTH009).',
     })
     async verifyRecoverPasswordCode(
         @Body() verifyRecoverPasswordDto: VerifyRecoverPasswordDto,
     ): Promise<unknown> {
-        return await this.authService.generateResetPasswordToken(
+        return await this.passwordRecoveryService.generateResetPasswordToken(
             verifyRecoverPasswordDto.phoneNumber,
             verifyRecoverPasswordDto.code,
         );
@@ -340,10 +348,9 @@ export class AuthController {
      * @param {string} resetPasswordDto.token - Valid reset token from recovery flow
      * @param {string} resetPasswordDto.newPassword - New password for the user account
      * @param {Request} req - Express request object populated by JwtResetGuard
-     * @param {Object} req.user - User information extracted from reset token
-     * @param {number} req.user.id - User ID for password reset
+     * @param {Object} req.user - User information extracted from reset token     * @param {number} req.user.id - User ID for password reset
      * @returns {Promise<string>} Success message confirming password reset
-     * @throws {BadRequestException} When reset token is invalid or password validation fails
+     * @throws {AppException} When reset token is invalid or password validation fails (AUTH008, VAL001-VAL003)
      *
      * @example
      * ```typescript
@@ -370,12 +377,15 @@ export class AuthController {
         type: String,
     })
     @ApiBadRequestResponse({
-        description: 'Invalid token or password provided.',
+        description: 'Invalid token or password provided (AUTH008, VAL001-VAL003).',
     })
     async resetPassword(
         @Body() resetPasswordDto: ResetPasswordDto,
         @Request() req,
     ): Promise<string> {
-        return await this.authService.resetPassword(req.user.id, resetPasswordDto.newPassword);
+        return await this.passwordRecoveryService.resetPassword(
+            req.user.id,
+            resetPasswordDto.newPassword,
+        );
     }
 }

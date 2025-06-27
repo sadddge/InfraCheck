@@ -3,15 +3,38 @@ import 'package:equatable/equatable.dart';
 
 part 'user_model.g.dart';
 
+/// Modelo que representa un usuario en el sistema InfraCheck.
+/// 
+/// Contiene toda la información de un usuario registrado incluyendo
+/// datos de identificación, rol asignado, estado de cuenta y 
+/// metadatos de auditoría.
+/// 
+/// Incluye manejo robusto de deserialización para manejar posibles
+/// inconsistencias en las respuestas del backend.
 @JsonSerializable()
 class User extends Equatable {
+  /// Identificador único del usuario en la base de datos
   final int id;
+  
+  /// Número de teléfono del usuario (usado como username)
   final String phoneNumber;
+  
+  /// Nombre del usuario
   final String name;
+  
+  /// Apellido del usuario (opcional)
   final String? lastName;
+  
+  /// Rol asignado al usuario (ej: 'ADMIN', 'USER', 'TECH')
   final String role;
+  
+  /// Estado actual de la cuenta del usuario (opcional)
   final String? status;
+  
+  /// Fecha y hora de creación de la cuenta
   final DateTime? createdAt;
+  
+  /// Fecha y hora de última actualización de los datos
   final DateTime? updatedAt;
 
   const User({
@@ -24,6 +47,11 @@ class User extends Equatable {
     this.createdAt,
     this.updatedAt,
   });
+
+  /// Crea una instancia de [User] desde un mapa JSON.
+  /// 
+  /// Incluye manejo de errores con fallback manual para manejar
+  /// inconsistencias potenciales en las respuestas del backend.
   factory User.fromJson(Map<String, dynamic> json) {
     try {
       return _$UserFromJson(json);
@@ -42,10 +70,16 @@ class User extends Equatable {
             ? DateTime.parse(json['updatedAt'] as String) 
             : null,
       );
-    }
-  }
+    }  }
   
+  /// Convierte la instancia de [User] a un mapa JSON.
   Map<String, dynamic> toJson() => _$UserToJson(this);
+
+  /// Crea una nueva instancia de [User] con valores modificados.
+  /// 
+  /// Permite actualizar campos específicos manteniendo los valores
+  /// existentes para los campos no especificados. Útil para actualizaciones
+  /// parciales de datos del usuario.
   User copyWith({
     int? id,
     String? phoneNumber,

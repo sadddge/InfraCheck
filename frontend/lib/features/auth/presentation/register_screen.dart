@@ -7,6 +7,19 @@ import '../../../shared/theme/text_styles.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'widgets/custom_text_field.dart';
 
+/// Pantalla de registro de nuevos usuarios para InfraCheck.
+/// 
+/// Permite a los nuevos usuarios crear una cuenta proporcionando sus datos
+/// personales y credenciales. Incluye validación de formularios, verificación
+/// de contraseñas y navegación automática al proceso de verificación por SMS.
+/// 
+/// Características principales:
+/// - Formulario completo de registro con validación
+/// - Verificación de coincidencia de contraseñas
+/// - Integración con el sistema de autenticación
+/// - Envío automático de código de verificación por SMS
+/// - Interfaz moderna con efectos visuales
+/// - Navegación a pantalla de verificación tras registro exitoso
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
 
@@ -15,13 +28,28 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  /// Controla la visibilidad de la contraseña en el primer campo
   bool _obscurePassword = true;
+  
+  /// Controla la visibilidad de la contraseña en el campo de confirmación
   bool _obscureConfirmPassword = true;
+  
+  /// Controlador para el campo de nombre
   final TextEditingController _nameController = TextEditingController();
+  
+  /// Controlador para el campo de apellido
   final TextEditingController _lastNameController = TextEditingController();
+  
+  /// Controlador para el campo de número de teléfono
   final TextEditingController _phoneNumberController = TextEditingController();
+  
+  /// Controlador para el campo de contraseña
   final TextEditingController _passwordController = TextEditingController();
+  
+  /// Controlador para el campo de confirmación de contraseña
   final TextEditingController _confirmPasswordController = TextEditingController();
+  
+  /// Clave global para validación del formulario
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -33,6 +61,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
+
+  /// Maneja el proceso de registro de nuevo usuario.
+  /// 
+  /// Valida el formulario, verifica que las contraseñas coincidan,
+  /// realiza el registro a través del [AuthProvider] y navega a la
+  /// pantalla de verificación de código SMS si es exitoso.
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -72,10 +106,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(      body: Stack(
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      body: Stack(
         children: [
           // Background with gradient and blur effect
           Container(
@@ -96,15 +132,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
           ),
           // Blur effect
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
             child: Container(),
-          ),
-          // Main content
-          SafeArea(
+          ),          // Main content
+          Padding(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top,
+              bottom: MediaQuery.of(context).padding.bottom,
+            ),
             child: SingleChildScrollView(
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 393),
@@ -143,7 +182,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 4,
                           ),
                         ],
@@ -182,11 +221,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 16),
-                            CustomTextField(
+                            const SizedBox(height: 16),                            CustomTextField(
                               label: 'Número de telefono',
                               controller: _phoneNumberController,
                               hintText: '+56912345678',
+                              keyboardType: TextInputType.phone,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Por favor ingresa tu número de telefono';

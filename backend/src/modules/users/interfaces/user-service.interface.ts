@@ -1,3 +1,4 @@
+import { IPaginationOptions, Pagination } from 'nestjs-typeorm-paginate';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { User } from 'src/database/entities/user.entity';
 import { RegisterDto } from 'src/modules/auth/dto/register.dto';
@@ -33,22 +34,14 @@ export const USER_SERVICE = 'USER_SERVICE';
  */
 export interface IUserService {
     /**
-     * Retrieves all users from the system with optional status filtering.
+     * Retrieves paginated users from the system with optional status filtering.
      * Supports administrative user listing with status-based filtering.
      *
      * @param status Optional user status filter to limit results
-     * @returns Array of user data transfer objects
-     *
-     * @example
-     * ```typescript
-     * // Get all users
-     * const allUsers = await userService.findAll();
-     *
-     * // Get only active users
-     * const activeUsers = await userService.findAll(UserStatus.ACTIVE);
-     * ```
+     * @param options Pagination options (page, limit)
+     * @returns Paginated list of user data transfer objects
      */
-    findAll(status?: UserStatus): Promise<UserDto[]>;
+    findAll(options: IPaginationOptions, status?: UserStatus): Promise<Pagination<UserDto>>;
 
     /**
      * Finds a user by their unique identifier.
@@ -56,7 +49,7 @@ export interface IUserService {
      *
      * @param id Unique user identifier
      * @returns User data transfer object
-     * @throws {NotFoundException} When user with specified ID does not exist
+     * @throws {AppException} USR001 - When user with specified ID does not exist
      *
      * @example
      * ```typescript
@@ -72,7 +65,7 @@ export interface IUserService {
      *
      * @param phoneNumber Phone number in E.164 format
      * @returns User data transfer object
-     * @throws {NotFoundException} When user with phone number does not exist
+     * @throws {AppException} USR001 - When user with phone number does not exist
      *
      * @example
      * ```typescript
@@ -89,8 +82,8 @@ export interface IUserService {
      * @param id User identifier to update
      * @param updateUserDto Data transfer object containing updated user information
      * @returns Updated user data transfer object
-     * @throws {NotFoundException} When user with specified ID does not exist
-     * @throws {ConflictException} When updated data conflicts with existing records
+     * @throws {AppException} USR001 - When user with specified ID does not exist
+     * @throws {AppException} USR002 - When updated data conflicts with existing records
      *
      * @example
      * ```typescript
@@ -101,7 +94,6 @@ export interface IUserService {
      * ```
      */
     update(id: number, updateUserDto: UpdateUserDto): Promise<UserDto>;
-
     /**
      * Updates user status for administrative approval workflows.
      * Used by administrators to approve, reject, or modify user access.
@@ -109,8 +101,8 @@ export interface IUserService {
      * @param id User identifier to update
      * @param status New user status to apply
      * @returns Updated user data transfer object
-     * @throws {NotFoundException} When user with specified ID does not exist
-     * @throws {ForbiddenException} When status transition is not allowed
+     * @throws {AppException} USR001 - When user with specified ID does not exist
+     * @throws {AppException} GEN002 - When status transition is not allowed
      *
      * @example
      * ```typescript
@@ -129,8 +121,8 @@ export interface IUserService {
      *
      * @param user Registration data including personal information and credentials
      * @returns Created user data transfer object
-     * @throws {ConflictException} When phone number or email already exists
-     * @throws {BadRequestException} When registration data is invalid
+     * @throws {AppException} USR002 - When phone number or email already exists
+     * @throws {AppException} GEN002 - When registration data is invalid
      *
      * @example
      * ```typescript
@@ -151,8 +143,8 @@ export interface IUserService {
      *
      * @param user Registration data including administrative credentials
      * @returns Created admin user data transfer object
-     * @throws {ConflictException} When phone number or email already exists
-     * @throws {ForbiddenException} When current user lacks admin creation permissions
+     * @throws {AppException} USR002 - When phone number or email already exists
+     * @throws {AppException} GEN002 - When current user lacks admin creation permissions
      *
      * @example
      * ```typescript
@@ -173,8 +165,8 @@ export interface IUserService {
      *
      * @param id User identifier to remove
      * @returns Resolves when user is successfully deleted
-     * @throws {NotFoundException} When user with specified ID does not exist
-     * @throws {ForbiddenException} When user deletion is not allowed
+     * @throws {AppException} USR001 - When user with specified ID does not exist
+     * @throws {AppException} GEN002 - When user deletion is not allowed
      *
      * @example
      * ```typescript
@@ -190,7 +182,7 @@ export interface IUserService {
      *
      * @param id User identifier to retrieve
      * @returns Complete user entity including password hash
-     * @throws {NotFoundException} When user with specified ID does not exist
+     * @throws {AppException} USR001 - When user with specified ID does not exist
      *
      * @example
      * ```typescript
@@ -206,7 +198,7 @@ export interface IUserService {
      *
      * @param phoneNumber Phone number in E.164 format
      * @returns Complete user entity including password hash
-     * @throws {NotFoundException} When user with phone number does not exist
+     * @throws {AppException} USR001 - When user with phone number does not exist
      *
      * @example
      * ```typescript

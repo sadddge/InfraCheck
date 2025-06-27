@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
+import { FollowsModule } from '../reports/follows/follows.module';
+import { UserFollowsController } from './controllers/user-follows.controller';
 import { UsersController } from './controllers/users.controller';
 import { USER_SERVICE } from './interfaces/user-service.interface';
 import { UsersService } from './services/users.service';
@@ -35,9 +37,9 @@ import { UsersService } from './services/users.service';
  * @since 1.0.0
  */
 @Module({
-    imports: [TypeOrmModule.forFeature([User])],
+    imports: [TypeOrmModule.forFeature([User]), FollowsModule],
     exports: [TypeOrmModule, USER_SERVICE],
-    controllers: [UsersController],
+    controllers: [UsersController, UserFollowsController],
     providers: [
         {
             provide: USER_SERVICE,

@@ -23,6 +23,7 @@
         "@aws-sdk/client-s3": "^3.823.0",
         "@google-cloud/vision": "^5.1.0",
         "@nestjs/axios": "^4.0.0",
+        "@nestjs/cache-manager": "^3.0.1",
         "@nestjs/common": "^11.0.1",
         "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.0.1",
@@ -37,17 +38,20 @@
         "@nestjs/websockets": "^11.1.1",
         "axios": "^1.9.0",
         "bcrypt": "^6.0.0",
+        "cache-manager": "^7.0.0",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.2",
         "compression": "^1.8.0",
         "helmet": "^8.1.0",
+        "nestjs-typeorm-paginate": "^4.1.0",
         "passport": "^0.7.0",
         "passport-jwt": "^4.0.1",
         "passport-local": "^1.0.0",
         "pg": "^8.16.0",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.1",
-        "sharp": "^0.32.1",
+        "sharp": "^0.34.2",
+        "socket.io": "^4.8.1",
         "twilio": "^5.6.1",
         "typeorm": "^0.3.24"
     },
@@ -81,14 +85,38 @@
         "typescript-eslint": "^8.20.0"
     },
     "jest": {
-        "moduleFileExtensions": ["js", "json", "ts"],
+        "moduleFileExtensions": [
+            "js",
+            "json",
+            "ts"
+        ],
         "rootDir": "src",
         "testRegex": ".*\\.spec\\.ts$",
         "transform": {
             "^.+\\.(t|j)s$": "ts-jest"
         },
-        "collectCoverageFrom": ["**/*.(t|j)s"],
+        "testPathIgnorePatterns": [
+            "<rootDir>/node_modules/",
+            "<rootDir>/dist/",
+            "<rootDir>/test/e2e/"
+        ],
+        "collectCoverageFrom": [
+            "**/*.(t|j)s"
+        ],
+        "coveragePathIgnorePatterns": [
+            "/node_modules/",
+            "/dist/",
+            "/main\\.ts$",
+            "/.*\\.module\\.ts$",
+            "/.*\\.dto\\.ts$",
+            "/.*\\.entity\\.ts$",
+            "/.*\\.interface\\.ts$",
+            "/.*\\.d\\.ts$"
+        ],
         "coverageDirectory": "../coverage",
-        "testEnvironment": "node"
+        "testEnvironment": "node",
+        "moduleNameMapper": {
+            "^src/(.*)$": "<rootDir>/$1"
+        }
     }
 }

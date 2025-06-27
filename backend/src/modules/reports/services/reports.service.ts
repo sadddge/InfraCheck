@@ -1,32 +1,63 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
+import { ReportChangeType } from 'src/common/enums/report-change-type.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
+import { reportNotFound } from 'src/common/helpers/exception.helper';
+import { ReportChange } from 'src/database/entities/report-change.entity';
 import { Report } from 'src/database/entities/report.entity';
 import {
     IUploadService,
     UPLOAD_SERVICE,
 } from 'src/modules/upload/interfaces/upload-service.interface';
-import { Repository } from 'typeorm';
+import { Equal, Repository } from 'typeorm';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { ReportChangeDto } from '../dto/report-change.dto';
 import { ReportDto } from '../dto/report.dto';
 import { IReportsService } from '../interfaces/reports-service.interface';
 
+/**
+ * Reports service providing CRUD operations and business logic for infrastructure reports.
+ * Handles report creation with image uploads, state management, and data retrieval.
+ *
+ * Core functionality:
+ * - Report creation with geolocation and image processing
+ * - Report retrieval with filtering and relationships
+ * - Administrative state management workflow
+ * - Change history tracking and audit trail
+ *
+ * @example
+ * ```typescript
+ * const reportsService = new ReportsService(reportRepository, uploadService);
+ * const reports = await reportsService.findAll();
+ * const report = await reportsService.createReport(dto, files, userId);
+ * ```
+ */
 @Injectable()
 export class ReportsService implements IReportsService {
+    /**
+     * Creates a new ReportsService instance.
+     *
+     * @param reportRepository TypeORM repository for Report entity operations
+     * @param uploadService Service for handling image uploads and processing
+     */
     constructor(
+        @InjectRepository(ReportChange)
+        private readonly changeRepository: Repository<ReportChange>,
         @InjectRepository(Report)
         private readonly reportRepository: Repository<Report>,
         @Inject(UPLOAD_SERVICE)
         private readonly uploadService: IUploadService,
     ) {}
 
-    async findAll(): Promise<ReportDto[]> {
-        const reports = await this.reportRepository.find({
+    /** @inheritDoc */
+    async findAll(options: IPaginationOptions): Promise<Pagination<ReportDto>> {
+        const paginated = await paginate(this.reportRepository, options, {
             relations: ['creator', 'images'],
+            order: { createdAt: 'DESC' },
         });
 
-        return reports.map(report => ({
+        const items: ReportDto[] = paginated.items.map(report => ({
             id: report.id,
             title: report.title,
             description: report.description,
@@ -44,16 +75,19 @@ export class ReportsService implements IReportsService {
                 url: img.imageUrl,
             })),
         }));
+
+        return new Pagination(items, paginated.meta, paginated.links);
     }
 
+    /** @inheritDoc */
     async findById(id: number): Promise<ReportDto> {
         const report = await this.reportRepository.findOne({
-            where: { id },
+            where: { id: Equal(id) },
             relations: ['creator', 'images'],
         });
 
         if (!report) {
-            throw new NotFoundException(`Report with ID ${id} not found`);
+            reportNotFound();
         }
 
         return {
@@ -76,23 +110,45 @@ export class ReportsService implements IReportsService {
         };
     }
 
-    async findHistoryByReportId(reportId: number): Promise<ReportChangeDto[]> {
-        const report = await this.reportRepository.findOne({
-            where: { id: reportId },
-            relations: ['changes', 'changes.creator'],
+    /** @inheritDoc */
+    async findHistoryByReportId(
+        reportId: number,
+        options: IPaginationOptions,
+    ): Promise<Pagination<ReportChangeDto>> {
+        const exists = await this.reportRepository.findOne({
+            where: { id: Equal(reportId) },
         });
-        if (!report) {
-            throw new NotFoundException(`Report with ID ${reportId} not found`);
+        if (!exists) {
+            reportNotFound();
         }
-        return report.changes.map(change => ({
-            creatorId: change.creator.id,
+
+        const qb = this.changeRepository
+            .createQueryBuilder('change')
+            .innerJoin('change.report', 'report', 'report.id = :reportId', { reportId })
+            .innerJoinAndSelect('change.creator', 'creator')
+            .select([
+                'creator.id',
+                'change.id',
+                'change.changeType',
+                'change.from',
+                'change.to',
+                'change.createdAt',
+            ])
+            .orderBy('change.createdAt', 'DESC');
+
+        const paginated = await paginate<ReportChange>(qb, options);
+        const items: ReportChangeDto[] = paginated.items.map(change => ({
+            id: change.id,
             changeType: change.changeType,
             from: change.from,
             to: change.to,
             createdAt: change.createdAt,
+            creatorId: change.creator.id,
         }));
+        return new Pagination<ReportChangeDto>(items, paginated.meta, paginated.links);
     }
 
+    /** @inheritDoc */
     async createReport(
         dto: CreateReportDto,
         files: Express.Multer.File[],
@@ -119,8 +175,8 @@ export class ReportsService implements IReportsService {
             });
         }
 
-        const lat = this.getAvarage(imageRecords.map(img => img.latitude));
-        const lon = this.getAvarage(imageRecords.map(img => img.longitude));
+        const lat = this.getAverage(imageRecords.map(img => img.latitude));
+        const lon = this.getAverage(imageRecords.map(img => img.longitude));
 
         const report: Report = this.reportRepository.create({
             title: dto.title,
@@ -154,15 +210,30 @@ export class ReportsService implements IReportsService {
         return reportDto;
     }
 
-    async updateState(id: number, state: ReportState): Promise<ReportDto> {
+    /** @inheritDoc */
+    async updateState(id: number, creatorId: number, state: ReportState): Promise<ReportDto> {
         const report = await this.reportRepository.findOne({
-            where: { id },
+            where: { id: Equal(id) },
             relations: ['creator', 'images'],
         });
 
         if (!report) {
-            throw new NotFoundException(`Report with ID ${id} not found`);
+            reportNotFound();
         }
+
+        if (report.state === state) {
+            return this.findById(report.id);
+        }
+
+        const change = this.changeRepository.create({
+            report,
+            creator: { id: creatorId },
+            changeType: ReportChangeType.STATE,
+            from: report.state,
+            to: state,
+        });
+
+        await this.changeRepository.save(change);
 
         report.state = state;
         const updatedReport = await this.reportRepository.save(report);
@@ -170,7 +241,7 @@ export class ReportsService implements IReportsService {
         return this.findById(updatedReport.id);
     }
 
-    private getAvarage(values: number[]): number {
+    private getAverage(values: number[]): number {
         return values.reduce((acc, val) => acc + val, 0) / values.length;
     }
 }
