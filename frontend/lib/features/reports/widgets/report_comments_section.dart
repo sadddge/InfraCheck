@@ -36,7 +36,10 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
   @override
   void initState() {
     super.initState();
-    _comments = List.from(widget.comments);
+    // Ordenar comentarios iniciales por fecha más reciente primero
+    final sortedComments = List<Comment>.from(widget.comments);
+    sortedComments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    _comments = sortedComments;
     _loadComments();
   }
 
@@ -46,16 +49,20 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
     
     // Solo actualizar si cambió el reportId (cambio de reporte)
     if (oldWidget.reportId != widget.reportId) {
+      final sortedComments = List<Comment>.from(widget.comments);
+      sortedComments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       setState(() {
-        _comments = List.from(widget.comments);
+        _comments = sortedComments;
       });
       _loadComments();
     } 
     // Para el mismo reporte, confiar en el estado local optimista
     // y solo sincronizar en casos muy específicos (como carga inicial)
     else if (_comments.isEmpty && widget.comments.isNotEmpty) {
+      final sortedComments = List<Comment>.from(widget.comments);
+      sortedComments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       setState(() {
-        _comments = List.from(widget.comments);
+        _comments = sortedComments;
       });
     }
   }
@@ -104,17 +111,17 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
         );
 
         debugPrint('✨ Agregando comentario optimista con ID: ${optimisticComment.id}');
-        // Agregar optimistamente a la UI
+        // Agregar optimistamente a la UI AL PRINCIPIO (más reciente arriba)
         setState(() {
-          _comments = [..._comments, optimisticComment!];
+          _comments = [optimisticComment!, ..._comments];
         });
         debugPrint('📝 Estado local actualizado. Total comentarios: ${_comments.length}');
 
-        // Hacer scroll hacia el comentario nuevo inmediatamente
+        // Hacer scroll hacia arriba para mostrar el comentario nuevo
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
             _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
+              0.0, // Ir al principio de la lista
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
             );
@@ -272,10 +279,15 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
       
       debugPrint('📝 Comentarios cargados: ${comments.length}');
       
+      // Ordenar comentarios por fecha más reciente primero
+      final sortedComments = List<Comment>.from(comments);
+      sortedComments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      
       if (mounted) {
         setState(() {
-          _comments = comments;
+          _comments = sortedComments;
         });
+        debugPrint('🔄 Comentarios ordenados por fecha (más reciente primero)');
       }
     } catch (e) {
       debugPrint('❌ Error en carga inicial de comentarios: $e');
