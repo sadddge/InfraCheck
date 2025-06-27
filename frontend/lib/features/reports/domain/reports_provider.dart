@@ -441,20 +441,34 @@ class ReportsProvider with ChangeNotifier {
   }
 
   /// Obtiene los comentarios de un reporte específico
-  Future<List<Comment>> getReportComments(int reportId) async {
+  Future<List<Comment>> getReportComments(int reportId, {int limit = 100, int offset = 0}) async {
     try {
       final endpoint = ApiConfig.getReportCommentsEndpoint
           .replaceAll(':reportId', reportId.toString());
       
-      final response = await ApiService.get(endpoint);
+      // Agregar parámetros de paginación
+      final endpointWithQuery = '$endpoint?limit=$limit&offset=$offset';
       
-      final List<dynamic> commentsData = response['data'] ?? response;
+      final response = await ApiService.get(endpointWithQuery);
+      
+      // El backend puede estar devolviendo diferentes estructuras
+      List<dynamic> commentsData;
+      if (response.containsKey('data') && response['data'] is List) {
+        commentsData = response['data'];
+      } else if (response.containsKey('comments') && response['comments'] is List) {
+        commentsData = response['comments'];
+      } else if (response.containsKey('items') && response['items'] is List) {
+        commentsData = response['items'];
+      } else if (response is List) {
+        commentsData = response;
+      } else {
+        commentsData = [];
+      }
       
       return commentsData
           .map((commentJson) => Comment.fromJson(commentJson))
           .toList();
     } catch (e) {
-      debugPrint('❌ Error al obtener comentarios: $e');
       throw Exception('Error al obtener comentarios: $e');
     }
   }

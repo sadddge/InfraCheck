@@ -63,15 +63,43 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       final reportsProvider = context.read<ReportsProvider>();
       final report = await reportsProvider.getReportById(widget.reportId);
       
+      // Debug: Imprimir información de comentarios
+      print('🔍 Reporte cargado - ID: ${report.id}');
+      print('💬 Comentarios encontrados: ${report.comments?.length ?? 0}');
+      if (report.comments?.isNotEmpty == true) {
+        print('📝 Primer comentario: ${report.comments!.first.content}');
+      }
+      
       setState(() {
         _report = report;
         _isLoading = false;
       });
     } catch (e) {
+      print('❌ Error cargando reporte: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  /// Refresca el reporte específico (para comentarios)
+  Future<void> _refreshReport() async {
+    if (_report == null) return;
+    
+    try {
+      final reportsProvider = context.read<ReportsProvider>();
+      final updatedReport = await reportsProvider.getReportById(widget.reportId);
+      
+      print('🔄 Reporte refrescado - Comentarios: ${updatedReport.comments?.length ?? 0}');
+      
+      if (mounted) {
+        setState(() {
+          _report = updatedReport;
+        });
+      }
+    } catch (e) {
+      print('❌ Error refrescando reporte: $e');
     }
   }
 
@@ -247,6 +275,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           ),
         ),
         
+        // Espaciado antes de comentarios
+        const SliverToBoxAdapter(
+          child: SizedBox(height: 20),
+        ),
+        
         // Sección de comentarios
         SliverToBoxAdapter(
           child: Consumer<AuthProvider>(
@@ -255,6 +288,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 reportId: _report!.id,
                 comments: _report!.comments ?? [],
                 currentUser: authProvider.user,
+                onCommentAdded: _refreshReport, // Agregado para refrescar
               );
             },
           ),
