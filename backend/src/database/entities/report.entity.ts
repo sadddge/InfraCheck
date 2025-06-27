@@ -2,6 +2,7 @@ import { ReportCategory } from 'src/common/enums/report-category.enums';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { Column, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Comment } from './comment.entity';
+import { Notification } from './notification.entity';
 import { ReportChange } from './report-change.entity';
 import { ReportImage } from './report-image.entity';
 import { User } from './user.entity';
@@ -55,6 +56,13 @@ export class Report {
         vote => vote.report,
     )
     votes: Vote[];
+
+    @OneToMany(
+        () => Notification,
+        notification => notification.report,
+        { onDelete: 'CASCADE' },
+    )
+    notifications: Notification[];
 
     @ManyToMany(
         () => User,

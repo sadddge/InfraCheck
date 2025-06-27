@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { ChatModule } from './modules/chat/chat.module';
+import { FirebaseModule } from './modules/firebase/firebase.module';
 import { ReportModule } from './modules/reports/reports.module';
 import { UsersModule } from './modules/users/users.module';
 import { VotesModule } from './modules/votes/votes.module';
@@ -55,6 +56,7 @@ import { VotesModule } from './modules/votes/votes.module';
         ReportModule,
         VotesModule,
         ChatModule,
+        FirebaseModule,
     ],
     providers: [
         {

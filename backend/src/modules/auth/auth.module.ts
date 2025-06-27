@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { NotificationPreference } from 'src/database/entities/notification-preference.entity';
 import { RefreshToken } from 'src/database/entities/refresh-token.entity';
 import { UsersModule } from '../users/users.module';
 import { VerificationModule } from '../verification/verification.module';
@@ -63,7 +64,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
             }),
             inject: [ConfigService],
         }),
-        TypeOrmModule.forFeature([RefreshToken]),
+        TypeOrmModule.forFeature([RefreshToken, NotificationPreference]),
     ],
     controllers: [AuthController],
     providers: [

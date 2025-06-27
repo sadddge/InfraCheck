@@ -38,6 +38,7 @@ describe('FollowsService', () => {
         select: jest.fn().mockReturnThis(),
         getCount: jest.fn(),
         getOne: jest.fn(),
+        getMany: jest.fn(),
         getManyAndCount: jest.fn(),
     };
 
@@ -349,6 +350,52 @@ describe('FollowsService', () => {
             await expect(service.getUserFollowedReports(userId, options)).rejects.toThrow(
                 AppException,
             );
+        });
+    });
+
+    describe('getReportFollowerIds', () => {
+        it('should return array of follower user IDs', async () => {
+            const reportId = 1;
+            const mockUsers = [
+                { id: 1 },
+                { id: 2 },
+                { id: 3 },
+            ];
+
+            reportRepository.findOne.mockResolvedValue(mockReport);
+            mockQueryBuilder.getMany.mockResolvedValue(mockUsers);
+
+            const result = await service.getReportFollowerIds(reportId);
+
+            expect(userRepository.createQueryBuilder).toHaveBeenCalledWith('user');
+            expect(mockQueryBuilder.innerJoin).toHaveBeenCalledWith(
+                'user.reportsFollowed',
+                'report',
+                'report.id = :reportId',
+                { reportId },
+            );
+            expect(mockQueryBuilder.select).toHaveBeenCalledWith(['user.id']);
+            expect(mockQueryBuilder.getMany).toHaveBeenCalled();
+            expect(result).toEqual([1, 2, 3]);
+        });
+
+        it('should return empty array when report has no followers', async () => {
+            const reportId = 1;
+
+            reportRepository.findOne.mockResolvedValue(mockReport);
+            mockQueryBuilder.getMany.mockResolvedValue([]);
+
+            const result = await service.getReportFollowerIds(reportId);
+
+            expect(result).toEqual([]);
+        });
+
+        it('should throw AppException when report does not exist', async () => {
+            const reportId = 999;
+
+            reportRepository.findOne.mockResolvedValue(null);
+
+            await expect(service.getReportFollowerIds(reportId)).rejects.toThrow(AppException);
         });
     });
 });
