@@ -60,9 +60,25 @@ class UserService {
       includeAuth: true,
     );
     
-    // El backend devuelve una lista de usuarios
+    // Manejar diferentes formatos de respuesta del backend
     if (response is List) {
+      // Respuesta directa como lista
       return response.map((userJson) => User.fromJson(userJson)).toList();
+    } else if (response is Map<String, dynamic>) {
+      // Respuesta paginada o envuelta
+      if (response.containsKey('items') && response['items'] is List) {
+        // Formato de paginación: { items: [...], meta: {...} }
+        final items = response['items'] as List;
+        return items.map((userJson) => User.fromJson(userJson)).toList();
+      } else if (response.containsKey('data') && response['data'] is List) {
+        // Formato envuelto: { data: [...] }
+        final data = response['data'] as List;
+        return data.map((userJson) => User.fromJson(userJson)).toList();
+      } else if (response.containsKey('users') && response['users'] is List) {
+        // Formato específico: { users: [...] }
+        final users = response['users'] as List;
+        return users.map((userJson) => User.fromJson(userJson)).toList();
+      }
     }
     
     return [];

@@ -242,9 +242,9 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
                                         spreadRadius: 0,
                                       ),
                                     ],
-                                  ),
-                                  child: TextFormField(
+                                  ),                                  child: TextFormField(
                                     controller: _phoneNumberController,
+                                    keyboardType: TextInputType.phone,
                                     style: const TextStyle(
                                       color: Color(0xFF104641),
                                       fontSize: 13,

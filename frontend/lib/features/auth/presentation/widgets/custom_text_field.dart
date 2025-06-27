@@ -21,9 +21,11 @@ class CustomTextField extends StatelessWidget {
   
   /// Widget que se muestra al final del campo (ej: botón para mostrar/ocultar contraseña)
   final Widget? suffixIcon;
-  
-  /// Función de validación personalizada para el campo
+    /// Función de validación personalizada para el campo
   final String? Function(String?)? validator;
+  
+  /// Tipo de teclado a mostrar
+  final TextInputType? keyboardType;
 
   const CustomTextField({
     Key? key,
@@ -33,6 +35,7 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.suffixIcon,
     this.validator,
+    this.keyboardType,
   }) : super(key: key);
 
   @override
@@ -63,12 +66,12 @@ class CustomTextField extends StatelessWidget {
                 blurRadius: 2,
               ),
             ],
-          ),
-          child: TextFormField(
+          ),          child: TextFormField(
             controller: controller,
             obscureText: obscureText,
             style: AppTextStyles.inputText,
             validator: validator,
+            keyboardType: keyboardType,
             decoration: InputDecoration(
               hintText: hintText,
               hintStyle: AppTextStyles.inputHint,

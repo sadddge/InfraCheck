@@ -68,6 +68,9 @@ class AuthProvider extends ChangeNotifier {  /// Estado actual de autenticación
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
 
+  /// Verifica si el usuario actual tiene rol de administrador
+  bool get isAdmin => _user?.role.toUpperCase() == 'ADMIN';
+
   /// Constructor que verifica automáticamente el estado de autenticación
   AuthProvider() {
     _checkAuthStatus();
@@ -80,23 +83,30 @@ class AuthProvider extends ChangeNotifier {  /// Estado actual de autenticación
   /// Verifica el estado de autenticación al inicializar el proveedor.
   /// 
   /// Comprueba si existe una sesión activa válida y actualiza el estado
-  /// en consecuencia. En producción, también obtendría los datos del
+  /// en consecuencia. Si hay un token válido, obtiene la información del
   /// usuario desde el backend.
   Future<void> _checkAuthStatus() async {
     _setLoading(true);
     
     try {
       final isAuth = await AuthService.isAuthenticated();
-      if (isAuth) {        // En producción, aquí se obtendría la información del usuario desde el backend
-        // Por ahora se marca como no autenticado ya que no tenemos la implementación completa
-        _setUnauthenticated();
+      if (isAuth) {
+        // Si hay un token, intentar obtener la información del usuario
+        try {
+          final user = await AuthService.getCurrentUser();
+          _setAuthenticated(user);
+        } catch (e) {
+          // Si no se puede obtener el usuario, limpiar la sesión
+          await AuthService.logout();
+          _setUnauthenticated();
+        }
       } else {
         _setUnauthenticated();
       }
     } catch (e) {
       _setUnauthenticated();
     }
-      _setLoading(false);
+    _setLoading(false);
   }
 
   // ==========================================

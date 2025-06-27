@@ -31,21 +31,24 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   bool _isLoading = false;
   List<User> _users = [];
   String _searchQuery = '';
-  String? _errorMessage;
-
-  @override
+  String? _errorMessage;  @override
   void initState() {
     super.initState();
     _loadUsers();
-  }
-
-  Future<void> _loadUsers() async {
+  }  Future<void> _loadUsers() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
+      // Verificar autenticación primero
+      final isAuth = await ApiService.isAuthenticated();
+      
+      if (!isAuth) {
+        throw ApiException('Usuario no autenticado');
+      }
+      
       // Obtener todos los usuarios del sistema
       final users = await UserService.getUsers();
       
@@ -56,7 +59,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = e is ApiException ? e.message : 'Error al cargar usuarios';
+        _errorMessage = e is ApiException ? e.message : 'Error al cargar usuarios: $e';
       });
       
       if (mounted) {
@@ -64,6 +67,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           SnackBar(
             content: Text(_errorMessage!),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -291,8 +295,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           _isLoading = false;
         });
       }
-    }
-  }
+    }  }
 
   @override
   Widget build(BuildContext context) {
@@ -329,8 +332,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         'Gestión de Usuarios',
                         style: AppTextStyles.heading,
                       ),
-                    ),
-                    IconButton(
+                    ),                    IconButton(
                       onPressed: _isLoading ? null : _loadUsers,
                       icon: Icon(
                         Icons.refresh,
