@@ -44,29 +44,19 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
   void didUpdateWidget(ReportCommentsSection oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    // Solo actualizar si cambió el reportId
+    // Solo actualizar si cambió el reportId (cambio de reporte)
     if (oldWidget.reportId != widget.reportId) {
       setState(() {
         _comments = List.from(widget.comments);
       });
       _loadComments();
     } 
-    // Si el reportId es el mismo, solo sincronizar si no hay operaciones en progreso
-    // y si hay una diferencia significativa entre los comentarios
-    else if (!_isLoading) {
-      // Sincronizar solo si los IDs de comentarios son diferentes 
-      // (evita sobrescribir cambios optimistas válidos)
-      final currentIds = _comments.map((c) => c.id).toSet();
-      final newIds = widget.comments.map((c) => c.id).toSet();
-      
-      // Si hay comentarios nuevos en el widget padre que no están en nuestro estado local,
-      // y no estamos en medio de una operación, entonces sincronizar
-      if (newIds.difference(currentIds).isNotEmpty || 
-          currentIds.difference(newIds).isNotEmpty) {
-        setState(() {
-          _comments = List.from(widget.comments);
-        });
-      }
+    // Para el mismo reporte, confiar en el estado local optimista
+    // y solo sincronizar en casos muy específicos (como carga inicial)
+    else if (_comments.isEmpty && widget.comments.isNotEmpty) {
+      setState(() {
+        _comments = List.from(widget.comments);
+      });
     }
   }
 
@@ -95,6 +85,7 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
     final commentContent = _commentController.text.trim();
     Comment? optimisticComment;
 
+    debugPrint('🚀 Iniciando creación de comentario...');
     setState(() {
       _isLoading = true;
     });
@@ -112,10 +103,12 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
           createdAt: DateTime.now(),
         );
 
+        debugPrint('✨ Agregando comentario optimista con ID: ${optimisticComment.id}');
         // Agregar optimistamente a la UI
         setState(() {
           _comments = [..._comments, optimisticComment!];
         });
+        debugPrint('📝 Estado local actualizado. Total comentarios: ${_comments.length}');
 
         // Hacer scroll hacia el comentario nuevo inmediatamente
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -130,12 +123,14 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
       }
 
       final reportsProvider = context.read<ReportsProvider>();
+      debugPrint('📡 Enviando comentario al backend...');
       final newComment = await reportsProvider.addComment(
         reportId: widget.reportId,
         content: commentContent,
       );
 
       _commentController.clear();
+      debugPrint('✅ Comentario creado en backend con ID: ${newComment.id}');
       
       // Reemplazar comentario optimista con el real del backend
       setState(() {
@@ -143,6 +138,7 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
           return comment.id == optimisticComment?.id ? newComment : comment;
         }).toList();
       });
+      debugPrint('🔄 Comentario optimista reemplazado por el real. Total: ${_comments.length}');
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -154,13 +150,8 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
         );
       }
       
-      // Notificar al widget padre sobre el cambio con un delay para permitir 
-      // que la actualización optimista se mantenga visible
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted && widget.onCommentsChanged != null) {
-          widget.onCommentsChanged!();
-        }
-      });
+      // No notificar al widget padre - la sincronización se maneja internamente
+      // para evitar sobrescribir el estado optimista
     } catch (e) {
       // Rollback: remover comentario optimista en caso de error
       if (optimisticComment != null) {
@@ -213,16 +204,22 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
     final commentIndex = _comments.indexWhere((c) => c.id == commentId);
     final deletedComment = commentIndex >= 0 ? _comments[commentIndex] : null;
 
+    debugPrint('🗑️ Iniciando eliminación de comentario ID: $commentId');
+    debugPrint('📍 Posición del comentario: $commentIndex');
+
     // Eliminación optimista
     if (deletedComment != null) {
       setState(() {
         _comments = _comments.where((c) => c.id != commentId).toList();
       });
+      debugPrint('🚮 Comentario removido optimistamente. Total: ${_comments.length}');
     }
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
+      debugPrint('📡 Eliminando comentario en backend...');
       await reportsProvider.deleteComment(widget.reportId, commentId);
+      debugPrint('✅ Comentario eliminado exitosamente del backend');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -234,12 +231,8 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
         );
       }
 
-      // Notificar al widget padre sobre el cambio con un delay
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted && widget.onCommentsChanged != null) {
-          widget.onCommentsChanged!();
-        }
-      });
+      // No notificar al widget padre - la sincronización se maneja internamente
+      // para evitar sobrescribir el estado optimista
     } catch (e) {
       // Rollback: restaurar comentario en caso de error
       if (deletedComment != null && commentIndex >= 0) {
@@ -522,7 +515,7 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
             ),
           
           // Lista de comentarios
-          if (_comments.isEmpty)
+          if (_comments.isEmpty && !_isLoading)
             Container(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -552,7 +545,7 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
                 ],
               ),
             )
-          else
+          else if (_comments.isNotEmpty)
             Container(
               constraints: const BoxConstraints(maxHeight: 400),
               child: ListView.separated(

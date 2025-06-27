@@ -117,13 +117,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   /// Callback optimizado para cambios en comentarios
   void _onCommentsChanged() {
-    // En lugar de recargar inmediatamente, dar tiempo para que el provider se actualice
-    // y luego sincronizar después de la operación
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        _refreshReport();
-      }
-    });
+    // No hacer nada - la sincronización se maneja internamente en el widget de comentarios
+    // Esto evita sobrescribir el estado optimista local
   }
 
   /// Maneja el voto en el reporte
