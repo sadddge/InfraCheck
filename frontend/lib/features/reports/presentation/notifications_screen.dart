@@ -60,6 +60,55 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     await _loadFollowedReports();
   }
 
+  /// Maneja dejar de seguir un reporte desde la pantalla de notificaciones
+  Future<void> _handleUnfollowReport(int reportId) async {
+    try {
+      debugPrint('🔕 Intentando dejar de seguir reporte $reportId');
+      
+      final reportsProvider = context.read<ReportsProvider>();
+      await reportsProvider.toggleFollowReport(reportId);
+      
+      // Mostrar confirmación
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.notifications_off, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text('Ya no sigues este reporte'),
+              ],
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      
+      // Recargar la lista de reportes seguidos
+      await _loadFollowedReports();
+    } catch (e) {
+      debugPrint('❌ Error al dejar de seguir reporte $reportId: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: $e')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -361,12 +410,30 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               
               const SizedBox(height: 12),
               
-              // Estado actual
+              // Estado actual y botón de dejar de seguir
               Row(
                 children: [
                   _buildStatusChip(report.status),
                   const Spacer(),
                   _buildInfoChip(Icons.place, _getCategoryText(report.category)),
+                  const SizedBox(width: 8),
+                  // Botón de dejar de seguir
+                  InkWell(
+                    onTap: () => _handleUnfollowReport(report.id),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(
+                        Icons.notifications_off,
+                        size: 16,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
                 ],
               ),
               

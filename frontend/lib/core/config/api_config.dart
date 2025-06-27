@@ -68,7 +68,7 @@ class ApiConfig {
   /// - Development: `http://localhost:3000/api`
   /// - Staging: `https://api-staging.infracheck.com/api`
   /// - Production: `https://api.infracheck.com/api`
-  static const String baseUrl = 'http://192.168.1.89:3000/api';
+  static const String baseUrl = 'https://infracheck-backend.onrender.com/api';
 
   // === ENDPOINTS DE AUTENTICACIÓN ===
   /// Endpoint para iniciar sesión
@@ -200,9 +200,9 @@ class ApiConfig {
   
   /// Endpoint para dejar de seguir un reporte
   /// Método: DELETE
-  /// URL: /v1/reports/{reportId}/follow
+  /// URL: /v1/reports/{reportId}/unfollow
   /// Response: Confirmación de cancelación de seguimiento
-  static const String unfollowReportEndpoint = '/v1/reports/:reportId/follow';
+  static const String unfollowReportEndpoint = '/v1/reports/:reportId/unfollow';
   
   /// Endpoint para obtener nombres de seguidores del reporte
   /// Método: GET
@@ -484,4 +484,33 @@ class ApiConfig {
   ///   print('Método HTTP recomendado: $method');
   /// }
   /// ```
+  
+  /// Construye URLs dinámicas para endpoints que requieren parámetros.
+  /// 
+  /// Método utilitario para construir URLs completas reemplazando parámetros
+  /// en las rutas. Útil para endpoints con IDs dinámicos.
+  static String buildUrlWithParams(String endpoint, Map<String, String> params) {
+    String url = baseUrl + endpoint;
+    params.forEach((key, value) {
+      url = url.replaceAll(':$key', value);
+    });
+    return url;
+  }
+  
+  /// Construye la URL del WebSocket para el chat
+  static String get chatWebSocketUrl {
+    return baseUrl.replaceAll('/api', '').replaceAll('http', 'ws');
+  }
+
+  /// Construye URL para obtener mensajes del chat con query parameters
+  static String buildChatMessagesUrl({int? limit, DateTime? before}) {
+    final params = <String, String>{};
+    if (limit != null) params['limit'] = limit.toString();
+    if (before != null) params['before'] = before.toIso8601String();
+    
+    final query = Uri(queryParameters: params).query;
+    return query.isNotEmpty 
+        ? '$baseUrl$getChatMessagesEndpoint?$query'
+        : '$baseUrl$getChatMessagesEndpoint';
+  }
 }

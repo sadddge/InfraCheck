@@ -726,17 +726,62 @@ class ReportsProvider with ChangeNotifier {
     try {
       debugPrint('🔔 Obteniendo reportes seguidos...');
       
-      // TODO: Usar endpoint cuando esté disponible en backend
-      // final endpoint = ApiConfig.getMyFollowedReportsEndpoint;
-      // final response = await ApiService.get(endpoint);
-      
-      // Por ahora, simular con reportes que tienen isFollowing = true
+      // Cargar todos los reportes si no están cargados
       if (_reports.isEmpty) {
         await fetchAllReports();
       }
       
-      final followedReports = _reports.where((report) => report.isFollowing).toList();
-      debugPrint('🔔 Reportes seguidos encontrados: ${followedReports.length}');
+      // Intentar usar el endpoint del backend
+      List<Report> followedReports = [];
+      
+      try {
+        final endpoint = ApiConfig.getMyFollowedReportsEndpoint;
+        debugPrint('🔔 Consultando endpoint: $endpoint');
+        final response = await ApiService.get(endpoint);
+        
+        debugPrint('🔔 Respuesta del backend: $response');
+        
+        // Manejar estructura paginada del backend
+        if (response.containsKey('items')) {
+          final List<dynamic> followedItems = response['items'];
+          debugPrint('🔔 Items seguidos recibidos: ${followedItems.length}');
+          
+          // Extraer IDs de reportes seguidos
+          List<int> followedIds = followedItems.map((item) => item['reportId'] as int).toList();
+          debugPrint('🔔 IDs de reportes seguidos: $followedIds');
+          
+          // Filtrar reportes locales que coincidan con los IDs seguidos
+          followedReports = _reports.where((report) => followedIds.contains(report.id)).toList();
+          
+          // Actualizar estado local de seguimiento
+          for (final report in _reports) {
+            final shouldFollow = followedIds.contains(report.id);
+            if (report.isFollowing != shouldFollow) {
+              final reportIndex = _reports.indexWhere((r) => r.id == report.id);
+              if (reportIndex != -1) {
+                _reports[reportIndex] = _reports[reportIndex].copyWith(isFollowing: shouldFollow);
+              }
+            }
+          }
+          
+          debugPrint('🔔 Reportes seguidos encontrados: ${followedReports.length}');
+        } else {
+          debugPrint('⚠️ Respuesta inesperada del backend, usando fallback local');
+          followedReports = _reports.where((report) => report.isFollowing).toList();
+        }
+      } catch (e) {
+        debugPrint('⚠️ Error con endpoint del backend: $e');
+        debugPrint('🔄 Usando fallback: reportes con isFollowing=true');
+        followedReports = _reports.where((report) => report.isFollowing).toList();
+      }
+      
+      debugPrint('🔔 Total reportes seguidos: ${followedReports.length}');
+      
+      // Si no hay reportes seguidos, retornar lista vacía
+      if (followedReports.isEmpty) {
+        debugPrint('📭 No hay reportes seguidos disponibles');
+        return [];
+      }
       
       List<Map<String, dynamic>> reportsWithUpdates = [];
       

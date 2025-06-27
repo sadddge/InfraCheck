@@ -258,13 +258,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     // Botón de chat
                     GestureDetector(
                       onTap: () {
-                        // TODO: Navegar al chat en desarrollo
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Chat en desarrollo'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
+                        context.pushNamed('chat');
                       },
                       child: Container(
                         width: 56,
