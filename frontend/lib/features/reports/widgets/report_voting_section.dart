@@ -27,7 +27,7 @@ class ReportVotingSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -123,12 +123,12 @@ class ReportVotingSection extends StatelessWidget {
         height: 50,
         decoration: BoxDecoration(
           color: isSelected 
-            ? buttonColor.withOpacity(0.1)
+            ? buttonColor.withValues(alpha: 0.1)
             : AppColors.background,
           shape: BoxShape.circle,
           border: Border.all(
             color: isSelected 
-              ? buttonColor.withOpacity(0.3)
+              ? buttonColor.withValues(alpha: 0.3)
               : AppColors.inputBorder,
             width: 1.5,
           ),
@@ -164,7 +164,7 @@ class ReportVotingSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: textColor.withOpacity(0.05),
+        color: textColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(

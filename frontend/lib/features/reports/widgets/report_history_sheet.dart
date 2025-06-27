@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
-import '../../../shared/utils/date_helpers.dart';
+import '../../../core/models/report_history_model.dart';
+import '../domain/reports_provider.dart';
 
 /// Bottom sheet para mostrar el historial de cambios del reporte.
 /// 
@@ -19,7 +21,7 @@ class ReportHistorySheet extends StatefulWidget {
 }
 
 class _ReportHistorySheetState extends State<ReportHistorySheet> {
-  List<ReportHistoryEvent> _history = [];
+  List<ReportHistory> _history = [];
   bool _isLoading = true;
   String? _error;
 
@@ -36,16 +38,11 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
     });
 
     try {
-      // TODO: Implementar llamada real al backend
-      // final reportsProvider = context.read<ReportsProvider>();
-      // final history = await reportsProvider.getReportHistory(widget.reportId);
-      
-      // Por ahora usamos datos de ejemplo
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      _history = _generateSampleHistory();
+      final reportsProvider = context.read<ReportsProvider>();
+      final history = await reportsProvider.getReportHistory(widget.reportId);
       
       setState(() {
+        _history = history;
         _isLoading = false;
       });
     } catch (e) {
@@ -53,6 +50,24 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
         _error = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  /// Formatea una fecha de forma segura sin dependencias de localización
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inMinutes < 1) {
+      return 'Hace un momento';
+    } else if (difference.inMinutes < 60) {
+      return 'Hace ${difference.inMinutes} min';
+    } else if (difference.inHours < 24) {
+      return 'Hace ${difference.inHours} h';
+    } else if (difference.inDays < 7) {
+      return 'Hace ${difference.inDays} días';
+    } else {
+      return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     }
   }
 
@@ -75,7 +90,7 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textSecondary.withOpacity(0.3),
+              color: AppColors.textSecondary.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -182,7 +197,7 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
             Icon(
               Icons.timeline,
               size: 48,
-              color: AppColors.textSecondary.withOpacity(0.5),
+              color: AppColors.textSecondary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -216,7 +231,7 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
     );
   }
 
-  Widget _buildHistoryItem(ReportHistoryEvent event, bool isLast) {
+  Widget _buildHistoryItem(ReportHistory event, bool isLast) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -227,7 +242,7 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
               width: 12,
               height: 12,
               decoration: BoxDecoration(
-                color: event.color,
+                color: Color(event.eventColor),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: Colors.white,
@@ -235,7 +250,7 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: event.color.withOpacity(0.3),
+                    color: Color(event.eventColor).withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -261,7 +276,7 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  event.title,
+                  event.eventTitle,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -281,6 +296,26 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
                   ),
                 ],
                 
+                // Mostrar información de cambio de estado si aplica
+                if (event.changeType.toLowerCase().contains('state') || event.changeType.toLowerCase().contains('category')) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${event.from} → ${event.to}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+                
                 const SizedBox(height: 6),
                 
                 Row(
@@ -288,16 +323,32 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
                     Icon(
                       Icons.schedule,
                       size: 12,
-                      color: AppColors.textSecondary.withOpacity(0.7),
+                      color: AppColors.textSecondary.withValues(alpha: 0.7),
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      DateHelpers.formatDetailedDate(event.timestamp),
+                      _formatDate(event.createdAt),
                       style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.textSecondary.withOpacity(0.7),
+                        color: AppColors.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
+                    if (event.userFullName.isNotEmpty) ...[
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.person,
+                        size: 12,
+                        color: AppColors.textSecondary.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        event.userFullName,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -307,43 +358,4 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
       ],
     );
   }
-
-  List<ReportHistoryEvent> _generateSampleHistory() {
-    // Datos de ejemplo - en producción vendrían del backend
-    return [
-      ReportHistoryEvent(
-        title: 'Reporte creado',
-        description: 'El reporte fue enviado por el usuario y está pendiente de revisión.',
-        timestamp: DateTime.now().subtract(const Duration(days: 5)),
-        color: Colors.blue,
-      ),
-      ReportHistoryEvent(
-        title: 'En revisión',
-        description: 'El reporte está siendo evaluado por el equipo de infraestructura.',
-        timestamp: DateTime.now().subtract(const Duration(days: 3)),
-        color: Colors.orange,
-      ),
-      ReportHistoryEvent(
-        title: 'En progreso',
-        description: 'Se ha asignado un equipo de trabajo y se iniciaron las tareas de reparación.',
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-        color: Colors.green,
-      ),
-    ];
-  }
-}
-
-/// Modelo para eventos del historial
-class ReportHistoryEvent {
-  final String title;
-  final String description;
-  final DateTime timestamp;
-  final Color color;
-
-  const ReportHistoryEvent({
-    required this.title,
-    required this.description,
-    required this.timestamp,
-    required this.color,
-  });
 }

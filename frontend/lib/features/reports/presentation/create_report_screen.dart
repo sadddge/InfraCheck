@@ -164,7 +164,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                               ),
                               shadows: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.25),
+                                  color: Colors.black.withValues(alpha: 0.25),
                                   blurRadius: 3,
                                   offset: const Offset(0, 1.5),
                                 ),
@@ -366,7 +366,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 2,
-                              shadowColor: Colors.black.withOpacity(0.15),
+                              shadowColor: Colors.black.withValues(alpha: 0.15),
                             ),
                             child: _isSubmitting
                                 ? Row(
@@ -557,7 +557,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 ),
                 shadows: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),
@@ -590,7 +590,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                         ),
                         shadows: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 2,
                             offset: const Offset(0, 1),
                           ),
@@ -624,7 +624,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                                 ),
                                 shadows: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
+                                    color: Colors.black.withValues(alpha: 0.05),
                                     blurRadius: 2,
                                     offset: const Offset(0, 1),
                                   ),
@@ -638,7 +638,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                                 child: Container(
                                   clipBehavior: Clip.antiAlias,
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.6),
+                                    color: Colors.black.withValues(alpha: 0.6),
                                     borderRadius: BorderRadius.circular(3.6),
                                   ),
                                   child: Center(
@@ -655,7 +655,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                                           Shadow(
                                             offset: const Offset(0, 4),
                                             blurRadius: 4,
-                                            color: Colors.black.withOpacity(0.25),
+                                            color: Colors.black.withValues(alpha: 0.25),
                                           ),
                                         ],
                                       ),
