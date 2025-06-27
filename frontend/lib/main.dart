@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'app.dart';
 import 'core/providers/auth_provider.dart';
+import 'core/providers/notification_provider.dart';
 import 'features/camera/domain/camera_provider.dart';
 import 'features/camera/domain/models/photo_entry.dart';
 import 'features/reports/domain/reports_provider.dart';
+import 'features/chat/providers/chat_provider.dart';
 
 
 /// Punto de entrada principal de la aplicación InfraCheck.
@@ -15,6 +20,9 @@ import 'features/reports/domain/reports_provider.dart';
 /// necesarios para el funcionamiento de la aplicación.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  debugPrint('=== INICIO DE LA APLICACIÓN ===');
+  debugPrint('Firebase apps al inicio: ${Firebase.apps.length}');
   
   // Bloquear orientación a solo vertical
   await SystemChrome.setPreferredOrientations([
@@ -31,6 +39,34 @@ void main() async {
     systemNavigationBarColor: Colors.transparent,
     systemNavigationBarIconBrightness: Brightness.dark,
   ));
+  
+  // Initialize Firebase - verificación más robusta
+  try {
+    debugPrint('Verificando apps de Firebase existentes...');
+    for (var app in Firebase.apps) {
+      debugPrint('App existente: ${app.name} - Options: ${app.options.projectId}');
+    }
+    
+    if (Firebase.apps.isEmpty) {
+      debugPrint('Inicializando Firebase por primera vez...');
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint('Firebase inicializado exitosamente');
+    } else {
+      debugPrint('Firebase ya estaba inicializado, usando app existente: ${Firebase.app().name}');
+    }
+  } on FirebaseException catch (e) {
+    debugPrint('FirebaseException: ${e.code} - ${e.message}');
+    if (e.code == 'duplicate-app') {
+      debugPrint('App duplicada detectada, usando la existente');
+    } else {
+      rethrow;
+    }
+  } catch (e) {
+    debugPrint('Error general inicializando Firebase: $e');
+    rethrow;
+  }
   
   // Initialize Hive
   await Hive.initFlutter();
@@ -61,7 +97,9 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CameraProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => ReportsProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {

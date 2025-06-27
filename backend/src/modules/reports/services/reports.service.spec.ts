@@ -6,6 +6,7 @@ import { AppException } from '../../../common/exceptions/app.exception';
 import { ReportState } from 'src/common/enums/report-state.enums';
 import { ReportChange } from 'src/database/entities/report-change.entity';
 import { Report } from 'src/database/entities/report.entity';
+import { INotificationService, NOTIFICATION_SERVICE } from 'src/modules/notifications/interfaces/notification-service.interface';
 import {
     IUploadService,
     UPLOAD_SERVICE,
@@ -23,9 +24,11 @@ import {
     createMockReportImage,
     createMockRepository,
     createMockUploadService,
+    createMockUser,
     mockPaginate,
 } from '../../../common/test-helpers';
 import { CreateReportDto } from '../dto/create-report.dto';
+import { FOLLOWS_SERVICE, IFollowsService } from '../follows/interfaces/follows-service.interface';
 import { ReportsService } from './reports.service';
 
 describe('ReportsService', () => {
@@ -33,6 +36,8 @@ describe('ReportsService', () => {
     let reportRepository: jest.Mocked<Repository<Report>>;
     let changeRepository: jest.Mocked<Repository<ReportChange>>;
     let uploadService: jest.Mocked<IUploadService>;
+    let notificationService: jest.Mocked<INotificationService>;
+    let followsService: jest.Mocked<IFollowsService>;
 
     // Mock data using test fixtures
     const mockReportImage = createMockReportImage();
@@ -101,6 +106,12 @@ describe('ReportsService', () => {
         const mockReportRepository = createMockRepository<Repository<Report>>();
         const mockChangeRepository = createMockRepository<Repository<ReportChange>>();
         const mockUploadService = createMockUploadService();
+        const mockNotificationService = {
+            sendNotification: jest.fn().mockResolvedValue(undefined),
+        };
+        const mockFollowsService = {
+            getReportFollowerIds: jest.fn().mockResolvedValue([]),
+        };
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -117,12 +128,22 @@ describe('ReportsService', () => {
                     provide: UPLOAD_SERVICE,
                     useValue: mockUploadService,
                 },
+                {
+                    provide: NOTIFICATION_SERVICE,
+                    useValue: mockNotificationService,
+                },
+                {
+                    provide: FOLLOWS_SERVICE,
+                    useValue: mockFollowsService,
+                },
             ],
         }).compile();
         service = module.get<ReportsService>(ReportsService);
         reportRepository = module.get(getRepositoryToken(Report));
         changeRepository = module.get(getRepositoryToken(ReportChange));
         uploadService = module.get(UPLOAD_SERVICE);
+        notificationService = module.get(NOTIFICATION_SERVICE);
+        followsService = module.get(FOLLOWS_SERVICE);
     });
 
     afterEach(() => {
@@ -423,6 +444,130 @@ describe('ReportsService', () => {
 
             expect(findByIdSpy).toHaveBeenCalledWith(updatedReport.id);
             expect(result.state).toBe(ReportState.IN_PROGRESS);
+        });
+
+        it('should send notifications to report followers when state changes', async () => {
+            // Arrange
+            const reportCreatorId = 1;
+            const adminUserId = 2;
+            const followerIds = [3, 4, 5]; // IDs of users following the report
+
+            const reportWithCreator = createMockReport({
+                creator: createMockUser({ id: reportCreatorId }),
+                state: ReportState.PENDING
+            });
+            const updatedReport = { ...reportWithCreator, state: ReportState.IN_PROGRESS };
+
+            reportRepository.findOne.mockResolvedValue(reportWithCreator);
+            reportRepository.save.mockResolvedValue(updatedReport);
+            changeRepository.create.mockReturnValue(mockReportChange);
+            changeRepository.save.mockResolvedValue(mockReportChange);
+
+            // Mock follows service to return follower IDs
+            followsService.getReportFollowerIds.mockResolvedValue(followerIds);
+
+            // Mock findById call that happens after update
+            const expectedResult = createExpectedReportDto(updatedReport, []);
+            jest.spyOn(service, 'findById').mockResolvedValue(expectedResult);
+
+            // Act
+            const result = await service.updateState(reportWithCreator.id, adminUserId, ReportState.IN_PROGRESS);
+
+            // Assert
+            expect(followsService.getReportFollowerIds).toHaveBeenCalledWith(reportWithCreator.id);
+
+            // Should send notifications to: creator (1) + followers (3, 4, 5) = 4 notifications
+            // Admin (2) should NOT receive notification since they made the change
+            expect(notificationService.sendNotification).toHaveBeenCalledTimes(4);
+
+            // Verify notification sent to creator
+            expect(notificationService.sendNotification).toHaveBeenCalledWith(reportCreatorId, {
+                reportId: reportWithCreator.id,
+                from: ReportState.PENDING,
+                to: ReportState.IN_PROGRESS,
+                title: `Estado del reporte #${reportWithCreator.title}`,
+                message: `El reporte ha cambiado de estado de ${ReportState.PENDING} a ${ReportState.IN_PROGRESS}`,
+            });
+
+            // Verify notifications sent to followers
+            for (const followerId of followerIds) {
+                expect(notificationService.sendNotification).toHaveBeenCalledWith(followerId, {
+                    reportId: reportWithCreator.id,
+                    from: ReportState.PENDING,
+                    to: ReportState.IN_PROGRESS,
+                    title: `Estado del reporte #${reportWithCreator.title}`,
+                    message: `El reporte ha cambiado de estado de ${ReportState.PENDING} a ${ReportState.IN_PROGRESS}`,
+                });
+            }
+
+            expect(result.state).toBe(ReportState.IN_PROGRESS);
+        });
+
+        it('should not send notification to user who made the state change', async () => {
+            // Arrange
+            const userId = 1;
+            const reportWithCreator = createMockReport({
+                creator: createMockUser({ id: userId }), // Creator is the same as the user making the change
+                state: ReportState.PENDING
+            });
+            const updatedReport = { ...reportWithCreator, state: ReportState.IN_PROGRESS };
+
+            reportRepository.findOne.mockResolvedValue(reportWithCreator);
+            reportRepository.save.mockResolvedValue(updatedReport);
+            changeRepository.create.mockReturnValue(mockReportChange);
+            changeRepository.save.mockResolvedValue(mockReportChange);
+
+            // Mock follows service to return empty followers
+            followsService.getReportFollowerIds.mockResolvedValue([]);
+
+            // Mock findById call that happens after update
+            const expectedResult = createExpectedReportDto(updatedReport, []);
+            jest.spyOn(service, 'findById').mockResolvedValue(expectedResult);
+
+            // Act
+            await service.updateState(reportWithCreator.id, userId, ReportState.IN_PROGRESS);
+
+            // Assert
+            expect(followsService.getReportFollowerIds).toHaveBeenCalledWith(reportWithCreator.id);
+
+            // Should NOT send any notifications since the creator is making the change
+            // and there are no other followers
+            expect(notificationService.sendNotification).not.toHaveBeenCalled();
+        });
+
+        it('should handle notification errors gracefully without failing state update', async () => {
+            // Arrange
+            const reportCreatorId = 1;
+            const adminUserId = 2;
+            const followerIds = [3, 4, 5];
+
+            const reportWithCreator = createMockReport({
+                creator: createMockUser({ id: reportCreatorId }),
+                state: ReportState.PENDING
+            });
+            const updatedReport = { ...reportWithCreator, state: ReportState.IN_PROGRESS };
+
+            reportRepository.findOne.mockResolvedValue(reportWithCreator);
+            reportRepository.save.mockResolvedValue(updatedReport);
+            changeRepository.create.mockReturnValue(mockReportChange);
+            changeRepository.save.mockResolvedValue(mockReportChange);
+
+            followsService.getReportFollowerIds.mockResolvedValue(followerIds);
+
+            // Mock notification service to throw error
+            notificationService.sendNotification.mockRejectedValue(new Error('Notification failed'));
+
+            // Mock findById call that happens after update
+            const expectedResult = createExpectedReportDto(updatedReport, []);
+            jest.spyOn(service, 'findById').mockResolvedValue(expectedResult);
+
+            // Act - should not throw despite notification errors
+            const result = await service.updateState(reportWithCreator.id, adminUserId, ReportState.IN_PROGRESS);
+
+            // Assert
+            expect(result.state).toBe(ReportState.IN_PROGRESS);
+            expect(reportRepository.save).toHaveBeenCalled();
+            expect(notificationService.sendNotification).toHaveBeenCalled();
         });
 
         it('should throw AppException when updating non-existent report', async () => {

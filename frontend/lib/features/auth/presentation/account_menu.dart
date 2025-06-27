@@ -5,6 +5,8 @@ import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../../../shared/widgets/navigation_bar.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../reports/presentation/my_reports_screen.dart';
+import '../../reports/presentation/my_participations_screen.dart';
 
 /// Pantalla de menú de cuenta del usuario en InfraCheck.
 /// 
@@ -144,9 +146,10 @@ class AccountMenuScreen extends StatelessWidget {
                         title: 'Mis Reportes',
                         subtitle: 'Ver todos mis reportes',
                         onTap: () {
-                          // TODO: Navegar a página de mis reportes
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Navegando a Mis Reportes...')),
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const MyReportsScreen(),
+                            ),
                           );
                         },
                       ),
@@ -157,9 +160,10 @@ class AccountMenuScreen extends StatelessWidget {
                         title: 'Mis Participaciones',
                         subtitle: 'Reportes en los que he participado',
                         onTap: () {
-                          // TODO: Navegar a página de mis participaciones
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Navegando a Mis Participaciones...')),
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const MyParticipationsScreen(),
+                            ),
                           );
                         },
                       ),

@@ -1,4 +1,5 @@
 import { Readable } from 'node:stream';
+import { NotificationPreference } from 'src/database/entities/notification-preference.entity';
 import { Comment } from '../../database/entities/comment.entity';
 import { Message } from '../../database/entities/message.entity';
 import { ReportChange } from '../../database/entities/report-change.entity';
@@ -32,6 +33,9 @@ export function createMockUser(overrides: Partial<User> = {}): User {
         status: UserStatus.ACTIVE,
         createdAt: new Date('2024-01-01T10:00:00Z'),
         passwordUpdatedAt: null,
+        notificationPreference: {} as NotificationPreference,
+        notifications: [],
+        deviceTokens: [],
         refreshTokens: [],
         reports: [],
         comments: [],
@@ -61,6 +65,7 @@ export function createMockReport(overrides: Partial<Report> = {}): Report {
         longitude: -70.6693,
         createdAt: new Date('2024-01-01T10:00:00Z'),
         creator: mockUser,
+        notifications: [],
         images: [],
         changes: [],
         comments: [],

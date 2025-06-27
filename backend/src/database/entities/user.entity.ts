@@ -1,8 +1,11 @@
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Comment } from './comment.entity';
+import { DeviceToken } from './device-token.entity';
 import { Message } from './message.entity';
+import { NotificationPreference } from './notification-preference.entity';
+import { Notification } from './notification.entity';
 import { RefreshToken } from './refresh-token.entity';
 import { ReportChange } from './report-change.entity';
 import { Report } from './report.entity';
@@ -91,6 +94,12 @@ export class User {
     })
     passwordUpdatedAt: Date | null;
 
+    @OneToOne(() => NotificationPreference,
+        notificationPreference => notificationPreference.user,
+        { cascade: true, eager: true }
+    )
+    notificationPreference: NotificationPreference;
+
     @OneToMany(
         () => Report,
         report => report.creator,
@@ -122,10 +131,22 @@ export class User {
     votes: Vote[];
 
     @OneToMany(
+        () => Notification,
+        notification => notification.user,
+    )
+    notifications: Notification[];
+
+    @OneToMany(
         () => RefreshToken,
         refreshToken => refreshToken.user,
     )
     refreshTokens: RefreshToken[];
+
+    @OneToMany(
+        () => DeviceToken,
+        deviceToken => deviceToken.user,
+    )
+    deviceTokens: DeviceToken[];
 
     /**
      * Reports this user is following for notifications and updates.

@@ -3,6 +3,7 @@
 /dist
 /node_modules
 /build
+/backend/documentation
 
 # Logs
 logs
@@ -44,6 +45,12 @@ lerna-debug.log*
 .env.production.local
 .env.local
 
+# API Keys and sensitive data
+local.properties
+**/local.properties
+google-services.json
+GoogleService-Info.plist
+
 # temp directory
 .temp
 .tmp
@@ -83,6 +90,7 @@ ios/Pods/
 ios/Runner.xcworkspace/
 macos/Flutter/ephemeral/
 *.iml
+ios/runner
 
 # Common
 .DS_Store
@@ -136,3 +144,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase and sensitive credentials
+**/google-services.json
+**/local.properties
+backend/config/infracheck-service-key.json

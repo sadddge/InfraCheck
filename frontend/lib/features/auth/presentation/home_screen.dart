@@ -6,8 +6,13 @@ import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/widgets/navigation_bar.dart';
 import '../../../shared/widgets/google_map_widget.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/notification_provider.dart';
+import '../../camera/domain/camera_provider.dart';
+import '../../notifications/presentation/notification_widget.dart';
 import '../../../shared/utils/map_helpers.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../reports/presentation/notifications_screen.dart';
 import '../../camera/domain/camera_provider.dart';
 import '../../reports/domain/reports_provider.dart';
 import '../../reports/presentation/report_detail_screen.dart';
@@ -60,6 +65,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.dark,
       ));
+      
+      // Inicializar notificaciones si el usuario está autenticado
+      _initializeNotifications();
     });
   }
 
@@ -160,6 +168,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Inicializa las notificaciones para el usuario autenticado
+  void _initializeNotifications() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+    
+    // Conectar AuthProvider con NotificationProvider
+    authProvider.setNotificationProvider(notificationProvider);
+    
+    // Si hay un usuario autenticado, conectar notificaciones
+    if (authProvider.user != null) {
+      notificationProvider.initialize().then((_) {
+        notificationProvider.connectForUser(authProvider.user!.id);
+      }).catchError((error) {
+        debugPrint('Error inicializando notificaciones: $error');
+      });
+    }
+  }
   /// Maneja el toque en un marcador de reporte
   void _onReportMarkerTapped(int reportId) {
     debugPrint('🔍 Navegando a detalles del reporte ID: $reportId');
@@ -233,11 +258,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     // Botón de notificaciones
                     GestureDetector(
                       onTap: () {
-                        // TODO: Implementar notificaciones de reportes seguidos
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Notificaciones de reportes en desarrollo'),
-                            duration: Duration(seconds: 2),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationsScreen(),
                           ),
                         );
                       },
@@ -258,13 +282,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     // Botón de chat
                     GestureDetector(
                       onTap: () {
-                        // TODO: Navegar al chat en desarrollo
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Chat en desarrollo'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
+                        context.pushNamed('chat');
                       },
                       child: Container(
                         width: 56,

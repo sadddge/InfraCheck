@@ -117,6 +117,27 @@ export interface IFollowsService {
     ): Promise<Pagination<ReportFollowerDto>>;
 
     /**
+     * Retrieves the user IDs of all users following a specific report.
+     * Optimized method for notification systems to get only user IDs without additional data.
+     * Used specifically for bulk notification operations when report state changes.
+     *
+     * @param reportId The unique identifier of the report
+     * @returns Array of user IDs who are following the report
+     * @throws {AppException} REP001 - When report does not exist
+     *
+     * @example
+     * ```typescript
+     * const followerIds = await followsService.getReportFollowerIds(456);
+     * console.log(`Report has ${followerIds.length} followers`);
+     * // Send notifications to all followers
+     * for (const userId of followerIds) {
+     *   await notificationService.sendNotification(userId, payload);
+     * }
+     * ```
+     */
+    getReportFollowerIds(reportId: number): Promise<number[]>;
+
+    /**
      * Retrieves all reports followed by a specific user with report details.
      * Returns user's followed reports for dashboard and notification management.
      * Includes report status and recent activity information.

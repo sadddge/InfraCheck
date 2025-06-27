@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../core/models/report_model.dart';
-import '../../../core/enums/vote_type.dart';
+import '../../../core/models/vote_state_model.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../domain/reports_provider.dart';
 import '../widgets/report_header.dart';
 import '../widgets/report_info_card.dart';
-import '../widgets/report_voting_section.dart';
+import '../widgets/report_voting_widget.dart';
 import '../widgets/report_comments_section.dart';
 import '../widgets/report_history_sheet.dart';
 
@@ -35,7 +35,9 @@ class ReportDetailScreen extends StatefulWidget {
 
 class _ReportDetailScreenState extends State<ReportDetailScreen> {
   Report? _report;
+  VoteState _voteState = VoteState(upvotes: 0, downvotes: 0);
   bool _isLoading = true;
+  bool _isFollowLoading = false;
   String? _error;
 
   @override
@@ -63,11 +65,37 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       final reportsProvider = context.read<ReportsProvider>();
       final report = await reportsProvider.getReportById(widget.reportId);
       
+      // Cargar estado de votos con manejo de errores separado
+      VoteState voteState;
+      try {
+        voteState = await reportsProvider.getVoteState(widget.reportId);
+      } catch (e) {
+        debugPrint('⚠️ Error al cargar estado de votos: $e');
+        // Crear estado por defecto si falla la carga
+        voteState = VoteState(upvotes: 0, downvotes: 0);
+      }
+      
+      // Debug: Información de comentarios para desarrollo
+      assert(() {
+        debugPrint('🔍 Reporte cargado - ID: ${report.id}');
+        debugPrint('💬 Comentarios encontrados: ${report.comments?.length ?? 0}');
+        debugPrint('🗳️ Estado de votos: upvotes=${voteState.upvotes}, downvotes=${voteState.downvotes}, userVote=${voteState.userVote}');
+        if (report.comments?.isNotEmpty == true) {
+          debugPrint('📝 Primer comentario: ${report.comments!.first.content}');
+        }
+        return true;
+      }());
+      
       setState(() {
         _report = report;
+        _voteState = voteState;
         _isLoading = false;
       });
     } catch (e) {
+      assert(() {
+        debugPrint('❌ Error cargando reporte: $e');
+        return true;
+      }());
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -75,25 +103,29 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     }
   }
 
-  /// Maneja el voto en el reporte
-  Future<void> _handleVote(VoteType voteType) async {
+  /// Refresca el reporte específico (para comentarios)
+  Future<void> _refreshReport() async {
     if (_report == null) return;
-
+    
     try {
       final reportsProvider = context.read<ReportsProvider>();
-      await reportsProvider.voteOnReport(_report!.id, voteType);
+      final updatedReport = await reportsProvider.getReportById(widget.reportId);
       
-      // Recargar para obtener los votos actualizados
-      await _loadReportDetails();
-    } catch (e) {
+      assert(() {
+        debugPrint('🔄 Reporte refrescado - Comentarios: ${updatedReport.comments?.length ?? 0}');
+        return true;
+      }());
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al votar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _report = updatedReport;
+        });
       }
+    } catch (e) {
+      assert(() {
+        debugPrint('❌ Error refrescando reporte: $e');
+        return true;
+      }());
     }
   }
 
@@ -111,7 +143,13 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   /// Maneja el seguimiento/dejar de seguir el reporte
   Future<void> _handleFollowToggle() async {
-    if (_report == null) return;
+    if (_report == null || _isFollowLoading) return;
+
+    setState(() {
+      _isFollowLoading = true;
+    });
+
+    final wasFollowing = _report!.isFollowing;
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
@@ -119,14 +157,55 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       
       // Recargar para obtener el estado actualizado
       await _loadReportDetails();
-    } catch (e) {
+      
+      // Mostrar feedback exitoso
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al actualizar seguimiento: $e'),
-            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                Icon(
+                  wasFollowing ? Icons.notifications_off : Icons.notifications_active,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  wasFollowing 
+                      ? 'Ya no sigues este reporte' 
+                      : '¡Ahora sigues este reporte!',
+                ),
+              ],
+            ),
+            backgroundColor: wasFollowing ? Colors.orange : AppColors.primary,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
           ),
         );
+      }
+    } catch (e) {
+      debugPrint('❌ Error al actualizar seguimiento: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: $e')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFollowLoading = false;
+        });
       }
     }
   }
@@ -158,12 +237,23 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
               tooltip: 'Ver historial',
             ),
             IconButton(
-              icon: Icon(
-                _report!.isFollowing ? Icons.notifications_active : Icons.notifications_none,
-                color: _report!.isFollowing ? AppColors.primary : AppColors.textPrimary,
-              ),
-              onPressed: _handleFollowToggle,
-              tooltip: _report!.isFollowing ? 'Dejar de seguir' : 'Seguir reporte',
+              icon: _isFollowLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : Icon(
+                      _report!.isFollowing ? Icons.notifications_active : Icons.notifications_none,
+                      color: _report!.isFollowing ? AppColors.primary : AppColors.textPrimary,
+                    ),
+              onPressed: _isFollowLoading ? null : _handleFollowToggle,
+              tooltip: _isFollowLoading 
+                  ? 'Actualizando...'
+                  : (_report!.isFollowing ? 'Dejar de seguir' : 'Seguir reporte'),
             ),
           ],
         ],
@@ -241,10 +331,16 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         
         // Sistema de votación
         SliverToBoxAdapter(
-          child: ReportVotingSection(
-            report: _report!,
-            onVote: _handleVote,
+          child: ReportVotingWidget(
+            key: ValueKey('vote_${_report!.id}'),
+            reportId: _report!.id,
+            initialVoteState: _voteState,
           ),
+        ),
+        
+        // Espaciado antes de comentarios
+        const SliverToBoxAdapter(
+          child: SizedBox(height: 20),
         ),
         
         // Sección de comentarios
@@ -255,6 +351,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 reportId: _report!.id,
                 comments: _report!.comments ?? [],
                 currentUser: authProvider.user,
+                onCommentsChanged: _refreshReport,
               );
             },
           ),

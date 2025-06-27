@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/models/report_model.dart';
 import '../../../core/models/comment_model.dart';
+import '../../../core/models/report_history_model.dart';
+import '../../../core/models/vote_state_model.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/enums/vote_type.dart';
@@ -356,22 +358,68 @@ class ReportsProvider with ChangeNotifier {
     }
   }
 
-  /// Vota en un reporte (upvote o downvote)
-  Future<void> voteOnReport(int reportId, VoteType voteType) async {
+  /// Maneja el voto en un reporte - versión simplificada que confía en el frontend
+  /// El widget ya calculó la lógica, solo ejecutamos la acción
+  Future<VoteState> handleVote(int reportId, VoteType voteType, {required bool shouldRemove}) async {
     try {
-      final endpoint = ApiConfig.voteOnReportEndpoint.replaceAll(':id', reportId.toString());
-      final voteValue = voteType == VoteType.upvote ? 'upvote' : 'downvote';
-      
-      await ApiService.post(endpoint, data: {'vote': voteValue});
-      
-      debugPrint('🗳️ Voto enviado: $voteType para reporte $reportId');
-      
-      // Recargar reportes para obtener los datos actualizados
-      await fetchMyReports();
-      await fetchPublicReports();
+      if (shouldRemove) {
+        // Eliminar voto existente
+        await _removeVote(reportId);
+        debugPrint('🗳️ Voto eliminado: $voteType para reporte $reportId');
+      } else {
+        // Crear o cambiar voto
+        await _castVote(reportId, voteType);
+        debugPrint('🗳️ Voto enviado: $voteType para reporte $reportId');
+      }
+
+      // Obtener estado actualizado desde el servidor
+      return await getVoteState(reportId);
     } catch (e) {
-      debugPrint('❌ Error al votar en reporte: $e');
+      debugPrint('❌ Error al manejar voto en reporte: $e');
       throw Exception('Error al votar en reporte: $e');
+    }
+  }
+
+  /// Envía un voto al backend
+  Future<void> _castVote(int reportId, VoteType voteType) async {
+    final endpoint = ApiConfig.voteOnReportEndpoint.replaceAll(':reportId', reportId.toString());
+    final voteValue = voteType == VoteType.upvote ? 'upvote' : 'downvote';
+    
+    await ApiService.post(endpoint, data: {'type': voteValue});
+  }
+
+  /// Elimina el voto del usuario
+  Future<void> _removeVote(int reportId) async {
+    final endpoint = ApiConfig.removeVoteEndpoint.replaceAll(':reportId', reportId.toString());
+    await ApiService.delete(endpoint);
+  }
+
+  /// Obtiene el estado completo de votación de un reporte
+  Future<VoteState> getVoteState(int reportId) async {
+    try {
+      // Obtener estadísticas de votos
+      final statsEndpoint = ApiConfig.getVoteStatsEndpoint.replaceAll(':reportId', reportId.toString());
+      final statsResponse = await ApiService.get(statsEndpoint);
+      
+      // Obtener voto del usuario actual
+      final userVoteEndpoint = ApiConfig.getMyVoteOnReportEndpoint.replaceAll(':reportId', reportId.toString());
+      String? userVote;
+      try {
+        final userVoteResponse = await ApiService.get(userVoteEndpoint);
+        userVote = userVoteResponse['type'] as String?;
+      } catch (e) {
+        // Usuario no ha votado
+        userVote = null;
+      }
+
+      return VoteState(
+        userVote: userVote,
+        upvotes: statsResponse['upvotes'] as int? ?? 0,
+        downvotes: statsResponse['downvotes'] as int? ?? 0,
+      );
+    } catch (e) {
+      debugPrint('❌ Error al obtener estado de votos: $e');
+      throw Exception('Error al obtener estado de votos: $e');
     }
   }
 
@@ -441,20 +489,34 @@ class ReportsProvider with ChangeNotifier {
   }
 
   /// Obtiene los comentarios de un reporte específico
-  Future<List<Comment>> getReportComments(int reportId) async {
+  Future<List<Comment>> getReportComments(int reportId, {int limit = 100, int offset = 0}) async {
     try {
       final endpoint = ApiConfig.getReportCommentsEndpoint
           .replaceAll(':reportId', reportId.toString());
       
-      final response = await ApiService.get(endpoint);
+      // Agregar parámetros de paginación
+      final endpointWithQuery = '$endpoint?limit=$limit&offset=$offset';
       
-      final List<dynamic> commentsData = response['data'] ?? response;
+      final response = await ApiService.get(endpointWithQuery);
+      
+      // El backend puede estar devolviendo diferentes estructuras
+      List<dynamic> commentsData;
+      if (response.containsKey('data') && response['data'] is List) {
+        commentsData = response['data'];
+      } else if (response.containsKey('comments') && response['comments'] is List) {
+        commentsData = response['comments'];
+      } else if (response.containsKey('items') && response['items'] is List) {
+        commentsData = response['items'];
+      } else if (response is List) {
+        commentsData = response;
+      } else {
+        commentsData = [];
+      }
       
       return commentsData
           .map((commentJson) => Comment.fromJson(commentJson))
           .toList();
     } catch (e) {
-      debugPrint('❌ Error al obtener comentarios: $e');
       throw Exception('Error al obtener comentarios: $e');
     }
   }
@@ -462,32 +524,111 @@ class ReportsProvider with ChangeNotifier {
   /// Alterna el seguimiento de un reporte
   Future<void> toggleFollowReport(int reportId) async {
     try {
-      // TODO: Implementar endpoints de seguimiento cuando estén disponibles en el backend
-      // final endpoint = '/v1/reports/$reportId/follow';
-      // await ApiService.post(endpoint);
+      // Obtener el estado actual de seguimiento
+      final report = _reports.firstWhere((r) => r.id == reportId);
+      final isCurrentlyFollowing = report.isFollowing;
       
-      // Por ahora simulamos el seguimiento
-      await Future.delayed(const Duration(milliseconds: 300));
-      debugPrint('🔔 Seguimiento alternado para reporte $reportId');
+      final endpoint = isCurrentlyFollowing 
+          ? ApiConfig.unfollowReportEndpoint.replaceAll(':reportId', reportId.toString())
+          : ApiConfig.followReportEndpoint.replaceAll(':reportId', reportId.toString());
+      
+      if (isCurrentlyFollowing) {
+        await ApiService.delete(endpoint);
+        debugPrint('🔕 Dejado de seguir reporte $reportId');
+      } else {
+        await ApiService.post(endpoint);
+        debugPrint('🔔 Siguiendo reporte $reportId');
+      }
+      
+      // Actualizar el estado local del reporte
+      final reportIndex = _reports.indexWhere((r) => r.id == reportId);
+      if (reportIndex != -1) {
+        _reports[reportIndex] = _reports[reportIndex].copyWith(
+          isFollowing: !isCurrentlyFollowing,
+        );
+        notifyListeners();
+      }
+      
     } catch (e) {
+      debugPrint('❌ Error al actualizar seguimiento: $e');
       throw Exception('Error al actualizar seguimiento: $e');
     }
   }
 
   /// Obtiene el historial de cambios de un reporte
-  Future<List<dynamic>> getReportHistory(int reportId) async {
+  Future<List<ReportHistory>> getReportHistory(int reportId) async {
     try {
-      // TODO: Implementar endpoint de historial cuando esté disponible en el backend
-      // final endpoint = '/v1/reports/$reportId/history';
-      // final response = await ApiService.get(endpoint);
-      // return response['data'] ?? [];
+      final endpoint = ApiConfig.getReportHistoryEndpoint.replaceAll(':id', reportId.toString());
+      debugPrint('🔍 Obteniendo historial de reporte: $endpoint');
       
-      // Por ahora simulamos el historial
-      await Future.delayed(const Duration(milliseconds: 500));
-      return [];
+      final response = await ApiService.get(endpoint);
+      debugPrint('🔍 Respuesta historial: $response');
+      
+      List<ReportHistory> historyList = [];
+      
+      // Manejar respuesta paginada
+      if (response is Map<String, dynamic>) {
+        if (response.containsKey('items')) {
+          // Respuesta paginada
+          final items = response['items'] as List?;
+          if (items != null) {
+            historyList = items
+                .map((item) => ReportHistory.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+        } else if (response.containsKey('data')) {
+          // Respuesta con wrapper 'data'
+          final historyData = response['data'] as List?;
+          if (historyData != null) {
+            historyList = historyData
+                .map((item) => ReportHistory.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+        }
+      } else if (response is List) {
+        // Si la respuesta es directamente una lista
+        historyList = response
+            .map((item) => ReportHistory.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+      
+      // Enriquecer con información de usuarios
+      final enrichedHistory = await _enrichHistoryWithUserInfo(historyList);
+      
+      return enrichedHistory;
     } catch (e) {
+      debugPrint('❌ Error al obtener historial del reporte $reportId: $e');
       throw Exception('Error al obtener historial: $e');
     }
+  }
+
+  /// Enriquece el historial con información de usuarios
+  Future<List<ReportHistory>> _enrichHistoryWithUserInfo(List<ReportHistory> historyList) async {
+    final enrichedHistory = <ReportHistory>[];
+    
+    for (final historyItem in historyList) {
+      try {
+        // Obtener información del usuario si no la tenemos
+        if (historyItem.userName == null && historyItem.creatorId > 0) {
+          final userInfo = await getUserById(historyItem.creatorId);
+          if (userInfo != null) {
+            enrichedHistory.add(historyItem.copyWithUserInfo(
+              userName: userInfo['name'] as String?,
+              userLastName: userInfo['lastName'] as String?,
+            ));
+          } else {
+            enrichedHistory.add(historyItem);
+          }
+        } else {
+          enrichedHistory.add(historyItem);
+        }
+      } catch (e) {
+        debugPrint('⚠️ Error al obtener info de usuario ${historyItem.creatorId}: $e');
+        enrichedHistory.add(historyItem);
+      }
+    }
+    
+    return enrichedHistory;
   }
 
   /// Obtiene la información de un usuario por su ID
@@ -504,6 +645,215 @@ class ReportsProvider with ChangeNotifier {
       debugPrint('❌ Error al obtener usuario $userId: $e');
       return null;
     }
+  }
+
+  /// Obtiene todos los reportes creados por el usuario autenticado
+  Future<List<Report>> getMyReports({int page = 1, int limit = 20}) async {
+    try {
+      final endpoint = '${ApiConfig.getMyReportsEndpoint}?page=$page&limit=$limit';
+      final response = await ApiService.get(endpoint);
+      
+      debugPrint('📋 Cargando mis reportes - página $page');
+      
+      // Si el backend devuelve paginación
+      final data = response['data'] ?? response;
+      if (data is List) {
+        return data.map((reportData) => Report.fromJson(reportData)).toList();
+      } else if (data['items'] != null) {
+        // Formato paginado
+        final items = data['items'] as List;
+        return items.map((reportData) => Report.fromJson(reportData)).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint('❌ Error al cargar mis reportes: $e');
+      // Si no existe el endpoint, filtrar del cache
+      return _reports.where((report) {
+        // Filtrar por usuario actual (cuando esté disponible el ID del usuario)
+        return true; // Por ahora devolver todos hasta implementar filtro por usuario
+      }).toList();
+    }
+  }
+
+  /// Obtiene reportes en los que el usuario ha participado (comentado)
+  Future<List<Report>> getMyParticipatedReports(int userId, {int page = 1, int limit = 20}) async {
+    try {
+      debugPrint('💬 Cargando mis participaciones para usuario: $userId');
+      
+      // Si no hay reportes cargados, cargar todos primero
+      if (_reports.isEmpty) {
+        await fetchAllReports();
+      }
+      
+      debugPrint('💬 Total reportes disponibles: ${_reports.length}');
+      
+      List<Report> participatedReports = [];
+      
+      // Para cada reporte, cargar sus comentarios y verificar si el usuario participó
+      for (Report report in _reports) {
+        try {
+          debugPrint('🔍 Verificando reporte ${report.id}: ${report.title}');
+          final comments = await getReportComments(report.id);
+          debugPrint('💬 Reporte ${report.id} tiene ${comments.length} comentarios');
+          
+          final hasUserCommented = comments.any((comment) {
+            debugPrint('👤 Comentario de usuario ${comment.creatorId} vs usuario actual $userId');
+            return comment.creatorId == userId;
+          });
+          
+          if (hasUserCommented) {
+            debugPrint('✅ Usuario $userId comentó en reporte ${report.id}: ${report.title}');
+            participatedReports.add(report);
+          }
+        } catch (e) {
+          debugPrint('⚠️ Error cargando comentarios del reporte ${report.id}: $e');
+          // Continuar con el siguiente reporte si hay error
+        }
+      }
+      
+      debugPrint('💬 Participaciones encontradas: ${participatedReports.length}');
+      return participatedReports;
+      
+    } catch (e) {
+      debugPrint('❌ Error al cargar mis participaciones: $e');
+      return [];
+    }
+  }
+
+  /// Obtiene los reportes que el usuario está siguiendo junto con su último cambio
+  Future<List<Map<String, dynamic>>> getMyFollowedReportsWithUpdates() async {
+    try {
+      debugPrint('🔔 Obteniendo reportes seguidos...');
+      
+      // Cargar todos los reportes si no están cargados
+      if (_reports.isEmpty) {
+        await fetchAllReports();
+      }
+      
+      // Intentar usar el endpoint del backend
+      List<Report> followedReports = [];
+      
+      try {
+        final endpoint = ApiConfig.getMyFollowedReportsEndpoint;
+        debugPrint('🔔 Consultando endpoint: $endpoint');
+        final response = await ApiService.get(endpoint);
+        
+        debugPrint('🔔 Respuesta del backend: $response');
+        
+        // Manejar estructura paginada del backend
+        if (response.containsKey('items')) {
+          final List<dynamic> followedItems = response['items'];
+          debugPrint('🔔 Items seguidos recibidos: ${followedItems.length}');
+          
+          // Extraer IDs de reportes seguidos
+          List<int> followedIds = followedItems.map((item) => item['reportId'] as int).toList();
+          debugPrint('🔔 IDs de reportes seguidos: $followedIds');
+          
+          // Filtrar reportes locales que coincidan con los IDs seguidos
+          followedReports = _reports.where((report) => followedIds.contains(report.id)).toList();
+          
+          // Actualizar estado local de seguimiento
+          for (final report in _reports) {
+            final shouldFollow = followedIds.contains(report.id);
+            if (report.isFollowing != shouldFollow) {
+              final reportIndex = _reports.indexWhere((r) => r.id == report.id);
+              if (reportIndex != -1) {
+                _reports[reportIndex] = _reports[reportIndex].copyWith(isFollowing: shouldFollow);
+              }
+            }
+          }
+          
+          debugPrint('🔔 Reportes seguidos encontrados: ${followedReports.length}');
+        } else {
+          debugPrint('⚠️ Respuesta inesperada del backend, usando fallback local');
+          followedReports = _reports.where((report) => report.isFollowing).toList();
+        }
+      } catch (e) {
+        debugPrint('⚠️ Error con endpoint del backend: $e');
+        debugPrint('🔄 Usando fallback: reportes con isFollowing=true');
+        followedReports = _reports.where((report) => report.isFollowing).toList();
+      }
+      
+      debugPrint('🔔 Total reportes seguidos: ${followedReports.length}');
+      
+      // Si no hay reportes seguidos, retornar lista vacía
+      if (followedReports.isEmpty) {
+        debugPrint('📭 No hay reportes seguidos disponibles');
+        return [];
+      }
+      
+      List<Map<String, dynamic>> reportsWithUpdates = [];
+      
+      for (Report report in followedReports) {
+        try {
+          // Obtener el historial del reporte para encontrar el último cambio
+          final history = await getReportHistory(report.id);
+          
+          ReportHistory? lastChange;
+          if (history.isNotEmpty) {
+            // Ordenar por fecha más reciente y tomar el primero
+            history.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            lastChange = history.first;
+          }
+          
+          reportsWithUpdates.add({
+            'report': report,
+            'lastChange': lastChange,
+            'hasRecentUpdate': lastChange != null && 
+                _isRecentUpdate(lastChange.createdAt),
+          });
+          
+        } catch (e) {
+          debugPrint('⚠️ Error obteniendo historial para reporte ${report.id}: $e');
+          // Agregar reporte sin información de cambio
+          reportsWithUpdates.add({
+            'report': report,
+            'lastChange': null,
+            'hasRecentUpdate': false,
+          });
+        }
+      }
+      
+      // Ordenar por reportes con cambios recientes primero
+      reportsWithUpdates.sort((a, b) {
+        final aHasRecent = a['hasRecentUpdate'] as bool;
+        final bHasRecent = b['hasRecentUpdate'] as bool;
+        
+        if (aHasRecent && !bHasRecent) return -1;
+        if (!aHasRecent && bHasRecent) return 1;
+        
+        // Si ambos tienen o no tienen cambios recientes, ordenar por fecha del último cambio
+        final aLastChange = a['lastChange'] as ReportHistory?;
+        final bLastChange = b['lastChange'] as ReportHistory?;
+        
+        if (aLastChange != null && bLastChange != null) {
+          return bLastChange.createdAt.compareTo(aLastChange.createdAt);
+        }
+        
+        if (aLastChange != null && bLastChange == null) return -1;
+        if (aLastChange == null && bLastChange != null) return 1;
+        
+        // Si ambos son null, ordenar por fecha de creación del reporte
+        final aReport = a['report'] as Report;
+        final bReport = b['report'] as Report;
+        return bReport.createdAt.compareTo(aReport.createdAt);
+      });
+      
+      debugPrint('🔔 Reportes seguidos con actualizaciones: ${reportsWithUpdates.length}');
+      return reportsWithUpdates;
+      
+    } catch (e) {
+      debugPrint('❌ Error al obtener reportes seguidos: $e');
+      return [];
+    }
+  }
+  
+  /// Determina si un cambio es reciente (últimas 48 horas)
+  bool _isRecentUpdate(DateTime changeDate) {
+    final now = DateTime.now();
+    final difference = now.difference(changeDate);
+    return difference.inHours <= 48;
   }
 
   void _setLoading(bool loading) {
