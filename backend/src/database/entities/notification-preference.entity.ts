@@ -1,4 +1,4 @@
-import { Column, Entity, OneToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { User } from "./user.entity";
 
 @Entity()
@@ -8,6 +8,7 @@ export class NotificationPreference {
     @OneToOne(() => User, (user) => user.notificationPreference, {
         onDelete: "CASCADE",
     })
+    @JoinColumn({ name: "userId", referencedColumnName: "id" })
     user: User;
     @Column({ type: "boolean", default: true })
     sseEnabled: boolean;

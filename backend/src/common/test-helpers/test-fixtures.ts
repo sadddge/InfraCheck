@@ -1,4 +1,5 @@
 import { Readable } from 'node:stream';
+import { NotificationPreference } from 'src/database/entities/notification-preference.entity';
 import { Comment } from '../../database/entities/comment.entity';
 import { Message } from '../../database/entities/message.entity';
 import { ReportChange } from '../../database/entities/report-change.entity';
@@ -13,7 +14,6 @@ import { ReportState } from '../enums/report-state.enums';
 import { Role } from '../enums/roles.enums';
 import { UserStatus } from '../enums/user-status.enums';
 import { VoteType } from '../enums/vote-type.enums';
-import { NotificationPreference } from 'src/database/entities/notification-preference.entity';
 
 /**
  * Test fixtures for creating mock data
@@ -35,6 +35,7 @@ export function createMockUser(overrides: Partial<User> = {}): User {
         passwordUpdatedAt: null,
         notificationPreference: {} as NotificationPreference,
         notifications: [],
+        deviceTokens: [],
         refreshTokens: [],
         reports: [],
         comments: [],
