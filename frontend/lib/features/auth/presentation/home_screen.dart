@@ -6,7 +6,10 @@ import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../shared/widgets/navigation_bar.dart';
 import '../../../shared/widgets/google_map_widget.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/notification_provider.dart';
 import '../../camera/domain/camera_provider.dart';
+import '../../notifications/presentation/notification_widget.dart';
 
 /// Pantalla principal de la aplicación InfraCheck.
 /// 
@@ -50,6 +53,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.dark,
       ));
+      
+      // Inicializar notificaciones si el usuario está autenticado
+      _initializeNotifications();
     });
   }
 
@@ -119,6 +125,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Inicializa las notificaciones para el usuario autenticado
+  void _initializeNotifications() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+    
+    // Conectar AuthProvider con NotificationProvider
+    authProvider.setNotificationProvider(notificationProvider);
+    
+    // Si hay un usuario autenticado, conectar notificaciones
+    if (authProvider.user != null) {
+      notificationProvider.initialize().then((_) {
+        notificationProvider.connectForUser(authProvider.user!.id);
+      }).catchError((error) {
+        debugPrint('Error inicializando notificaciones: $error');
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,30 +174,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Botón de notificaciones
-                  GestureDetector(
-                    onTap: () {
-                      // TODO: Implementar notificaciones de reportes seguidos
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Notificaciones de reportes en desarrollo'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFBCE3E0),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      child: const Icon(
-                        Icons.notifications_outlined,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
-                    ),
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFBCE3E0),
+                    borderRadius: BorderRadius.circular(28),
                   ),
+                  child: NotificationIconWidget(
+                    iconSize: 24,
+                    iconColor: AppColors.primary,
+                  ),
+                ),
                   // Botón de chat
                   GestureDetector(
                     onTap: () {
