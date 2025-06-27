@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -18,6 +19,9 @@ import 'features/camera/domain/models/photo_entry.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  debugPrint('=== INICIO DE LA APLICACIÓN ===');
+  debugPrint('Firebase apps al inicio: ${Firebase.apps.length}');
+  
   // Bloquear orientación a solo vertical
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -34,10 +38,33 @@ void main() async {
     systemNavigationBarIconBrightness: Brightness.dark,
   ));
   
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // Initialize Firebase - verificación más robusta
+  try {
+    debugPrint('Verificando apps de Firebase existentes...');
+    for (var app in Firebase.apps) {
+      debugPrint('App existente: ${app.name} - Options: ${app.options.projectId}');
+    }
+    
+    if (Firebase.apps.isEmpty) {
+      debugPrint('Inicializando Firebase por primera vez...');
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint('Firebase inicializado exitosamente');
+    } else {
+      debugPrint('Firebase ya estaba inicializado, usando app existente: ${Firebase.app().name}');
+    }
+  } on FirebaseException catch (e) {
+    debugPrint('FirebaseException: ${e.code} - ${e.message}');
+    if (e.code == 'duplicate-app') {
+      debugPrint('App duplicada detectada, usando la existente');
+    } else {
+      rethrow;
+    }
+  } catch (e) {
+    debugPrint('Error general inicializando Firebase: $e');
+    rethrow;
+  }
   
   // Initialize Hive
   await Hive.initFlutter();

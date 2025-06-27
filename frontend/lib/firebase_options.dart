@@ -2,7 +2,7 @@
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show defaultTargetPlatform, kIsWeb, TargetPlatform, debugPrint;
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -53,13 +53,25 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get android {
+    // Debug: verificar qué valores estamos recibiendo
+    const apiKey = String.fromEnvironment('FIREBASE_API_KEY', defaultValue: 'REPLACE_WITH_YOUR_API_KEY');
+    const appId = String.fromEnvironment('FIREBASE_APP_ID', defaultValue: 'REPLACE_WITH_YOUR_APP_ID');
+    const messagingSenderId = String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID', defaultValue: 'REPLACE_WITH_YOUR_SENDER_ID');
+    const projectId = String.fromEnvironment('FIREBASE_PROJECT_ID', defaultValue: 'REPLACE_WITH_YOUR_PROJECT_ID');
+    const storageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET', defaultValue: 'REPLACE_WITH_YOUR_STORAGE_BUCKET');
+    
+    debugPrint('Firebase Options Debug:');
+    debugPrint('API Key: ${apiKey.substring(0, 10)}...');
+    debugPrint('Project ID: $projectId');
+    debugPrint('App ID: ${appId.substring(0, 15)}...');
+    
     // Usar valores desde variables de entorno (más seguro)
-    return const FirebaseOptions(
-      apiKey: String.fromEnvironment('FIREBASE_API_KEY', defaultValue: 'REPLACE_WITH_YOUR_API_KEY'),
-      appId: String.fromEnvironment('FIREBASE_APP_ID', defaultValue: 'REPLACE_WITH_YOUR_APP_ID'),
-      messagingSenderId: String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID', defaultValue: 'REPLACE_WITH_YOUR_SENDER_ID'),
-      projectId: String.fromEnvironment('FIREBASE_PROJECT_ID', defaultValue: 'REPLACE_WITH_YOUR_PROJECT_ID'),
-      storageBucket: String.fromEnvironment('FIREBASE_STORAGE_BUCKET', defaultValue: 'REPLACE_WITH_YOUR_STORAGE_BUCKET'),
+    return FirebaseOptions(
+      apiKey: apiKey,
+      appId: appId,
+      messagingSenderId: messagingSenderId,
+      projectId: projectId,
+      storageBucket: storageBucket,
     );
   }
 }
