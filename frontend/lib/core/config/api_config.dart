@@ -130,6 +130,20 @@ class ApiConfig {
   /// Endpoint para actualizar estado de un reporte
   static const String updateReportStateEndpoint = '/v1/reports/:id/state';
   
+  /// Endpoint para obtener reportes creados por el usuario autenticado
+  /// Método: GET
+  /// URL: /v1/users/me/reports
+  /// Query params: ?page=1&limit=10
+  /// Response: Lista paginada de reportes del usuario
+  static const String getMyReportsEndpoint = '/v1/users/me/reports';
+
+  /// Endpoint para obtener reportes en los que el usuario ha comentado
+  /// Método: GET
+  /// URL: /v1/users/me/participated-reports
+  /// Query params: ?page=1&limit=10
+  /// Response: Lista paginada de reportes con participación del usuario
+  static const String getMyParticipatedReportsEndpoint = '/v1/users/me/participated-reports';
+
   // === ENDPOINTS DE VOTOS ===
   /// Endpoint para votar en un reporte (upvote/downvote)
   /// Método: POST
