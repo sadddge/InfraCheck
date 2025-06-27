@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'notification_provider.dart';
 import '../models/user_model.dart';
 import '../models/auth_models.dart';
 import '../models/auth_error_models.dart';
@@ -51,6 +52,9 @@ class AuthProvider extends ChangeNotifier {  /// Estado actual de autenticación
   
   /// Token temporal para restablecimiento de contraseña
   String? _resetToken;
+
+  /// Referencia al provider de notificaciones (se inyecta desde el contexto)
+  NotificationProvider? _notificationProvider;
 
   // ==========================================
   // GETTERS PÚBLICOS
@@ -253,6 +257,9 @@ class AuthProvider extends ChangeNotifier {  /// Estado actual de autenticación
     _user = user;
     _clearError();
     notifyListeners();
+    
+    // Inicializar notificaciones para el usuario autenticado
+    _initializeNotificationsForUser(user.id);
   }
 
   void _setUnauthenticated() {
@@ -260,6 +267,9 @@ class AuthProvider extends ChangeNotifier {  /// Estado actual de autenticación
     _user = null;
     _clearError();
     notifyListeners();
+    
+    // Desconectar notificaciones al cerrar sesión
+    _disconnectNotifications();
   }
 
   void _setLoading(bool loading) {
@@ -307,5 +317,26 @@ class AuthProvider extends ChangeNotifier {  /// Estado actual de autenticación
   void clearError() {
     _clearError();
     notifyListeners();
+  }
+
+  /// Establece la referencia al provider de notificaciones
+  void setNotificationProvider(NotificationProvider provider) {
+    _notificationProvider = provider;
+  }
+
+  /// Inicializa las notificaciones para un usuario autenticado
+  void _initializeNotificationsForUser(int userId) {
+    _notificationProvider?.initialize().then((_) {
+      _notificationProvider?.connectForUser(userId);
+    }).catchError((error) {
+      debugPrint('Error inicializando notificaciones: $error');
+    });
+  }
+
+  /// Desconecta las notificaciones
+  void _disconnectNotifications() {
+    _notificationProvider?.disconnect().catchError((error) {
+      debugPrint('Error desconectando notificaciones: $error');
+    });
   }
 }
