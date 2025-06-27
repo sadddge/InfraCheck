@@ -1,10 +1,13 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { VERIFICATION } from 'src/common/constants/verification.constants';
 import { UserStatus } from 'src/common/enums/user-status.enums';
 import { invalidVerificationCode } from 'src/common/helpers/exception.helper';
+import { NotificationPreference } from 'src/database/entities/notification-preference.entity';
 import { IUserService, USER_SERVICE } from 'src/modules/users/interfaces/user-service.interface';
 import { IVerificationService } from 'src/modules/verification/interfaces/verification-service.interface';
+import { Repository } from 'typeorm';
 import { RegisterResponseDto } from '../dto/register-response.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { IUserRegistrationService } from '../interfaces/user-registration-service.interface';
@@ -59,7 +62,9 @@ export class UserRegistrationService implements IUserRegistrationService {
         @Inject(USER_SERVICE) private readonly usersService: IUserService,
         @Inject(VERIFICATION.REGISTER_TOKEN)
         private readonly verificationService: IVerificationService,
-    ) {}
+        @InjectRepository(NotificationPreference)
+        private readonly notificationPreferenceRepository: Repository<NotificationPreference>,
+    ) { }
 
     /** @inheritDoc */
     async register(dto: RegisterDto): Promise<RegisterResponseDto> {
@@ -70,7 +75,14 @@ export class UserRegistrationService implements IUserRegistrationService {
         });
 
         await this.verificationService.sendVerificationCode(user.phoneNumber);
+        const pref = this.notificationPreferenceRepository.create({
+            userId: user.id,
+            user: user,
+            sseEnabled: true,
+            pushEnabled: false,
+        });
 
+        await this.notificationPreferenceRepository.save(pref);
         return {
             id: user.id,
             phoneNumber: user.phoneNumber,
