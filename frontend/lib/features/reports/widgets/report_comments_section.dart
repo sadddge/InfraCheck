@@ -36,11 +36,19 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
   @override
   void initState() {
     super.initState();
+    debugPrint('🎯 ReportCommentsSection initState - reportId: ${widget.reportId}');
     // Ordenar comentarios iniciales por fecha más reciente primero
     final sortedComments = List<Comment>.from(widget.comments);
     sortedComments.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     _comments = sortedComments;
     _loadComments();
+    
+    // Debug: verificar información del usuario actual
+    if (widget.currentUser != null) {
+      debugPrint('🔍 Usuario actual en initState: ${widget.currentUser!.toJson()}');
+    } else {
+      debugPrint('⚠️ No hay usuario actual en initState');
+    }
   }
 
   @override
@@ -87,9 +95,15 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
   }
 
   Future<void> _submitComment() async {
-    if (!_formKey.currentState!.validate()) return;
+    debugPrint('🚀 _submitComment llamado');
+    if (!_formKey.currentState!.validate()) {
+      debugPrint('❌ Validación del formulario falló');
+      return;
+    }
 
     final commentContent = _commentController.text.trim();
+    debugPrint('📝 Contenido del comentario: "$commentContent"');
+    
     Comment? optimisticComment;
 
     debugPrint('🚀 Iniciando creación de comentario...');
@@ -99,17 +113,29 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
 
     try {
       // Crear comentario optimista para mostrar inmediatamente
+      debugPrint('🔍 Verificando usuario actual...');
       if (widget.currentUser != null) {
+        final user = widget.currentUser!;
+        debugPrint('👤 Usuario actual encontrado: ID=${user.id}, name="${user.name}", lastName="${user.lastName}"');
+        
+        // Asegurar que tenemos nombres válidos para el comentario optimista
+        final userName = user.name.trim().isNotEmpty ? user.name.trim() : 'Usuario';
+        final userLastName = user.lastName?.trim().isNotEmpty == true ? user.lastName!.trim() : '';
+        
         optimisticComment = Comment(
           id: DateTime.now().millisecondsSinceEpoch, // ID temporal
           content: commentContent,
-          creatorId: widget.currentUser!.id,
-          creatorName: widget.currentUser!.name,
-          creatorLastName: widget.currentUser!.lastName,
+          creatorId: user.id,
+          creatorName: userName,
+          creatorLastName: userLastName.isNotEmpty ? userLastName : null,
           reportId: widget.reportId,
           createdAt: DateTime.now(),
         );
 
+        debugPrint('✨ Comentario optimista creado:');
+        debugPrint('   - creatorName: "${optimisticComment.creatorName}"');
+        debugPrint('   - creatorLastName: "${optimisticComment.creatorLastName}"');
+        debugPrint('   - creatorFullName: "${optimisticComment.creatorFullName}"');
         debugPrint('✨ Agregando comentario optimista con ID: ${optimisticComment.id}');
         // Agregar optimistamente a la UI AL PRINCIPIO (más reciente arriba)
         setState(() {
@@ -127,6 +153,8 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
             );
           }
         });
+      } else {
+        debugPrint('❌ No hay usuario actual disponible para comentario optimista');
       }
 
       final reportsProvider = context.read<ReportsProvider>();
@@ -140,12 +168,26 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
       debugPrint('✅ Comentario creado en backend con ID: ${newComment.id}');
       
       // Reemplazar comentario optimista con el real del backend
+      // IMPORTANTE: conservar la información del usuario del comentario optimista
+      // ya que el backend solo devuelve creator.id sin name/lastName
       setState(() {
         _comments = _comments.map((comment) {
-          return comment.id == optimisticComment?.id ? newComment : comment;
+          if (comment.id == optimisticComment?.id) {
+            // Crear nuevo comentario con datos del backend pero conservando info de usuario
+            return Comment(
+              id: newComment.id,
+              content: newComment.content,
+              creatorId: newComment.creatorId,
+              creatorName: optimisticComment?.creatorName ?? newComment.creatorName,
+              creatorLastName: optimisticComment?.creatorLastName ?? newComment.creatorLastName,
+              reportId: newComment.reportId,
+              createdAt: newComment.createdAt,
+            );
+          }
+          return comment;
         }).toList();
       });
-      debugPrint('🔄 Comentario optimista reemplazado por el real. Total: ${_comments.length}');
+      debugPrint('🔄 Comentario optimista reemplazado conservando info de usuario. Total: ${_comments.length}');
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -489,7 +531,10 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _submitComment,
+                      onPressed: _isLoading ? null : () {
+                        debugPrint('🔥 Botón de comentario presionado (_isLoading: $_isLoading)');
+                        _submitComment();
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
