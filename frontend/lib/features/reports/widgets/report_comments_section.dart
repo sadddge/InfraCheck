@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 import '../../../core/models/comment_model.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/services/permissions_service.dart';
@@ -11,23 +12,25 @@ class ReportCommentsSection extends StatefulWidget {
   final int reportId;
   final List<Comment> comments;
   final User? currentUser;
-  final VoidCallback? onCommentAdded;
+  final VoidCallback? onCommentsChanged;
 
   const ReportCommentsSection({
     super.key,
     required this.reportId,
     required this.comments,
     required this.currentUser,
-    this.onCommentAdded,
+    this.onCommentsChanged,
   });
 
   @override
   State<ReportCommentsSection> createState() => _ReportCommentsSectionState();
 }
 
-class _ReportCommentsSectionState extends State<ReportCommentsSection> {
+class _ReportCommentsSectionState extends State<ReportCommentsSection>
+    with TickerProviderStateMixin {
   final TextEditingController _commentController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
   List<Comment> _comments = [];
 
@@ -41,12 +44,30 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
   @override
   void didUpdateWidget(ReportCommentsSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Solo actualizar si el reportId cambió, no por cambios en comments
+    
+    // Solo actualizar si cambió el reportId
     if (oldWidget.reportId != widget.reportId) {
       setState(() {
         _comments = List.from(widget.comments);
       });
-      _loadComments();
+      _loadComments(forceRefresh: true);
+    } 
+    // Si el reportId es el mismo, solo sincronizar si no hay operaciones en progreso
+    // y si hay una diferencia significativa entre los comentarios
+    else if (!_isLoading) {
+      // Sincronizar solo si los IDs de comentarios son diferentes 
+      // (evita sobrescribir cambios optimistas válidos)
+      final currentIds = _comments.map((c) => c.id).toSet();
+      final newIds = widget.comments.map((c) => c.id).toSet();
+      
+      // Si hay comentarios nuevos en el widget padre que no están en nuestro estado local,
+      // y no estamos en medio de una operación, entonces sincronizar
+      if (newIds.difference(currentIds).isNotEmpty || 
+          currentIds.difference(newIds).isNotEmpty) {
+        setState(() {
+          _comments = List.from(widget.comments);
+        });
+      }
     }
   }
 
@@ -72,36 +93,83 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
   Future<void> _submitComment() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final commentContent = _commentController.text.trim();
+    Comment? optimisticComment;
+
     setState(() {
       _isLoading = true;
     });
 
     try {
+      // Crear comentario optimista para mostrar inmediatamente
+      if (widget.currentUser != null) {
+        optimisticComment = Comment(
+          id: DateTime.now().millisecondsSinceEpoch, // ID temporal
+          content: commentContent,
+          creatorId: widget.currentUser!.id,
+          creatorName: widget.currentUser!.name,
+          creatorLastName: widget.currentUser!.lastName,
+          reportId: widget.reportId,
+          createdAt: DateTime.now(),
+        );
+
+        // Agregar optimistamente a la UI
+        setState(() {
+          _comments = [..._comments, optimisticComment!];
+        });
+
+        // Hacer scroll hacia el comentario nuevo inmediatamente
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      }
+
       final reportsProvider = context.read<ReportsProvider>();
-      await reportsProvider.addComment(
+      final newComment = await reportsProvider.addComment(
         reportId: widget.reportId,
-        content: _commentController.text.trim(),
+        content: commentContent,
       );
 
       _commentController.clear();
       
-      // Recargar comentarios del backend para asegurar sincronización
-      await _loadComments();
+      // Reemplazar comentario optimista con el real del backend
+      setState(() {
+        _comments = _comments.map((comment) {
+          return comment.id == optimisticComment?.id ? newComment : comment;
+        }).toList();
+      });
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Comentario agregado exitosamente'),
             backgroundColor: AppColors.primary,
+            duration: Duration(seconds: 2),
           ),
         );
       }
       
-      // Llamar callback después de actualizar UI
-      if (widget.onCommentAdded != null) {
-        widget.onCommentAdded!();
-      }
+      // Notificar al widget padre sobre el cambio con un delay para permitir 
+      // que la actualización optimista se mantenga visible
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted && widget.onCommentsChanged != null) {
+          widget.onCommentsChanged!();
+        }
+      });
     } catch (e) {
+      // Rollback: remover comentario optimista en caso de error
+      if (optimisticComment != null) {
+        setState(() {
+          _comments = _comments.where((comment) => comment.id != optimisticComment!.id).toList();
+        });
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -142,32 +210,51 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
 
     if (confirm != true || !mounted) return;
 
+    // Guardar el comentario para posible rollback
+    final commentIndex = _comments.indexWhere((c) => c.id == commentId);
+    final deletedComment = commentIndex >= 0 ? _comments[commentIndex] : null;
+
+    // Eliminación optimista
+    if (deletedComment != null) {
+      setState(() {
+        _comments = _comments.where((c) => c.id != commentId).toList();
+      });
+    }
+
     try {
       final reportsProvider = context.read<ReportsProvider>();
       await reportsProvider.deleteComment(widget.reportId, commentId);
-
-      // Recargar comentarios del backend para asegurar sincronización
-      await _loadComments();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Comentario eliminado exitosamente'),
             backgroundColor: AppColors.primary,
+            duration: Duration(seconds: 2),
           ),
         );
       }
 
-      // Llamar callback después de actualizar UI
-      if (widget.onCommentAdded != null) {
-        widget.onCommentAdded!();
-      }
+      // Notificar al widget padre sobre el cambio con un delay
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted && widget.onCommentsChanged != null) {
+          widget.onCommentsChanged!();
+        }
+      });
     } catch (e) {
+      // Rollback: restaurar comentario en caso de error
+      if (deletedComment != null && commentIndex >= 0) {
+        setState(() {
+          _comments.insert(commentIndex, deletedComment);
+        });
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al eliminar comentario: $e'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -175,31 +262,59 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
   }
 
   /// Carga los comentarios del reporte desde el backend
-  Future<void> _loadComments() async {
+  /// Solo debe usarse para sincronización inicial o refrescos manuales
+  Future<void> _loadComments({bool forceRefresh = false}) async {
     if (!mounted) return;
     
+    // Si es un refresh forzado, marcar que estamos cargando
+    if (forceRefresh) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+    
+    // Evitar carga si ya tenemos comentarios y no es un refresh forzado
+    if (!forceRefresh && _comments.isNotEmpty && !_isLoading) return;
+    
     try {
+      debugPrint('🔄 Cargando comentarios para reporte ${widget.reportId} (force: $forceRefresh)');
+      
       final reportsProvider = context.read<ReportsProvider>();
       final comments = await reportsProvider.getReportComments(
         widget.reportId,
         limit: 100, // Asegurar que obtenemos hasta 100 comentarios
       );
       
+      debugPrint('📝 Comentarios cargados desde backend: ${comments.length}');
+      comments.forEach((c) => debugPrint('  - ID: ${c.id}, Contenido: ${c.content.substring(0, math.min(50, c.content.length))}...'));
+      
       if (mounted) {
         setState(() {
           _comments = comments;
+          if (forceRefresh) {
+            _isLoading = false;
+          }
         });
       }
     } catch (e) {
+      debugPrint('❌ Error cargando comentarios: $e');
       if (mounted) {
-        setState(() {});
+        if (forceRefresh) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar comentarios: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        // Solo mostrar error si era un refresh manual
+        if (forceRefresh) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error al cargar comentarios: $e'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
       }
     }
   }
@@ -357,6 +472,21 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(
+                    Icons.refresh,
+                    size: 20,
+                  ),
+                  color: AppColors.primary,
+                  onPressed: () => _loadComments(forceRefresh: true),
+                  tooltip: 'Actualizar comentarios',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
                   ),
                 ),
               ],

@@ -89,7 +89,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     }
   }
 
-  /// Refresca el reporte específico (para comentarios)
+  /// Refresca el reporte específico (para comentarios y otros cambios)
   Future<void> _refreshReport() async {
     if (_report == null) return;
     
@@ -113,6 +113,17 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         return true;
       }());
     }
+  }
+
+  /// Callback optimizado para cambios en comentarios
+  void _onCommentsChanged() {
+    // En lugar de recargar inmediatamente, dar tiempo para que el provider se actualice
+    // y luego sincronizar después de la operación
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _refreshReport();
+      }
+    });
   }
 
   /// Maneja el voto en el reporte
@@ -300,7 +311,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 reportId: _report!.id,
                 comments: _report!.comments ?? [],
                 currentUser: authProvider.user,
-                onCommentAdded: _refreshReport, // Agregado para refrescar
+                onCommentsChanged: _onCommentsChanged, // Callback mejorado
               );
             },
           ),
