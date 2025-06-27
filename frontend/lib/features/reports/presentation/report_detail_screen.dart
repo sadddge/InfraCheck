@@ -37,6 +37,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   Report? _report;
   VoteState _voteState = VoteState(upvotes: 0, downvotes: 0);
   bool _isLoading = true;
+  bool _isFollowLoading = false;
   String? _error;
 
   @override
@@ -142,7 +143,13 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   /// Maneja el seguimiento/dejar de seguir el reporte
   Future<void> _handleFollowToggle() async {
-    if (_report == null) return;
+    if (_report == null || _isFollowLoading) return;
+
+    setState(() {
+      _isFollowLoading = true;
+    });
+
+    final wasFollowing = _report!.isFollowing;
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
@@ -150,14 +157,55 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       
       // Recargar para obtener el estado actualizado
       await _loadReportDetails();
-    } catch (e) {
+      
+      // Mostrar feedback exitoso
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al actualizar seguimiento: $e'),
-            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                Icon(
+                  wasFollowing ? Icons.notifications_off : Icons.notifications_active,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  wasFollowing 
+                      ? 'Ya no sigues este reporte' 
+                      : '¡Ahora sigues este reporte!',
+                ),
+              ],
+            ),
+            backgroundColor: wasFollowing ? Colors.orange : AppColors.primary,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
           ),
         );
+      }
+    } catch (e) {
+      debugPrint('❌ Error al actualizar seguimiento: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: $e')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFollowLoading = false;
+        });
       }
     }
   }
@@ -189,12 +237,23 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
               tooltip: 'Ver historial',
             ),
             IconButton(
-              icon: Icon(
-                _report!.isFollowing ? Icons.notifications_active : Icons.notifications_none,
-                color: _report!.isFollowing ? AppColors.primary : AppColors.textPrimary,
-              ),
-              onPressed: _handleFollowToggle,
-              tooltip: _report!.isFollowing ? 'Dejar de seguir' : 'Seguir reporte',
+              icon: _isFollowLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : Icon(
+                      _report!.isFollowing ? Icons.notifications_active : Icons.notifications_none,
+                      color: _report!.isFollowing ? AppColors.primary : AppColors.textPrimary,
+                    ),
+              onPressed: _isFollowLoading ? null : _handleFollowToggle,
+              tooltip: _isFollowLoading 
+                  ? 'Actualizando...'
+                  : (_report!.isFollowing ? 'Dejar de seguir' : 'Seguir reporte'),
             ),
           ],
         ],

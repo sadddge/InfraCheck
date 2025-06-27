@@ -17,6 +17,7 @@ import 'features/auth/presentation/admin_users_screen.dart';
 import 'features/reports/presentation/create_report_screen.dart';
 import 'features/reports/presentation/admin_reports_screen.dart';
 import 'features/camera/domain/models/photo_entry.dart';
+import 'features/chat/presentation/chat_screen.dart';
 
 /// Crea una transición suave sin animación extraña para navegación de navbar
 Page<dynamic> _createPage(Widget child, GoRouterState state) {
@@ -216,6 +217,13 @@ GoRouter createRouter(AuthProvider authProvider) {
       path: '/admin/reports',
       name: 'admin-reports',
       pageBuilder: (context, state) => _createPage(const AdminReportsScreen(), state),
+    ),
+    
+    // RUTA: Chat comunitario
+    GoRoute(
+      path: '/chat',
+      name: 'chat',
+      pageBuilder: (context, state) => _createPage(const ChatScreen(), state),
     ),
   ],
 

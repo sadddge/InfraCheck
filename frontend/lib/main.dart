@@ -11,6 +11,7 @@ import 'core/providers/notification_provider.dart';
 import 'features/camera/domain/camera_provider.dart';
 import 'features/camera/domain/models/photo_entry.dart';
 import 'features/reports/domain/reports_provider.dart';
+import 'features/chat/providers/chat_provider.dart';
 
 
 /// Punto de entrada principal de la aplicación InfraCheck.
@@ -98,6 +99,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CameraProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => ReportsProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
