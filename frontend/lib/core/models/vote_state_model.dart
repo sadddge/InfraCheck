@@ -40,9 +40,10 @@ class VoteState extends Equatable {
     String? userVote,
     int? upvotes,
     int? downvotes,
+    bool clearUserVote = false,
   }) {
     return VoteState(
-      userVote: userVote,
+      userVote: clearUserVote ? null : (userVote ?? this.userVote),
       upvotes: upvotes ?? this.upvotes,
       downvotes: downvotes ?? this.downvotes,
     );

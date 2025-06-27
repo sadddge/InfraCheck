@@ -143,22 +143,22 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
     Color borderColor;
     
     if (isSelected) {
-      // Colores cuando el botón está seleccionado
+      // Colores planos cuando el botón está seleccionado
       buttonColor = isUpvote ? AppColors.primary : AppColors.accent;
-      backgroundColor = buttonColor.withValues(alpha: 0.15);
-      borderColor = buttonColor.withValues(alpha: 0.4);
+      backgroundColor = buttonColor.withValues(alpha: 0.1);
+      borderColor = buttonColor;
     } else {
-      // Colores cuando el botón no está seleccionado
+      // Colores neutros cuando el botón no está seleccionado
       buttonColor = AppColors.textSecondary;
-      backgroundColor = AppColors.background;
-      borderColor = AppColors.inputBorder;
+      backgroundColor = Colors.grey.shade50;
+      borderColor = Colors.grey.shade300;
     }
     
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(25),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 150),
         width: 50,
         height: 50,
         decoration: BoxDecoration(
@@ -166,15 +166,9 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
           shape: BoxShape.circle,
           border: Border.all(
             color: borderColor,
-            width: isSelected ? 2 : 1.5,
+            width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: buttonColor.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ] : null,
+          // Sin boxShadow para estética plana
         ),
         child: Icon(
           icon,
@@ -188,13 +182,17 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
   Widget _buildScoreDisplay() {
     final score = _voteState.totalScore;
     Color scoreColor;
+    Color backgroundColor;
     
     if (score > 0) {
       scoreColor = AppColors.primary;
+      backgroundColor = AppColors.primary.withValues(alpha: 0.08);
     } else if (score < 0) {
       scoreColor = AppColors.accent;
+      backgroundColor = AppColors.accent.withValues(alpha: 0.08);
     } else {
       scoreColor = AppColors.textSecondary;
+      backgroundColor = Colors.grey.shade100;
     }
     
     String displayText;
@@ -205,15 +203,16 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
     }
     
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: scoreColor.withValues(alpha: 0.1),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: scoreColor.withValues(alpha: 0.2),
           width: 1,
         ),
+        // Sin boxShadow para estética plana
       ),
       child: Text(
         displayText,
@@ -294,53 +293,106 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
   Future<void> _handleVote(VoteType voteType) async {
     if (_isLoading) return;
 
+    // Estado actual del voto
+    final wasUpvoted = _voteState.hasUpvoted;
+    final wasDownvoted = _voteState.hasDownvoted;
+    final currentUpvotes = _voteState.upvotes;
+    final currentDownvotes = _voteState.downvotes;
+
+    // Calcular nuevo estado optimista
+    VoteState optimisticState;
+    
+    if (voteType == VoteType.upvote) {
+      if (wasUpvoted) {
+        // Quitar upvote
+        optimisticState = _voteState.copyWith(
+          clearUserVote: true,
+          upvotes: currentUpvotes - 1,
+        );
+      } else if (wasDownvoted) {
+        // Cambiar de downvote a upvote
+        optimisticState = _voteState.copyWith(
+          userVote: 'upvote',
+          upvotes: currentUpvotes + 1,
+          downvotes: currentDownvotes - 1,
+        );
+      } else {
+        // Agregar upvote
+        optimisticState = _voteState.copyWith(
+          userVote: 'upvote',
+          upvotes: currentUpvotes + 1,
+        );
+      }
+    } else { // downvote
+      if (wasDownvoted) {
+        // Quitar downvote
+        optimisticState = _voteState.copyWith(
+          clearUserVote: true,
+          downvotes: currentDownvotes - 1,
+        );
+      } else if (wasUpvoted) {
+        // Cambiar de upvote a downvote
+        optimisticState = _voteState.copyWith(
+          userVote: 'downvote',
+          upvotes: currentUpvotes - 1,
+          downvotes: currentDownvotes + 1,
+        );
+      } else {
+        // Agregar downvote
+        optimisticState = _voteState.copyWith(
+          userVote: 'downvote',
+          downvotes: currentDownvotes + 1,
+        );
+      }
+    }
+
+    // Aplicar cambio optimista inmediatamente
     setState(() {
+      _voteState = optimisticState;
       _isLoading = true;
     });
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
-      final newVoteState = await reportsProvider.handleVote(widget.reportId, voteType);
+      final serverState = await reportsProvider.handleVote(widget.reportId, voteType);
       
+      // Actualizar con la respuesta real del servidor
       setState(() {
-        _voteState = newVoteState;
+        _voteState = serverState;
         _isLoading = false;
       });
-
-      // Feedback háptico
-      if (_voteState.hasUpvoted || _voteState.hasDownvoted) {
-        // Vibración ligera para voto nuevo
-      } else {
-        // Vibración diferente para eliminación de voto
-      }
 
       // Mensaje de confirmación
       if (mounted) {
         String message;
-        if (_voteState.userVote == voteType.name) {
+        if (serverState.userVote == voteType.name) {
           message = voteType == VoteType.upvote ? '👍 Te gusta este reporte' : '👎 No te gusta este reporte';
+        } else if (serverState.hasNotVoted) {
+          message = '❌ Voto eliminado';
         } else {
           message = '🔄 Voto actualizado';
-        }
-        
-        if (_voteState.hasNotVoted) {
-          message = '❌ Voto eliminado';
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
             duration: const Duration(seconds: 2),
-            backgroundColor: _voteState.hasUpvoted 
+            backgroundColor: serverState.hasUpvoted 
               ? AppColors.primary 
-              : _voteState.hasDownvoted 
+              : serverState.hasDownvoted 
                 ? AppColors.accent 
                 : AppColors.textSecondary,
           ),
         );
       }
     } catch (e) {
+      // Rollback: restaurar estado anterior
       setState(() {
+        _voteState = VoteState(
+          userVote: wasUpvoted ? 'upvote' : wasDownvoted ? 'downvote' : null,
+          upvotes: currentUpvotes,
+          downvotes: currentDownvotes,
+        );
         _isLoading = false;
       });
 
