@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:math' as math;
 import '../../../core/models/comment_model.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/services/permissions_service.dart';
@@ -50,7 +49,7 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
       setState(() {
         _comments = List.from(widget.comments);
       });
-      _loadComments(forceRefresh: true);
+      _loadComments();
     } 
     // Si el reportId es el mismo, solo sincronizar si no hay operaciones en progreso
     // y si hay una diferencia significativa entre los comentarios
@@ -262,60 +261,31 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
   }
 
   /// Carga los comentarios del reporte desde el backend
-  /// Solo debe usarse para sincronización inicial o refrescos manuales
-  Future<void> _loadComments({bool forceRefresh = false}) async {
+  /// Solo se usa para la carga inicial cuando el widget se inicializa
+  Future<void> _loadComments() async {
     if (!mounted) return;
     
-    // Si es un refresh forzado, marcar que estamos cargando
-    if (forceRefresh) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
-    
-    // Evitar carga si ya tenemos comentarios y no es un refresh forzado
-    if (!forceRefresh && _comments.isNotEmpty && !_isLoading) return;
+    // Solo cargar si no tenemos comentarios aún
+    if (_comments.isNotEmpty) return;
     
     try {
-      debugPrint('🔄 Cargando comentarios para reporte ${widget.reportId} (force: $forceRefresh)');
+      debugPrint('🔄 Carga inicial de comentarios para reporte ${widget.reportId}');
       
       final reportsProvider = context.read<ReportsProvider>();
       final comments = await reportsProvider.getReportComments(
         widget.reportId,
-        limit: 100, // Asegurar que obtenemos hasta 100 comentarios
+        limit: 100,
       );
       
-      debugPrint('📝 Comentarios cargados desde backend: ${comments.length}');
-      comments.forEach((c) => debugPrint('  - ID: ${c.id}, Contenido: ${c.content.substring(0, math.min(50, c.content.length))}...'));
+      debugPrint('📝 Comentarios cargados: ${comments.length}');
       
       if (mounted) {
         setState(() {
           _comments = comments;
-          if (forceRefresh) {
-            _isLoading = false;
-          }
         });
       }
     } catch (e) {
-      debugPrint('❌ Error cargando comentarios: $e');
-      if (mounted) {
-        if (forceRefresh) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-        
-        // Solo mostrar error si era un refresh manual
-        if (forceRefresh) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error al cargar comentarios: $e'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
-      }
+      debugPrint('❌ Error en carga inicial de comentarios: $e');
     }
   }
 
@@ -472,21 +442,6 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection>
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(
-                    Icons.refresh,
-                    size: 20,
-                  ),
-                  color: AppColors.primary,
-                  onPressed: () => _loadComments(forceRefresh: true),
-                  tooltip: 'Actualizar comentarios',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
                   ),
                 ),
               ],
