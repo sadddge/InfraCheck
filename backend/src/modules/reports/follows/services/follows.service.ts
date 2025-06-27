@@ -56,7 +56,7 @@ export class FollowsService implements IFollowsService {
         private readonly userRepository: Repository<User>,
         @InjectRepository(Report)
         private readonly reportRepository: Repository<Report>,
-    ) {}
+    ) { }
 
     /** @inheritDoc */
     async followReport(userId: number, reportId: number): Promise<FollowActionResponseDto> {
