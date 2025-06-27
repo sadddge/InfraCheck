@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'comment_model.dart';
 
 /// Categorías disponibles para clasificar reportes de infraestructura.
 /// 
@@ -174,7 +175,7 @@ class Report extends Equatable {
   final bool isFollowing;
   
   /// Lista de comentarios del reporte
-  final List<dynamic>? comments;
+  final List<Comment>? comments;
 
   /// Crea una nueva instancia de Report.
   /// 
@@ -257,7 +258,9 @@ class Report extends Equatable {
         downvotes: json['downvotes'] as int? ?? 0,
         userVote: json['userVote'] as String?,
         isFollowing: json['isFollowing'] as bool? ?? false,
-        comments: json['comments'] as List?,
+        comments: (json['comments'] as List?)
+            ?.map((comment) => Comment.fromJson(comment))
+            .toList(),
       );
     } catch (e) {
       debugPrint('Error en Report.fromJson: $e');
@@ -357,7 +360,7 @@ class Report extends Equatable {
     int? downvotes,
     String? userVote,
     bool? isFollowing,
-    List<dynamic>? comments,
+    List<Comment>? comments,
   }) {
     return Report(
       id: id ?? this.id,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../core/models/report_model.dart';
 import '../../../core/enums/vote_type.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../domain/reports_provider.dart';
 import '../widgets/report_header.dart';
 import '../widgets/report_info_card.dart';
@@ -36,11 +37,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   Report? _report;
   bool _isLoading = true;
   String? _error;
-  
-  // Controllers para comentarios
-  final TextEditingController _commentController = TextEditingController();
-  final FocusNode _commentFocusNode = FocusNode();
-  bool _isSubmittingComment = false;
 
   @override
   void initState() {
@@ -51,8 +47,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   @override
   void dispose() {
-    _commentController.dispose();
-    _commentFocusNode.dispose();
     super.dispose();
   }
 
@@ -100,39 +94,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           ),
         );
       }
-    }
-  }
-
-  /// Maneja el envío de un nuevo comentario
-  Future<void> _handleCommentSubmit() async {
-    if (_report == null || _commentController.text.trim().isEmpty) return;
-
-    setState(() {
-      _isSubmittingComment = true;
-    });
-
-    try {
-      final reportsProvider = context.read<ReportsProvider>();
-      await reportsProvider.addComment(_report!.id, _commentController.text.trim());
-      
-      _commentController.clear();
-      _commentFocusNode.unfocus();
-      
-      // Recargar para obtener los comentarios actualizados
-      await _loadReportDetails();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al enviar comentario: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      setState(() {
-        _isSubmittingComment = false;
-      });
     }
   }
 
@@ -288,12 +249,14 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         
         // Sección de comentarios
         SliverToBoxAdapter(
-          child: ReportCommentsSection(
-            report: _report!,
-            commentController: _commentController,
-            commentFocusNode: _commentFocusNode,
-            isSubmittingComment: _isSubmittingComment,
-            onCommentSubmit: _handleCommentSubmit,
+          child: Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              return ReportCommentsSection(
+                reportId: _report!.id,
+                comments: _report!.comments ?? [],
+                currentUser: authProvider.user,
+              );
+            },
           ),
         ),
         

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/models/report_model.dart';
+import '../../../core/models/comment_model.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/enums/vote_type.dart';
@@ -366,7 +367,8 @@ class ReportsProvider with ChangeNotifier {
       debugPrint('🗳️ Voto enviado: $voteType para reporte $reportId');
       
       // Recargar reportes para obtener los datos actualizados
-      await fetchAllReports();
+      await fetchMyReports();
+      await fetchPublicReports();
     } catch (e) {
       debugPrint('❌ Error al votar en reporte: $e');
       throw Exception('Error al votar en reporte: $e');
@@ -374,17 +376,86 @@ class ReportsProvider with ChangeNotifier {
   }
 
   /// Agrega un comentario a un reporte
-  Future<void> addComment(int reportId, String content) async {
+  Future<Comment> addComment({
+    required int reportId,
+    required String content,
+  }) async {
+    // Validaciones básicas
+    if (content.trim().isEmpty) {
+      throw Exception('El comentario no puede estar vacío');
+    }
+    
+    if (content.trim().length < 3) {
+      throw Exception('El comentario debe tener al menos 3 caracteres');
+    }
+    
+    if (content.trim().length > 500) {
+      throw Exception('El comentario no puede tener más de 500 caracteres');
+    }
+
     try {
-      // TODO: Implementar endpoint de comentarios cuando esté disponible en el backend
-      // final endpoint = '/v1/reports/$reportId/comments';
-      // await ApiService.post(endpoint, data: {'content': content});
+      final endpoint = ApiConfig.createReportCommentEndpoint
+          .replaceAll(':reportId', reportId.toString());
       
-      // Por ahora simulamos el envío del comentario
-      await Future.delayed(const Duration(milliseconds: 800));
-      debugPrint('💬 Comentario enviado para reporte $reportId: $content');
+      final response = await ApiService.post(endpoint, data: {
+        'content': content.trim(),
+      });
+      
+      debugPrint('💬 Comentario enviado para reporte $reportId');
+      debugPrint('📄 Respuesta del servidor: ${response.toString()}');
+      
+      // Crear el comentario desde la respuesta
+      final commentData = response['data'] ?? response;
+      debugPrint('📝 Datos del comentario: ${commentData.toString()}');
+      
+      final comment = Comment.fromJson(commentData);
+      
+      // Recargar reportes para obtener los datos actualizados
+      await fetchMyReports();
+      await fetchPublicReports();
+      
+      return comment;
     } catch (e) {
+      debugPrint('❌ Error al enviar comentario: $e');
       throw Exception('Error al enviar comentario: $e');
+    }
+  }
+
+  /// Elimina un comentario de un reporte
+  Future<void> deleteComment(int reportId, int commentId) async {
+    try {
+      final endpoint = ApiConfig.deleteReportCommentEndpoint
+          .replaceAll(':reportId', reportId.toString())
+          .replaceAll(':id', commentId.toString());
+      
+      await ApiService.delete(endpoint);
+      
+      debugPrint('�️ Comentario $commentId eliminado del reporte $reportId');
+      
+      // Recargar reportes para obtener los datos actualizados
+      await fetchAllReports();
+    } catch (e) {
+      debugPrint('❌ Error al eliminar comentario: $e');
+      throw Exception('Error al eliminar comentario: $e');
+    }
+  }
+
+  /// Obtiene los comentarios de un reporte específico
+  Future<List<Comment>> getReportComments(int reportId) async {
+    try {
+      final endpoint = ApiConfig.getReportCommentsEndpoint
+          .replaceAll(':reportId', reportId.toString());
+      
+      final response = await ApiService.get(endpoint);
+      
+      final List<dynamic> commentsData = response['data'] ?? response;
+      
+      return commentsData
+          .map((commentJson) => Comment.fromJson(commentJson))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ Error al obtener comentarios: $e');
+      throw Exception('Error al obtener comentarios: $e');
     }
   }
 

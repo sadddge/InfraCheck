@@ -72,11 +72,13 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
         );
       }
     } catch (e) {
+      debugPrint('❌ Error al agregar comentario: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al agregar comentario: $e'),
+            content: Text('Error al agregar comentario: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -280,7 +282,7 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
             ),
           )
         else
-          ...widget.comments.map(_buildCommentItem).toList(),
+          ...widget.comments.map(_buildCommentItem),
       ],
     );
   }
