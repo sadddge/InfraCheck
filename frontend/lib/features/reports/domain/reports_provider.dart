@@ -358,27 +358,12 @@ class ReportsProvider with ChangeNotifier {
     }
   }
 
-  /// Maneja el voto en un reporte con lógica optimizada
-  /// El frontend ya maneja la lógica de toggle, aquí solo enviamos el voto
-  Future<VoteState> handleVote(int reportId, VoteType voteType) async {
+  /// Maneja el voto en un reporte - versión simplificada que confía en el frontend
+  /// El widget ya calculó la lógica, solo ejecutamos la acción
+  Future<VoteState> handleVote(int reportId, VoteType voteType, {required bool shouldRemove}) async {
     try {
-      // El widget ya calculó si debe enviar o eliminar el voto
-      // Consultar voto actual para decidir la acción
-      String? currentUserVote;
-      try {
-        final currentVoteEndpoint = ApiConfig.getMyVoteOnReportEndpoint.replaceAll(':reportId', reportId.toString());
-        final currentVoteResponse = await ApiService.get(currentVoteEndpoint);
-        currentUserVote = currentVoteResponse['type'] as String?;
-      } catch (e) {
-        // Usuario no tiene voto previo
-        currentUserVote = null;
-      }
-
-      final voteValue = voteType == VoteType.upvote ? 'upvote' : 'downvote';
-      
-      // Decidir acción basada en el estado actual
-      if (currentUserVote == voteValue) {
-        // Toggle: eliminar voto existente
+      if (shouldRemove) {
+        // Eliminar voto existente
         await _removeVote(reportId);
         debugPrint('🗳️ Voto eliminado: $voteType para reporte $reportId');
       } else {
@@ -640,6 +625,80 @@ class ReportsProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('❌ Error al obtener usuario $userId: $e');
       return null;
+    }
+  }
+
+  /// Obtiene todos los reportes creados por el usuario autenticado
+  Future<List<Report>> getMyReports({int page = 1, int limit = 20}) async {
+    try {
+      final endpoint = '${ApiConfig.getMyReportsEndpoint}?page=$page&limit=$limit';
+      final response = await ApiService.get(endpoint);
+      
+      debugPrint('📋 Cargando mis reportes - página $page');
+      
+      // Si el backend devuelve paginación
+      final data = response['data'] ?? response;
+      if (data is List) {
+        return data.map((reportData) => Report.fromJson(reportData)).toList();
+      } else if (data['items'] != null) {
+        // Formato paginado
+        final items = data['items'] as List;
+        return items.map((reportData) => Report.fromJson(reportData)).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint('❌ Error al cargar mis reportes: $e');
+      // Si no existe el endpoint, filtrar del cache
+      return _reports.where((report) {
+        // Filtrar por usuario actual (cuando esté disponible el ID del usuario)
+        return true; // Por ahora devolver todos hasta implementar filtro por usuario
+      }).toList();
+    }
+  }
+
+  /// Obtiene reportes en los que el usuario ha participado (comentado)
+  Future<List<Report>> getMyParticipatedReports(int userId, {int page = 1, int limit = 20}) async {
+    try {
+      debugPrint('💬 Cargando mis participaciones para usuario: $userId');
+      
+      // Si no hay reportes cargados, cargar todos primero
+      if (_reports.isEmpty) {
+        await fetchAllReports();
+      }
+      
+      debugPrint('💬 Total reportes disponibles: ${_reports.length}');
+      
+      List<Report> participatedReports = [];
+      
+      // Para cada reporte, cargar sus comentarios y verificar si el usuario participó
+      for (Report report in _reports) {
+        try {
+          debugPrint('🔍 Verificando reporte ${report.id}: ${report.title}');
+          final comments = await getReportComments(report.id);
+          debugPrint('💬 Reporte ${report.id} tiene ${comments.length} comentarios');
+          
+          final hasUserCommented = comments.any((comment) {
+            debugPrint('👤 Comentario de usuario ${comment.creatorId} vs usuario actual $userId');
+            return comment.creatorId == userId;
+          });
+          
+          if (hasUserCommented) {
+            debugPrint('✅ Usuario $userId comentó en reporte ${report.id}: ${report.title}');
+            participatedReports.add(report);
+          }
+        } catch (e) {
+          debugPrint('⚠️ Error cargando comentarios del reporte ${report.id}: $e');
+          // Continuar con el siguiente reporte si hay error
+        }
+      }
+      
+      debugPrint('💬 Participaciones encontradas: ${participatedReports.length}');
+      return participatedReports;
+      
+    } catch (e) {
+      debugPrint('❌ Error al cargar mis participaciones: $e');
+      return [];
     }
   }
 

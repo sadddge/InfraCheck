@@ -4,6 +4,7 @@ import '../../../shared/theme/colors.dart';
 import '../../../shared/theme/text_styles.dart';
 import '../../../shared/widgets/navigation_bar.dart';
 import '../../../core/models/report_model.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../domain/reports_provider.dart';
 import '../presentation/report_detail_screen.dart';
 
@@ -24,6 +25,7 @@ class MyParticipationsScreen extends StatefulWidget {
 
 class _MyParticipationsScreenState extends State<MyParticipationsScreen> {
   List<Report> _myParticipations = [];
+  Map<int, int> _userCommentsCount = {}; // Mapa para almacenar el número de comentarios del usuario por reporte
   bool _isLoading = true;
   String? _error;
 
@@ -41,13 +43,48 @@ class _MyParticipationsScreenState extends State<MyParticipationsScreen> {
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
-      final participations = await reportsProvider.getMyParticipatedReports();
+      final authProvider = context.read<AuthProvider>();
+      
+      final currentUser = authProvider.user;
+      if (currentUser == null) {
+        throw Exception('Usuario no autenticado');
+      }
+      
+      debugPrint('🔍 Cargando participaciones del usuario ${currentUser.id}...');
+      
+      // Cargar todos los reportes si no están cargados
+      if (reportsProvider.reports.isEmpty) {
+        await reportsProvider.fetchAllReports();
+      }
+      
+      List<Report> participatedReports = [];
+      Map<int, int> commentsCount = {};
+      
+      // Para cada reporte, verificar si el usuario comentó
+      for (Report report in reportsProvider.reports) {
+        try {
+          final comments = await reportsProvider.getReportComments(report.id);
+          final userComments = comments.where((comment) => comment.creatorId == currentUser.id).toList();
+          
+          if (userComments.isNotEmpty) {
+            participatedReports.add(report);
+            commentsCount[report.id] = userComments.length;
+            debugPrint('✅ Usuario ${currentUser.id} tiene ${userComments.length} comentarios en reporte ${report.id}');
+          }
+        } catch (e) {
+          debugPrint('⚠️ Error cargando comentarios del reporte ${report.id}: $e');
+        }
+      }
+      
+      debugPrint('💬 Participaciones obtenidas: ${participatedReports.length}');
       
       setState(() {
-        _myParticipations = participations;
+        _myParticipations = participatedReports;
+        _userCommentsCount = commentsCount;
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('❌ Error cargando participaciones: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -485,9 +522,7 @@ class _MyParticipationsScreenState extends State<MyParticipationsScreen> {
   }
 
   int _getMyCommentsCount(Report report) {
-    // TODO: Filtrar por comentarios del usuario actual cuando esté disponible el ID
-    // Por ahora retornamos 1 como placeholder
-    return (report.comments?.length ?? 0) > 0 ? 1 : 0;
+    return _userCommentsCount[report.id] ?? 0;
   }
 
   String _formatDate(DateTime date) {
