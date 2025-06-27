@@ -170,10 +170,14 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
           ),
           // Sin boxShadow para estética plana
         ),
-        child: Icon(
-          icon,
-          size: 28,
-          color: buttonColor,
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 100),
+          scale: _isLoading ? 0.95 : 1.0, // Efecto sutil de pulsación
+          child: Icon(
+            icon,
+            size: 28,
+            color: buttonColor,
+          ),
         ),
       ),
     );
@@ -352,6 +356,28 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
       _isLoading = true;
     });
 
+    // Feedback inmediato al usuario
+    if (mounted) {
+      String message;
+      if (optimisticState.userVote == voteType.name) {
+        message = voteType == VoteType.upvote ? '👍 Te gusta este reporte' : '👎 No te gusta este reporte';
+      } else {
+        message = '❌ Voto eliminado';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 1),
+          backgroundColor: optimisticState.hasUpvoted 
+            ? AppColors.primary 
+            : optimisticState.hasDownvoted 
+              ? AppColors.accent 
+              : AppColors.textSecondary,
+        ),
+      );
+    }
+
     try {
       final reportsProvider = context.read<ReportsProvider>();
       final serverState = await reportsProvider.handleVote(widget.reportId, voteType);
@@ -362,29 +388,6 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
         _isLoading = false;
       });
 
-      // Mensaje de confirmación
-      if (mounted) {
-        String message;
-        if (serverState.userVote == voteType.name) {
-          message = voteType == VoteType.upvote ? '👍 Te gusta este reporte' : '👎 No te gusta este reporte';
-        } else if (serverState.hasNotVoted) {
-          message = '❌ Voto eliminado';
-        } else {
-          message = '🔄 Voto actualizado';
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: const Duration(seconds: 2),
-            backgroundColor: serverState.hasUpvoted 
-              ? AppColors.primary 
-              : serverState.hasDownvoted 
-                ? AppColors.accent 
-                : AppColors.textSecondary,
-          ),
-        );
-      }
     } catch (e) {
       // Rollback: restaurar estado anterior
       setState(() {

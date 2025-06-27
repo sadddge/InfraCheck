@@ -358,37 +358,36 @@ class ReportsProvider with ChangeNotifier {
     }
   }
 
-  /// Maneja el voto en un reporte con lógica inteligente
-  /// - Si no ha votado: crea el voto
-  /// - Si votó lo mismo: elimina el voto (toggle)
-  /// - Si votó diferente: cambia el voto
+  /// Maneja el voto en un reporte con lógica optimizada
+  /// El frontend ya maneja la lógica de toggle, aquí solo enviamos el voto
   Future<VoteState> handleVote(int reportId, VoteType voteType) async {
     try {
-      final currentVoteEndpoint = ApiConfig.getMyVoteOnReportEndpoint.replaceAll(':reportId', reportId.toString());
-      
-      // Obtener voto actual del usuario
+      // El widget ya calculó si debe enviar o eliminar el voto
+      // Consultar voto actual para decidir la acción
       String? currentUserVote;
       try {
+        final currentVoteEndpoint = ApiConfig.getMyVoteOnReportEndpoint.replaceAll(':reportId', reportId.toString());
         final currentVoteResponse = await ApiService.get(currentVoteEndpoint);
         currentUserVote = currentVoteResponse['type'] as String?;
       } catch (e) {
-        // Si no hay voto actual, currentUserVote queda null
-        debugPrint('💡 Usuario no tiene voto previo en reporte $reportId');
+        // Usuario no tiene voto previo
+        currentUserVote = null;
       }
 
       final voteValue = voteType == VoteType.upvote ? 'upvote' : 'downvote';
       
-      // Si el usuario ya votó lo mismo, eliminar el voto
+      // Decidir acción basada en el estado actual
       if (currentUserVote == voteValue) {
+        // Toggle: eliminar voto existente
         await _removeVote(reportId);
         debugPrint('🗳️ Voto eliminado: $voteType para reporte $reportId');
       } else {
-        // Crear o actualizar voto
+        // Crear o cambiar voto
         await _castVote(reportId, voteType);
         debugPrint('🗳️ Voto enviado: $voteType para reporte $reportId');
       }
 
-      // Obtener estadísticas actualizadas
+      // Obtener estado actualizado desde el servidor
       return await getVoteState(reportId);
     } catch (e) {
       debugPrint('❌ Error al manejar voto en reporte: $e');
