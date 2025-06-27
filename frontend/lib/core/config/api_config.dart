@@ -68,7 +68,7 @@ class ApiConfig {
   /// - Development: `http://localhost:3000/api`
   /// - Staging: `https://api-staging.infracheck.com/api`
   /// - Production: `https://api.infracheck.com/api`
-  static const String baseUrl = 'http://192.168.1.89:3000/api';
+  static const String baseUrl = 'https://infracheck-backend.onrender.com/api';
 
   // === ENDPOINTS DE AUTENTICACIÓN ===
   /// Endpoint para iniciar sesión
