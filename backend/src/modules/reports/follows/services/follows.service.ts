@@ -126,6 +126,19 @@ export class FollowsService implements IFollowsService {
     }
 
     /** @inheritDoc */
+    async getReportFollowerIds(reportId: number): Promise<number[]> {
+        await this.validateReport(reportId);
+
+        const followers = await this.userRepository
+            .createQueryBuilder('user')
+            .innerJoin('user.reportsFollowed', 'report', 'report.id = :reportId', { reportId })
+            .select(['user.id'])
+            .getMany();
+
+        return followers.map(user => user.id);
+    }
+
+    /** @inheritDoc */
     async getUserFollowedReports(
         userId: number,
         options: IPaginationOptions,
