@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../core/models/report_model.dart';
+import '../../../core/enums/vote_type.dart';
 import '../domain/reports_provider.dart';
 import '../widgets/report_header.dart';
 import '../widgets/report_info_card.dart';
@@ -303,10 +304,4 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       ],
     );
   }
-}
-
-/// Enum para tipos de voto
-enum VoteType {
-  upvote,
-  downvote,
 }

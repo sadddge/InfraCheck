@@ -98,6 +98,9 @@ class ApiConfig {
   
   /// Endpoint para actualizar estado de un reporte
   static const String updateReportStateEndpoint = '/v1/reports/:id/state';
+  
+  /// Endpoint para votar en un reporte
+  static const String voteOnReportEndpoint = '/v1/reports/:id/vote';
 
   // === ENDPOINTS DE SEGUIMIENTO DE USUARIOS ===
   /// Endpoint para obtener reportes seguidos por el usuario actual

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../core/models/report_model.dart';
-import '../presentation/report_detail_screen.dart';
+import '../../../core/enums/vote_type.dart';
 
-/// Widget del sistema de votación estilo Reddit.
+/// Widget del sistema de votación simplificado.
 /// 
 /// Permite a los usuarios votar positiva o negativamente en el reporte,
-/// mostrando el contador de votos y el estado actual del voto del usuario.
+/// mostrando un contador total simplificado entre las dos opciones.
+/// Basado en el diseño de Reddit con un enfoque minimalista.
 class ReportVotingSection extends StatelessWidget {
   final Report report;
   final Function(VoteType) onVote;
@@ -59,49 +60,43 @@ class ReportVotingSection extends StatelessWidget {
             
             const SizedBox(height: 16),
             
-            // Sistema de votación
-            _buildVotingControls(),
-            
-            const SizedBox(height: 12),
-            
-            // Información adicional
-            _buildVotingInfo(),
+            // Sistema de votación simplificado
+            _buildSimplifiedVotingControls(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildVotingControls() {
+  Widget _buildSimplifiedVotingControls() {
+    // Calcular el total de votos (positivos - negativos)
+    final totalVotes = report.upvotes - report.downvotes;
+    
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Botón de upvote
+        // Botón de upvote (flecha arriba)
         _buildVoteButton(
-          icon: Icons.keyboard_arrow_up,
+          icon: Icons.keyboard_arrow_up_rounded,
           isSelected: report.userVote == 'upvote',
           isUpvote: true,
           onTap: () => onVote(VoteType.upvote),
         ),
         
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         
-        // Contador de votos
-        _buildVoteCounter(),
+        // Contador total en el medio
+        _buildTotalVoteCounter(totalVotes),
         
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         
-        // Botón de downvote
+        // Botón de downvote (flecha abajo)
         _buildVoteButton(
-          icon: Icons.keyboard_arrow_down,
+          icon: Icons.keyboard_arrow_down_rounded,
           isSelected: report.userVote == 'downvote',
           isUpvote: false,
           onTap: () => onVote(VoteType.downvote),
         ),
-        
-        const Spacer(),
-        
-        // Indicador de tendencia
-        _buildTrendIndicator(),
       ],
     );
   }
@@ -112,177 +107,73 @@ class ReportVotingSection extends StatelessWidget {
     required bool isUpvote,
     required VoidCallback onTap,
   }) {
-    final color = isSelected 
-      ? (isUpvote ? Colors.orange : Colors.blue)
-      : AppColors.textSecondary;
+    // Usar los colores del proyecto
+    Color buttonColor;
+    if (isSelected) {
+      buttonColor = isUpvote ? AppColors.primary : AppColors.accent;
+    } else {
+      buttonColor = AppColors.textSecondary;
+    }
     
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(25),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        width: 50,
+        height: 50,
         decoration: BoxDecoration(
           color: isSelected 
-            ? color.withOpacity(0.1)
-            : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+            ? buttonColor.withOpacity(0.1)
+            : AppColors.background,
+          shape: BoxShape.circle,
           border: Border.all(
             color: isSelected 
-              ? color.withOpacity(0.3)
-              : AppColors.background,
-            width: 1,
+              ? buttonColor.withOpacity(0.3)
+              : AppColors.inputBorder,
+            width: 1.5,
           ),
         ),
         child: Icon(
           icon,
-          size: 24,
-          color: color,
+          size: 28,
+          color: buttonColor,
         ),
       ),
     );
   }
 
-  Widget _buildVoteCounter() {
-    final voteCount = report.upvotes - report.downvotes;
-    final isPositive = voteCount > 0;
-    final isNegative = voteCount < 0;
-    
-    Color textColor = AppColors.textPrimary;
-    if (isPositive) {
-      textColor = Colors.orange;
-    } else if (isNegative) {
-      textColor = Colors.blue;
+  Widget _buildTotalVoteCounter(int totalVotes) {
+    // Determinar el color basado en el total
+    Color textColor;
+    if (totalVotes > 0) {
+      textColor = AppColors.primary;
+    } else if (totalVotes < 0) {
+      textColor = AppColors.accent;
+    } else {
+      textColor = AppColors.textSecondary;
     }
     
-    return Column(
-      children: [
-        Text(
-          voteCount.toString(),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
-        ),
-        const Text(
-          'votos',
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTrendIndicator() {
-    final voteCount = report.upvotes - report.downvotes;
-    final totalVotes = report.upvotes + report.downvotes;
-    
-    if (totalVotes == 0) {
-      return const SizedBox.shrink();
+    // Formatear el número para mostrar (ej: 3.2K)
+    String displayText;
+    if (totalVotes.abs() >= 1000) {
+      displayText = '${(totalVotes / 1000).toStringAsFixed(1)}K';
+    } else {
+      displayText = totalVotes.toString();
     }
     
-    final isPositive = voteCount > 0;
-    final percentage = totalVotes > 0 
-      ? (report.upvotes / totalVotes * 100).round()
-      : 0;
-    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isPositive 
-          ? Colors.green.withOpacity(0.1)
-          : Colors.red.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        color: textColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isPositive ? Icons.trending_up : Icons.trending_down,
-            size: 14,
-            color: isPositive ? Colors.green : Colors.red,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '$percentage%',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: isPositive ? Colors.green : Colors.red,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVotingInfo() {
-    final totalVotes = report.upvotes + report.downvotes;
-    
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          // Upvotes
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.thumb_up_outlined,
-                size: 14,
-                color: Colors.orange.shade600,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${report.upvotes}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.orange.shade600,
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(width: 16),
-          
-          // Downvotes
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.thumb_down_outlined,
-                size: 14,
-                color: Colors.blue.shade600,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${report.downvotes}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.blue.shade600,
-                ),
-              ),
-            ],
-          ),
-          
-          const Spacer(),
-          
-          // Total de participación
-          Text(
-            '$totalVotes ${totalVotes == 1 ? 'voto' : 'votos'} totales',
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
+      child: Text(
+        displayText,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+        ),
       ),
     );
   }

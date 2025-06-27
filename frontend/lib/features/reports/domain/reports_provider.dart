@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import '../../../core/models/report_model.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/config/api_config.dart';
+import '../../../core/enums/vote_type.dart';
 import '../../../features/camera/domain/models/photo_entry.dart';
-import '../presentation/report_detail_screen.dart';
 
 /// Provider para manejar el estado y operaciones de reportes
 class ReportsProvider with ChangeNotifier {
@@ -358,15 +358,17 @@ class ReportsProvider with ChangeNotifier {
   /// Vota en un reporte (upvote o downvote)
   Future<void> voteOnReport(int reportId, VoteType voteType) async {
     try {
-      // TODO: Implementar endpoint de votación cuando esté disponible en el backend
-      // final endpoint = '/v1/reports/$reportId/vote';
-      // final voteValue = voteType == VoteType.upvote ? 'upvote' : 'downvote';
-      // await ApiService.post(endpoint, data: {'vote': voteValue});
+      final endpoint = ApiConfig.voteOnReportEndpoint.replaceAll(':id', reportId.toString());
+      final voteValue = voteType == VoteType.upvote ? 'upvote' : 'downvote';
       
-      // Por ahora simulamos la votación
-      await Future.delayed(const Duration(milliseconds: 500));
+      await ApiService.post(endpoint, data: {'vote': voteValue});
+      
       debugPrint('🗳️ Voto enviado: $voteType para reporte $reportId');
+      
+      // Recargar reportes para obtener los datos actualizados
+      await fetchAllReports();
     } catch (e) {
+      debugPrint('❌ Error al votar en reporte: $e');
       throw Exception('Error al votar en reporte: $e');
     }
   }
