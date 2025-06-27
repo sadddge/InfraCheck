@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/models/report_model.dart';
 import '../../../core/models/comment_model.dart';
+import '../../../core/models/report_history_model.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/enums/vote_type.dart';
@@ -489,19 +490,79 @@ class ReportsProvider with ChangeNotifier {
   }
 
   /// Obtiene el historial de cambios de un reporte
-  Future<List<dynamic>> getReportHistory(int reportId) async {
+  Future<List<ReportHistory>> getReportHistory(int reportId) async {
     try {
-      // TODO: Implementar endpoint de historial cuando esté disponible en el backend
-      // final endpoint = '/v1/reports/$reportId/history';
-      // final response = await ApiService.get(endpoint);
-      // return response['data'] ?? [];
+      final endpoint = ApiConfig.getReportHistoryEndpoint.replaceAll(':id', reportId.toString());
+      debugPrint('🔍 Obteniendo historial de reporte: $endpoint');
       
-      // Por ahora simulamos el historial
-      await Future.delayed(const Duration(milliseconds: 500));
-      return [];
+      final response = await ApiService.get(endpoint);
+      debugPrint('🔍 Respuesta historial: $response');
+      
+      List<ReportHistory> historyList = [];
+      
+      // Manejar respuesta paginada
+      if (response is Map<String, dynamic>) {
+        if (response.containsKey('items')) {
+          // Respuesta paginada
+          final items = response['items'] as List?;
+          if (items != null) {
+            historyList = items
+                .map((item) => ReportHistory.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+        } else if (response.containsKey('data')) {
+          // Respuesta con wrapper 'data'
+          final historyData = response['data'] as List?;
+          if (historyData != null) {
+            historyList = historyData
+                .map((item) => ReportHistory.fromJson(item as Map<String, dynamic>))
+                .toList();
+          }
+        }
+      } else if (response is List) {
+        // Si la respuesta es directamente una lista
+        historyList = response
+            .map((item) => ReportHistory.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+      
+      // Enriquecer con información de usuarios
+      final enrichedHistory = await _enrichHistoryWithUserInfo(historyList);
+      
+      return enrichedHistory;
     } catch (e) {
+      debugPrint('❌ Error al obtener historial del reporte $reportId: $e');
       throw Exception('Error al obtener historial: $e');
     }
+  }
+
+  /// Enriquece el historial con información de usuarios
+  Future<List<ReportHistory>> _enrichHistoryWithUserInfo(List<ReportHistory> historyList) async {
+    final enrichedHistory = <ReportHistory>[];
+    
+    for (final historyItem in historyList) {
+      try {
+        // Obtener información del usuario si no la tenemos
+        if (historyItem.userName == null && historyItem.creatorId > 0) {
+          final userInfo = await getUserById(historyItem.creatorId);
+          if (userInfo != null) {
+            enrichedHistory.add(historyItem.copyWithUserInfo(
+              userName: userInfo['name'] as String?,
+              userLastName: userInfo['lastName'] as String?,
+            ));
+          } else {
+            enrichedHistory.add(historyItem);
+          }
+        } else {
+          enrichedHistory.add(historyItem);
+        }
+      } catch (e) {
+        debugPrint('⚠️ Error al obtener info de usuario ${historyItem.creatorId}: $e');
+        enrichedHistory.add(historyItem);
+      }
+    }
+    
+    return enrichedHistory;
   }
 
   /// Obtiene la información de un usuario por su ID
