@@ -140,7 +140,7 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
       ),
     );
 
-    if (confirm != true) return;
+    if (confirm != true || !mounted) return;
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
@@ -176,6 +176,8 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
 
   /// Carga los comentarios del reporte desde el backend
   Future<void> _loadComments() async {
+    if (!mounted) return;
+    
     try {
       final reportsProvider = context.read<ReportsProvider>();
       final comments = await reportsProvider.getReportComments(
@@ -321,7 +323,7 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -335,7 +337,7 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
+              color: AppColors.primary.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),

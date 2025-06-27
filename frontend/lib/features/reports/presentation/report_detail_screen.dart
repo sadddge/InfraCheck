@@ -63,19 +63,25 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       final reportsProvider = context.read<ReportsProvider>();
       final report = await reportsProvider.getReportById(widget.reportId);
       
-      // Debug: Imprimir información de comentarios
-      print('🔍 Reporte cargado - ID: ${report.id}');
-      print('💬 Comentarios encontrados: ${report.comments?.length ?? 0}');
-      if (report.comments?.isNotEmpty == true) {
-        print('📝 Primer comentario: ${report.comments!.first.content}');
-      }
+      // Debug: Información de comentarios para desarrollo
+      assert(() {
+        debugPrint('🔍 Reporte cargado - ID: ${report.id}');
+        debugPrint('💬 Comentarios encontrados: ${report.comments?.length ?? 0}');
+        if (report.comments?.isNotEmpty == true) {
+          debugPrint('📝 Primer comentario: ${report.comments!.first.content}');
+        }
+        return true;
+      }());
       
       setState(() {
         _report = report;
         _isLoading = false;
       });
     } catch (e) {
-      print('❌ Error cargando reporte: $e');
+      assert(() {
+        debugPrint('❌ Error cargando reporte: $e');
+        return true;
+      }());
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -91,7 +97,10 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       final reportsProvider = context.read<ReportsProvider>();
       final updatedReport = await reportsProvider.getReportById(widget.reportId);
       
-      print('🔄 Reporte refrescado - Comentarios: ${updatedReport.comments?.length ?? 0}');
+      assert(() {
+        debugPrint('🔄 Reporte refrescado - Comentarios: ${updatedReport.comments?.length ?? 0}');
+        return true;
+      }());
       
       if (mounted) {
         setState(() {
@@ -99,7 +108,10 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         });
       }
     } catch (e) {
-      print('❌ Error refrescando reporte: $e');
+      assert(() {
+        debugPrint('❌ Error refrescando reporte: $e');
+        return true;
+      }());
     }
   }
 

@@ -75,7 +75,7 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textSecondary.withOpacity(0.3),
+              color: AppColors.textSecondary.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -182,7 +182,7 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
             Icon(
               Icons.timeline,
               size: 48,
-              color: AppColors.textSecondary.withOpacity(0.5),
+              color: AppColors.textSecondary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -235,7 +235,7 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: event.color.withOpacity(0.3),
+                    color: event.color.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -288,14 +288,14 @@ class _ReportHistorySheetState extends State<ReportHistorySheet> {
                     Icon(
                       Icons.schedule,
                       size: 12,
-                      color: AppColors.textSecondary.withOpacity(0.7),
+                      color: AppColors.textSecondary.withValues(alpha: 0.7),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       DateHelpers.formatDetailedDate(event.timestamp),
                       style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.textSecondary.withOpacity(0.7),
+                        color: AppColors.textSecondary.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
