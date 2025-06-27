@@ -41,10 +41,12 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
   @override
   void didUpdateWidget(ReportCommentsSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.comments != widget.comments) {
+    // Solo actualizar si el reportId cambió, no por cambios en comments
+    if (oldWidget.reportId != widget.reportId) {
       setState(() {
         _comments = List.from(widget.comments);
       });
+      _loadComments();
     }
   }
 
@@ -76,22 +78,15 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
-      final newComment = await reportsProvider.addComment(
+      await reportsProvider.addComment(
         reportId: widget.reportId,
         content: _commentController.text.trim(),
       );
 
       _commentController.clear();
       
-      // Actualizar la lista local de comentarios
-      setState(() {
-        _comments.insert(0, newComment); // Agregar al inicio de la lista
-      });
-      
-      // Llamar callback para refrescar el reporte
-      if (widget.onCommentAdded != null) {
-        widget.onCommentAdded!();
-      }
+      // Recargar comentarios del backend para asegurar sincronización
+      await _loadComments();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -100,6 +95,11 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
             backgroundColor: AppColors.primary,
           ),
         );
+      }
+      
+      // Llamar callback después de actualizar UI
+      if (widget.onCommentAdded != null) {
+        widget.onCommentAdded!();
       }
     } catch (e) {
       if (mounted) {
@@ -146,15 +146,8 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
       final reportsProvider = context.read<ReportsProvider>();
       await reportsProvider.deleteComment(widget.reportId, commentId);
 
-      // Remover el comentario de la lista local
-      setState(() {
-        _comments.removeWhere((comment) => comment.id == commentId);
-      });
-
-      // Llamar callback para refrescar el reporte
-      if (widget.onCommentAdded != null) {
-        widget.onCommentAdded!();
-      }
+      // Recargar comentarios del backend para asegurar sincronización
+      await _loadComments();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -163,6 +156,11 @@ class _ReportCommentsSectionState extends State<ReportCommentsSection> {
             backgroundColor: AppColors.primary,
           ),
         );
+      }
+
+      // Llamar callback después de actualizar UI
+      if (widget.onCommentAdded != null) {
+        widget.onCommentAdded!();
       }
     } catch (e) {
       if (mounted) {
