@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../../../core/models/report_model.dart';
 import '../../../core/models/comment_model.dart';
 import '../../../core/models/report_history_model.dart';
+import '../../../core/models/vote_state_model.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/config/api_config.dart';
 import '../../../core/enums/vote_type.dart';
@@ -357,22 +358,84 @@ class ReportsProvider with ChangeNotifier {
     }
   }
 
-  /// Vota en un reporte (upvote o downvote)
-  Future<void> voteOnReport(int reportId, VoteType voteType) async {
+  /// Maneja el voto en un reporte con lógica inteligente
+  /// - Si no ha votado: crea el voto
+  /// - Si votó lo mismo: elimina el voto (toggle)
+  /// - Si votó diferente: cambia el voto
+  Future<VoteState> handleVote(int reportId, VoteType voteType) async {
     try {
-      final endpoint = ApiConfig.voteOnReportEndpoint.replaceAll(':id', reportId.toString());
+      final currentVoteEndpoint = ApiConfig.getMyVoteOnReportEndpoint.replaceAll(':reportId', reportId.toString());
+      
+      // Obtener voto actual del usuario
+      String? currentUserVote;
+      try {
+        final currentVoteResponse = await ApiService.get(currentVoteEndpoint);
+        currentUserVote = currentVoteResponse['type'] as String?;
+      } catch (e) {
+        // Si no hay voto actual, currentUserVote queda null
+        debugPrint('💡 Usuario no tiene voto previo en reporte $reportId');
+      }
+
       final voteValue = voteType == VoteType.upvote ? 'upvote' : 'downvote';
       
-      await ApiService.post(endpoint, data: {'vote': voteValue});
-      
-      debugPrint('🗳️ Voto enviado: $voteType para reporte $reportId');
-      
-      // Recargar reportes para obtener los datos actualizados
-      await fetchMyReports();
-      await fetchPublicReports();
+      // Si el usuario ya votó lo mismo, eliminar el voto
+      if (currentUserVote == voteValue) {
+        await _removeVote(reportId);
+        debugPrint('🗳️ Voto eliminado: $voteType para reporte $reportId');
+      } else {
+        // Crear o actualizar voto
+        await _castVote(reportId, voteType);
+        debugPrint('🗳️ Voto enviado: $voteType para reporte $reportId');
+      }
+
+      // Obtener estadísticas actualizadas
+      return await getVoteState(reportId);
     } catch (e) {
-      debugPrint('❌ Error al votar en reporte: $e');
+      debugPrint('❌ Error al manejar voto en reporte: $e');
       throw Exception('Error al votar en reporte: $e');
+    }
+  }
+
+  /// Envía un voto al backend
+  Future<void> _castVote(int reportId, VoteType voteType) async {
+    final endpoint = ApiConfig.voteOnReportEndpoint.replaceAll(':reportId', reportId.toString());
+    final voteValue = voteType == VoteType.upvote ? 'upvote' : 'downvote';
+    
+    await ApiService.post(endpoint, data: {'type': voteValue});
+  }
+
+  /// Elimina el voto del usuario
+  Future<void> _removeVote(int reportId) async {
+    final endpoint = ApiConfig.removeVoteEndpoint.replaceAll(':reportId', reportId.toString());
+    await ApiService.delete(endpoint);
+  }
+
+  /// Obtiene el estado completo de votación de un reporte
+  Future<VoteState> getVoteState(int reportId) async {
+    try {
+      // Obtener estadísticas de votos
+      final statsEndpoint = ApiConfig.getVoteStatsEndpoint.replaceAll(':reportId', reportId.toString());
+      final statsResponse = await ApiService.get(statsEndpoint);
+      
+      // Obtener voto del usuario actual
+      final userVoteEndpoint = ApiConfig.getMyVoteOnReportEndpoint.replaceAll(':reportId', reportId.toString());
+      String? userVote;
+      try {
+        final userVoteResponse = await ApiService.get(userVoteEndpoint);
+        userVote = userVoteResponse['type'] as String?;
+      } catch (e) {
+        // Usuario no ha votado
+        userVote = null;
+      }
+
+      return VoteState(
+        userVote: userVote,
+        upvotes: statsResponse['upvotes'] as int? ?? 0,
+        downvotes: statsResponse['downvotes'] as int? ?? 0,
+      );
+    } catch (e) {
+      debugPrint('❌ Error al obtener estado de votos: $e');
+      throw Exception('Error al obtener estado de votos: $e');
     }
   }
 

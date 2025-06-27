@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/theme/colors.dart';
 import '../../../core/models/report_model.dart';
-import '../../../core/enums/vote_type.dart';
+import '../../../core/models/vote_state_model.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../domain/reports_provider.dart';
 import '../widgets/report_header.dart';
 import '../widgets/report_info_card.dart';
-import '../widgets/report_voting_section.dart';
+import '../widgets/report_voting_widget.dart';
 import '../widgets/report_comments_section.dart';
 import '../widgets/report_history_sheet.dart';
 
@@ -35,7 +35,9 @@ class ReportDetailScreen extends StatefulWidget {
 
 class _ReportDetailScreenState extends State<ReportDetailScreen> {
   Report? _report;
+  VoteState? _voteState;
   bool _isLoading = true;
+  bool _isLoadingVotes = true;
   String? _error;
 
   @override
@@ -61,12 +63,21 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
-      final report = await reportsProvider.getReportById(widget.reportId);
+      
+      // Cargar reporte y estado de votos en paralelo
+      final results = await Future.wait([
+        reportsProvider.getReportById(widget.reportId),
+        reportsProvider.getVoteState(widget.reportId),
+      ]);
+      
+      final report = results[0] as Report;
+      final voteState = results[1] as VoteState;
       
       // Debug: Información de comentarios para desarrollo
       assert(() {
         debugPrint('🔍 Reporte cargado - ID: ${report.id}');
         debugPrint('💬 Comentarios encontrados: ${report.comments?.length ?? 0}');
+        debugPrint('🗳️ Estado de votos: upvotes=${voteState.upvotes}, downvotes=${voteState.downvotes}, userVote=${voteState.userVote}');
         if (report.comments?.isNotEmpty == true) {
           debugPrint('📝 Primer comentario: ${report.comments!.first.content}');
         }
@@ -75,7 +86,9 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       
       setState(() {
         _report = report;
+        _voteState = voteState;
         _isLoading = false;
+        _isLoadingVotes = false;
       });
     } catch (e) {
       assert(() {
@@ -85,33 +98,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       setState(() {
         _error = e.toString();
         _isLoading = false;
+        _isLoadingVotes = false;
       });
-    }
-  }
-
-  /// Refresca el reporte específico (para comentarios y otros cambios)
-  Future<void> _refreshReport() async {
-    if (_report == null) return;
-    
-    try {
-      final reportsProvider = context.read<ReportsProvider>();
-      final updatedReport = await reportsProvider.getReportById(widget.reportId);
-      
-      assert(() {
-        debugPrint('🔄 Reporte refrescado - Comentarios: ${updatedReport.comments?.length ?? 0}');
-        return true;
-      }());
-      
-      if (mounted) {
-        setState(() {
-          _report = updatedReport;
-        });
-      }
-    } catch (e) {
-      assert(() {
-        debugPrint('❌ Error refrescando reporte: $e');
-        return true;
-      }());
     }
   }
 
@@ -119,28 +107,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   void _onCommentsChanged() {
     // No hacer nada - la sincronización se maneja internamente en el widget de comentarios
     // Esto evita sobrescribir el estado optimista local
-  }
-
-  /// Maneja el voto en el reporte
-  Future<void> _handleVote(VoteType voteType) async {
-    if (_report == null) return;
-
-    try {
-      final reportsProvider = context.read<ReportsProvider>();
-      await reportsProvider.voteOnReport(_report!.id, voteType);
-      
-      // Recargar para obtener los votos actualizados
-      await _loadReportDetails();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al votar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   /// Muestra el historial de cambios en un bottom sheet
@@ -286,12 +252,13 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         ),
         
         // Sistema de votación
-        SliverToBoxAdapter(
-          child: ReportVotingSection(
-            report: _report!,
-            onVote: _handleVote,
+        if (!_isLoadingVotes && _voteState != null)
+          SliverToBoxAdapter(
+            child: ReportVotingWidget(
+              reportId: _report!.id,
+              initialVoteState: _voteState!,
+            ),
           ),
-        ),
         
         // Espaciado antes de comentarios
         const SliverToBoxAdapter(
