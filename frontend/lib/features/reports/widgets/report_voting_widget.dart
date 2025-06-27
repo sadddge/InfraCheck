@@ -303,25 +303,29 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
     final currentUpvotes = _voteState.upvotes;
     final currentDownvotes = _voteState.downvotes;
 
-    // Calcular nuevo estado optimista
+    // Determinar la acción a realizar
+    bool shouldRemoveVote = false;
     VoteState optimisticState;
     
     if (voteType == VoteType.upvote) {
       if (wasUpvoted) {
-        // Quitar upvote
+        // Quitar upvote existente
+        shouldRemoveVote = true;
         optimisticState = _voteState.copyWith(
           clearUserVote: true,
           upvotes: currentUpvotes - 1,
         );
       } else if (wasDownvoted) {
         // Cambiar de downvote a upvote
+        shouldRemoveVote = false;
         optimisticState = _voteState.copyWith(
           userVote: 'upvote',
           upvotes: currentUpvotes + 1,
           downvotes: currentDownvotes - 1,
         );
       } else {
-        // Agregar upvote
+        // Agregar upvote nuevo
+        shouldRemoveVote = false;
         optimisticState = _voteState.copyWith(
           userVote: 'upvote',
           upvotes: currentUpvotes + 1,
@@ -329,20 +333,23 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
       }
     } else { // downvote
       if (wasDownvoted) {
-        // Quitar downvote
+        // Quitar downvote existente
+        shouldRemoveVote = true;
         optimisticState = _voteState.copyWith(
           clearUserVote: true,
           downvotes: currentDownvotes - 1,
         );
       } else if (wasUpvoted) {
         // Cambiar de upvote a downvote
+        shouldRemoveVote = false;
         optimisticState = _voteState.copyWith(
           userVote: 'downvote',
           upvotes: currentUpvotes - 1,
           downvotes: currentDownvotes + 1,
         );
       } else {
-        // Agregar downvote
+        // Agregar downvote nuevo
+        shouldRemoveVote = false;
         optimisticState = _voteState.copyWith(
           userVote: 'downvote',
           downvotes: currentDownvotes + 1,
@@ -356,13 +363,20 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
       _isLoading = true;
     });
 
+    // Debug: mostrar qué acción se va a realizar
+    debugPrint('🗳️ Acción: ${shouldRemoveVote ? 'ELIMINAR' : 'AGREGAR/CAMBIAR'} voto $voteType');
+    debugPrint('🗳️ Estado anterior: upvoted=$wasUpvoted, downvoted=$wasDownvoted');
+    debugPrint('🗳️ Estado optimista: ${optimisticState.userVote}, upvotes=${optimisticState.upvotes}, downvotes=${optimisticState.downvotes}');
+
     // Feedback inmediato al usuario
     if (mounted) {
       String message;
-      if (optimisticState.userVote == voteType.name) {
+      if (shouldRemoveVote) {
+        message = '❌ Voto eliminado';
+      } else if (optimisticState.userVote == voteType.name) {
         message = voteType == VoteType.upvote ? '👍 Te gusta este reporte' : '👎 No te gusta este reporte';
       } else {
-        message = '❌ Voto eliminado';
+        message = 'Voto actualizado';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -380,26 +394,37 @@ class _ReportVotingWidgetState extends State<ReportVotingWidget> {
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
-      final serverState = await reportsProvider.handleVote(widget.reportId, voteType);
+      final serverState = await reportsProvider.handleVote(
+        widget.reportId, 
+        voteType, 
+        shouldRemove: shouldRemoveVote,
+      );
       
-      // Actualizar con la respuesta real del servidor
-      setState(() {
-        _voteState = serverState;
-        _isLoading = false;
-      });
+      // Debug: mostrar estado del servidor
+      debugPrint('🗳️ Estado del servidor: ${serverState.userVote}, upvotes=${serverState.upvotes}, downvotes=${serverState.downvotes}');
+      
+      // Actualizar con la respuesta real del servidor solo si mounted
+      if (mounted) {
+        setState(() {
+          _voteState = serverState;
+          _isLoading = false;
+        });
+      }
 
     } catch (e) {
+      debugPrint('❌ Error en voto, haciendo rollback: $e');
+      
       // Rollback: restaurar estado anterior
-      setState(() {
-        _voteState = VoteState(
-          userVote: wasUpvoted ? 'upvote' : wasDownvoted ? 'downvote' : null,
-          upvotes: currentUpvotes,
-          downvotes: currentDownvotes,
-        );
-        _isLoading = false;
-      });
-
       if (mounted) {
+        setState(() {
+          _voteState = VoteState(
+            userVote: wasUpvoted ? 'upvote' : wasDownvoted ? 'downvote' : null,
+            upvotes: currentUpvotes,
+            downvotes: currentDownvotes,
+          );
+          _isLoading = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al votar: ${e.toString()}'),

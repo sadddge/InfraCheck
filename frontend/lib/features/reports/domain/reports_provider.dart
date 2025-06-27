@@ -524,14 +524,33 @@ class ReportsProvider with ChangeNotifier {
   /// Alterna el seguimiento de un reporte
   Future<void> toggleFollowReport(int reportId) async {
     try {
-      // TODO: Implementar endpoints de seguimiento cuando estén disponibles en el backend
-      // final endpoint = '/v1/reports/$reportId/follow';
-      // await ApiService.post(endpoint);
+      // Obtener el estado actual de seguimiento
+      final report = _reports.firstWhere((r) => r.id == reportId);
+      final isCurrentlyFollowing = report.isFollowing;
       
-      // Por ahora simulamos el seguimiento
-      await Future.delayed(const Duration(milliseconds: 300));
-      debugPrint('🔔 Seguimiento alternado para reporte $reportId');
+      final endpoint = isCurrentlyFollowing 
+          ? ApiConfig.unfollowReportEndpoint.replaceAll(':reportId', reportId.toString())
+          : ApiConfig.followReportEndpoint.replaceAll(':reportId', reportId.toString());
+      
+      if (isCurrentlyFollowing) {
+        await ApiService.delete(endpoint);
+        debugPrint('🔕 Dejado de seguir reporte $reportId');
+      } else {
+        await ApiService.post(endpoint);
+        debugPrint('🔔 Siguiendo reporte $reportId');
+      }
+      
+      // Actualizar el estado local del reporte
+      final reportIndex = _reports.indexWhere((r) => r.id == reportId);
+      if (reportIndex != -1) {
+        _reports[reportIndex] = _reports[reportIndex].copyWith(
+          isFollowing: !isCurrentlyFollowing,
+        );
+        notifyListeners();
+      }
+      
     } catch (e) {
+      debugPrint('❌ Error al actualizar seguimiento: $e');
       throw Exception('Error al actualizar seguimiento: $e');
     }
   }

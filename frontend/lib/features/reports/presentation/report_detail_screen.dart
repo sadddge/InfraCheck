@@ -35,9 +35,8 @@ class ReportDetailScreen extends StatefulWidget {
 
 class _ReportDetailScreenState extends State<ReportDetailScreen> {
   Report? _report;
-  VoteState? _voteState;
+  VoteState _voteState = VoteState(upvotes: 0, downvotes: 0);
   bool _isLoading = true;
-  bool _isLoadingVotes = true;
   String? _error;
 
   @override
@@ -63,15 +62,17 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
     try {
       final reportsProvider = context.read<ReportsProvider>();
+      final report = await reportsProvider.getReportById(widget.reportId);
       
-      // Cargar reporte y estado de votos en paralelo
-      final results = await Future.wait([
-        reportsProvider.getReportById(widget.reportId),
-        reportsProvider.getVoteState(widget.reportId),
-      ]);
-      
-      final report = results[0] as Report;
-      final voteState = results[1] as VoteState;
+      // Cargar estado de votos con manejo de errores separado
+      VoteState voteState;
+      try {
+        voteState = await reportsProvider.getVoteState(widget.reportId);
+      } catch (e) {
+        debugPrint('⚠️ Error al cargar estado de votos: $e');
+        // Crear estado por defecto si falla la carga
+        voteState = VoteState(upvotes: 0, downvotes: 0);
+      }
       
       // Debug: Información de comentarios para desarrollo
       assert(() {
@@ -88,7 +89,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         _report = report;
         _voteState = voteState;
         _isLoading = false;
-        _isLoadingVotes = false;
       });
     } catch (e) {
       assert(() {
@@ -98,15 +98,34 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       setState(() {
         _error = e.toString();
         _isLoading = false;
-        _isLoadingVotes = false;
       });
     }
   }
 
-  /// Callback optimizado para cambios en comentarios
-  void _onCommentsChanged() {
-    // No hacer nada - la sincronización se maneja internamente en el widget de comentarios
-    // Esto evita sobrescribir el estado optimista local
+  /// Refresca el reporte específico (para comentarios)
+  Future<void> _refreshReport() async {
+    if (_report == null) return;
+    
+    try {
+      final reportsProvider = context.read<ReportsProvider>();
+      final updatedReport = await reportsProvider.getReportById(widget.reportId);
+      
+      assert(() {
+        debugPrint('🔄 Reporte refrescado - Comentarios: ${updatedReport.comments?.length ?? 0}');
+        return true;
+      }());
+      
+      if (mounted) {
+        setState(() {
+          _report = updatedReport;
+        });
+      }
+    } catch (e) {
+      assert(() {
+        debugPrint('❌ Error refrescando reporte: $e');
+        return true;
+      }());
+    }
   }
 
   /// Muestra el historial de cambios en un bottom sheet
@@ -252,13 +271,13 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         ),
         
         // Sistema de votación
-        if (!_isLoadingVotes && _voteState != null)
-          SliverToBoxAdapter(
-            child: ReportVotingWidget(
-              reportId: _report!.id,
-              initialVoteState: _voteState!,
-            ),
+        SliverToBoxAdapter(
+          child: ReportVotingWidget(
+            key: ValueKey('vote_${_report!.id}'),
+            reportId: _report!.id,
+            initialVoteState: _voteState,
           ),
+        ),
         
         // Espaciado antes de comentarios
         const SliverToBoxAdapter(
@@ -273,7 +292,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 reportId: _report!.id,
                 comments: _report!.comments ?? [],
                 currentUser: authProvider.user,
-                onCommentsChanged: _onCommentsChanged, // Callback mejorado
+                onCommentsChanged: _refreshReport,
               );
             },
           ),
