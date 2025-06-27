@@ -1,312 +1,287 @@
 import 'package:flutter/material.dart';
-import '../../../shared/theme/colors.dart';
-import '../../../core/models/report_model.dart';
+import 'package:provider/provider.dart';
+import '../../../core/models/comment_model.dart';
+import '../../../core/models/user_model.dart';
+import '../../../core/services/permissions_service.dart';
 import '../../../shared/utils/date_helpers.dart';
+import '../../../shared/theme/colors.dart';
+import '../domain/reports_provider.dart';
 
-/// Widget de la sección de comentarios.
-/// 
-/// Muestra los comentarios existentes y permite agregar nuevos comentarios
-/// con una interfaz limpia y fácil de usar.
-class ReportCommentsSection extends StatelessWidget {
-  final Report report;
-  final TextEditingController commentController;
-  final FocusNode commentFocusNode;
-  final bool isSubmittingComment;
-  final VoidCallback onCommentSubmit;
+class ReportCommentsSection extends StatefulWidget {
+  final int reportId;
+  final List<Comment> comments;
+  final User? currentUser;
 
   const ReportCommentsSection({
-    Key? key,
-    required this.report,
-    required this.commentController,
-    required this.commentFocusNode,
-    required this.isSubmittingComment,
-    required this.onCommentSubmit,
-  }) : super(key: key);
+    super.key,
+    required this.reportId,
+    required this.comments,
+    required this.currentUser,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Título de la sección
-            Row(
-              children: [
-                const Icon(
-                  Icons.chat_bubble_outline,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Comentarios (${report.comments?.length ?? 0})',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Formulario para nuevo comentario
-            _buildCommentForm(context),
-            
-            const SizedBox(height: 16),
-            
-            // Lista de comentarios
-            _buildCommentsList(),
-          ],
-        ),
-      ),
-    );
+  State<ReportCommentsSection> createState() => _ReportCommentsSectionState();
+}
+
+class _ReportCommentsSectionState extends State<ReportCommentsSection> {
+  final TextEditingController _commentController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 
-  Widget _buildCommentForm(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: commentFocusNode.hasFocus 
-            ? AppColors.primary.withOpacity(0.3)
-            : AppColors.background,
-          width: 2,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Campo de texto
-          TextField(
-            controller: commentController,
-            focusNode: commentFocusNode,
-            maxLines: 3,
-            minLines: 1,
-            decoration: const InputDecoration(
-              hintText: 'Escribe tu comentario...',
-              hintStyle: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
-            ),
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textPrimary,
-              height: 1.4,
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          // Botones de acción
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // Botón cancelar
-              if (commentFocusNode.hasFocus) ...[
-                TextButton(
-                  onPressed: () {
-                    commentController.clear();
-                    commentFocusNode.unfocus();
-                  },
-                  child: const Text(
-                    'Cancelar',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              
-              // Botón enviar
-              ElevatedButton(
-                onPressed: commentController.text.trim().isEmpty || isSubmittingComment
-                  ? null
-                  : onCommentSubmit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: isSubmittingComment
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text(
-                      'Comentar',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCommentsList() {
-    final comments = report.comments ?? [];
-    
-    if (comments.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 48,
-              color: AppColors.textSecondary.withOpacity(0.5),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Aún no hay comentarios',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Sé el primero en comentar sobre este reporte',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
+  String? _validateComment(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El comentario no puede estar vacío';
     }
-
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: comments.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final comment = comments[index];
-        return _buildCommentItem(comment);
-      },
-    );
+    if (value.trim().length < 3) {
+      return 'El comentario debe tener al menos 3 caracteres';
+    }
+    if (value.trim().length > 500) {
+      return 'El comentario no puede tener más de 500 caracteres';
+    }
+    return null;
   }
 
-  Widget _buildCommentItem(ReportComment comment) {
+  Future<void> _submitComment() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final reportsProvider = context.read<ReportsProvider>();
+      await reportsProvider.addComment(
+        reportId: widget.reportId,
+        content: _commentController.text.trim(),
+      );
+
+      _commentController.clear();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Comentario agregado exitosamente'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al agregar comentario: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteComment(int commentId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: const Text('¿Estás seguro de que quieres eliminar este comentario?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final reportsProvider = context.read<ReportsProvider>();
+      await reportsProvider.deleteComment(widget.reportId, commentId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Comentario eliminado exitosamente'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar comentario: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildCommentItem(Comment comment) {
+    final canDelete = PermissionsService.canDeleteComment(
+      currentUser: widget.currentUser,
+      commentCreatorId: comment.creatorId,
+    );
+
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.background.withOpacity(0.5),
+        color: Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header del comentario
           Row(
             children: [
-              // Avatar del usuario
               CircleAvatar(
-                radius: 12,
-                backgroundColor: AppColors.primary.withOpacity(0.1),
+                radius: 16,
+                backgroundColor: AppColors.accent,
                 child: Text(
-                  comment.authorInitials,
+                  comment.creatorInitials,
                   style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              
               const SizedBox(width: 8),
-              
-              // Nombre del autor
               Expanded(
-                child: Text(
-                  comment.authorName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      comment.creatorFullName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      DateHelpers.formatRelativeDate(comment.createdAt),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              
-              // Fecha del comentario
-              Text(
-                DateHelpers.formatRelativeDate(comment.createdAt),
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
+              if (canDelete)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () => _deleteComment(comment.id),
+                  tooltip: 'Eliminar comentario',
                 ),
-              ),
             ],
           ),
-          
           const SizedBox(height: 8),
-          
-          // Contenido del comentario
           Text(
             comment.content,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textPrimary,
-              height: 1.4,
-            ),
+            style: const TextStyle(fontSize: 14),
           ),
         ],
       ),
     );
   }
-}
 
-/// Modelo temporal para comentarios
-/// TODO: Mover a un archivo de modelo apropiado cuando se implemente el backend
-class ReportComment {
-  final String id;
-  final String content;
-  final String authorName;
-  final String authorInitials;
-  final DateTime createdAt;
-
-  const ReportComment({
-    required this.id,
-    required this.content,
-    required this.authorName,
-    required this.authorInitials,
-    required this.createdAt,
-  });
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Comentarios',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        // Formulario para agregar comentario
+        Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _commentController,
+                validator: _validateComment,
+                maxLines: 3,
+                maxLength: 500,
+                decoration: const InputDecoration(
+                  hintText: 'Escribe tu comentario...',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                enabled: !_isLoading,
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submitComment,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text('Agregar Comentario'),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 24),
+        
+        // Lista de comentarios
+        if (widget.comments.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: const Center(
+              child: Text(
+                'No hay comentarios aún. ¡Sé el primero en comentar!',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          )
+        else
+          ...widget.comments.map(_buildCommentItem).toList(),
+      ],
+    );
+  }
 }
