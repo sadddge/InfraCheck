@@ -1,6 +1,6 @@
 import { Role } from 'src/common/enums/roles.enums';
 import { UserStatus } from 'src/common/enums/user-status.enums';
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Comment } from './comment.entity';
 import { Message } from './message.entity';
 import { Notification } from './notification.entity';
@@ -8,6 +8,7 @@ import { RefreshToken } from './refresh-token.entity';
 import { ReportChange } from './report-change.entity';
 import { Report } from './report.entity';
 import { Vote } from './vote.entity';
+import { NotificationPreference } from './notification-preference.entity';
 
 /**
  * User entity representing system participants in the infrastructure reporting platform.
@@ -91,6 +92,12 @@ export class User {
         default: null,
     })
     passwordUpdatedAt: Date | null;
+
+    @OneToOne(() => NotificationPreference, {
+        cascade: true,
+        eager: true,
+    })
+    notificationPreference: NotificationPreference;
 
     @OneToMany(
         () => Report,
