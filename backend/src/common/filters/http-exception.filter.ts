@@ -92,8 +92,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             error: payload,
         });
         this.logger.error(
-            `Exception caught: ${payload.code} - ${payload.message}`,
-            exception instanceof Error ? exception.stack : JSON.stringify(exception),
+            `Exception caught: ${payload.code} - ${payload.message}`
         );
     }
 }
