@@ -1,4 +1,4 @@
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { RequestMethod, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -52,7 +52,12 @@ async function bootstrap() {
     );
 
     // API configuration
-    app.setGlobalPrefix('api');
+    app.setGlobalPrefix('api', {
+        exclude: [
+            { path: '/', method: RequestMethod.GET },
+            { path: '/', method: RequestMethod.HEAD },
+        ],
+    });
     app.enableVersioning({
         type: VersioningType.URI,
     });
