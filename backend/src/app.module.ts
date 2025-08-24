@@ -12,6 +12,7 @@ import { FirebaseModule } from './modules/firebase/firebase.module';
 import { ReportModule } from './modules/reports/reports.module';
 import { UsersModule } from './modules/users/users.module';
 import { VotesModule } from './modules/votes/votes.module';
+import { HealthModule } from './modules/health/healt.module';
 
 /**
  * Root application module that configures and imports all feature modules.
@@ -57,6 +58,7 @@ import { VotesModule } from './modules/votes/votes.module';
         VotesModule,
         ChatModule,
         FirebaseModule,
+        HealthModule
     ],
     providers: [
         {
