@@ -67,20 +67,27 @@ export class RolesGuard implements CanActivate {
         if (!requiredRoles || requiredRoles.length === 0) {
             return true; // No role requirements or empty array, allow access
         }
-        this.logger.debug(`requiredRoles: ${requiredRoles}`);
         const req = context.switchToHttp().getRequest();
         const user = req.user;
 
+        this.logger.debug(`Access check: user=${user?.id} role=${user?.role} required=${requiredRoles.join(',')}`);
+
         if (!user) {
-            this.logger.warn('No user found in request - authentication may have failed');
+            this.logger.warn(`Access denied: No authenticated user found for ${req.method} ${req.url}`);
             return false;
         }
 
         if (user.role === Role.ADMIN) {
+            this.logger.debug(`Access granted: Admin user ${user.id} accessing ${req.method} ${req.url}`);
             return true; // Admins have access to everything
         }
 
+        const hasAccess = requiredRoles.some(role => user.role === role);
+        if (!hasAccess) {
+            this.logger.warn(`Access denied: User ${user.id} with role ${user.role} cannot access ${req.method} ${req.url} (required: ${requiredRoles.join(',')})`);
+        }
+
         // Fix: Use exact comparison instead of includes() to prevent partial matches
-        return requiredRoles.some(role => user.role === role);
+        return hasAccess;
     }
 }

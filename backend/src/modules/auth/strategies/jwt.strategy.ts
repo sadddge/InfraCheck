@@ -65,7 +65,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
      * ```
      */
     validate(payload: JwtPayload) {
-        this.logger.debug(`Validating JWT payload: ${JSON.stringify(payload)}`);
+        // Solo log en caso de desarrollo o si es necesario para debugging
+        // this.logger.debug(`JWT validated for user ${payload.sub} with role ${payload.role}`);
         return {
             id: payload.sub,
             phoneNumber: payload.phoneNumber,

@@ -53,6 +53,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     catch(exception: unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
+        const request = ctx.getRequest();
 
         let status: number;
         let payload: ErrorDto;
@@ -91,8 +92,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
             data: null,
             error: payload,
         });
-        this.logger.error(
-            `Exception caught: ${payload.code} - ${payload.message}`
-        );
+        
+        // Log with more context
+        const logMessage = `${request.method} ${request.url} - ${status} ${payload.code}: ${payload.message}`;
+        if (status >= 500) {
+            this.logger.error(logMessage, exception instanceof Error ? exception.stack : undefined);
+        } else {
+            this.logger.warn(logMessage);
+        }
     }
 }

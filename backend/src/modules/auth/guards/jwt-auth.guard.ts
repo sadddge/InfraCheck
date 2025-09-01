@@ -95,9 +95,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
      */
     handleRequest<TUser = unknown>(err: unknown, user: unknown): TUser {
         if (err || !user) {
-            this.logger.warn(
-                `Authentication failed: ${err instanceof Error ? err.message : 'User not found'}`,
-            );
+            const errorMessage = err instanceof Error ? err.message : 'User not found';
+            this.logger.warn(`JWT authentication failed: ${errorMessage}`);
             throw err ?? invalidAccessToken();
         }
         return user as TUser;

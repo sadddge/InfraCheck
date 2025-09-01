@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, Pagination, paginate } from 'nestjs-typeorm-paginate';
 import { ReportChangeType } from 'src/common/enums/report-change-type.enums';
@@ -37,6 +37,8 @@ import { IReportsService } from '../interfaces/reports-service.interface';
  */
 @Injectable()
 export class ReportsService implements IReportsService {
+    private readonly logger = new Logger(ReportsService.name);
+
     /**
      * Creates a new ReportsService instance.
      *
@@ -197,6 +199,8 @@ export class ReportsService implements IReportsService {
         });
 
         const savedReport = await this.reportRepository.save(report);
+        this.logger.log(`Report created: ID=${savedReport.id}, title="${savedReport.title}", category=${savedReport.category}, creatorId=${creatorId}, images=${files.length}`);
+        
         const reportDto: ReportDto = {
             id: savedReport.id,
             title: savedReport.title,
@@ -242,6 +246,7 @@ export class ReportsService implements IReportsService {
         });
 
         await this.changeRepository.save(change);
+        this.logger.log(`Report ${report.id} state changed from ${report.state} to ${state} by user ${creatorId}`);
 
         // Get all followers of this report
         const followerIds = await this.followsService.getReportFollowerIds(report.id);
@@ -275,9 +280,10 @@ export class ReportsService implements IReportsService {
 
         try {
             await Promise.allSettled(notificationPromises);
+            this.logger.log(`Notifications sent for report ${report.id} state change from ${report.state} to ${state} (${recipientIds.size} recipients)`);
         } catch (error) {
             // Log error but don't fail the operation
-            console.error('Error sending notifications:', error);
+            this.logger.error(`Failed to send notifications for report ${report.id} state change: ${error instanceof Error ? error.message : 'Unknown error'}`, error instanceof Error ? error.stack : undefined);
         }
 
         report.state = state;
